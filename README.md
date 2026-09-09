@@ -33,7 +33,7 @@ If you changed a cookbook or plugin source, [regenerate the content first](https
 ## Publish your changes
 
 - **Hub changes:** merge your PR or push to this repository's `main`; GitHub Actions builds and publishes the website automatically.
-- **Plugin-source changes only:** first push to the branch selected in [source.config.json](source.config.json), currently `support_hub`. Then open [Build and deploy plugin directory](https://github.com/QwenLM/qwen-mm-plugins-hub/actions/workflows/pages.yml) → **Run workflow** on Hub `main`.
+- **Plugin-source changes only:** first merge into the branch selected in [source.config.json](source.config.json), currently plugin `main`. Then open [Build and deploy plugin directory](https://github.com/QwenLM/qwen-mm-plugins-hub/actions/workflows/pages.yml) → **Run workflow** on Hub `main`.
 
 For a new plugin, both its source and Hub cookbook must be available before the build runs.
 Wait for the workflow to pass, then check [the public Hub](https://qwenlm.github.io/qwen-mm-plugins-hub/). Publishing the website does not publish plugin releases.

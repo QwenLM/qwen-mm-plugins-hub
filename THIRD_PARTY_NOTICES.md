@@ -16,6 +16,8 @@ Plugin descriptions, Skill Markdown, tool definitions and English documentation 
 
 The initial Hub-owned cookbooks, screenshots and local case traces were migrated from upstream commit `82008629c47c385d073801d6cabac05ce8284e78`. Published demo recordings and additional HTML traces came from the upstream cookbook's linked Qwen OSS assets; the [migration provenance record](https://github.com/JJJYmmm/qwen-mm-plugins-hub/blob/823bef90cee588c256709a18da6e10e2d61d40c4/cookbook-media.json) preserves their original URLs, checksums and video conversions. Cookbook edits now live in `content/cookbooks/`. Original credits and external reference links inside the case content are preserved.
 
+The API Omni example audio, video clips and frame previews were copied unchanged from upstream commit `62c9373f011427c32cf508e5b56e1fbaf73aaa04`. Their contributor-supplied [source notes](public/cases/api/case-api-omni-examples/assert/SOURCES.md) are retained alongside the files; those notes do not establish additional permissions for material whose license is unspecified.
+
 ## Qwen3.5 tokenizer
 
 Build-time token estimates use the official [Qwen/Qwen3.5-9B tokenizer](https://huggingface.co/Qwen/Qwen3.5-9B/blob/c202236235762e1c871ad0ccb60c8ee5ba337b9a/tokenizer.json) with the [Hugging Face Tokenizers](https://github.com/huggingface/tokenizers) library. Exact source and engine versions are recorded in `tokenizer.config.json`. The tokenizer asset remains in an ignored build cache and is not redistributed in the website's static assets. Refer to the upstream repositories for their licenses and notices.
