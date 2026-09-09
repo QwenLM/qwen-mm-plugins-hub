@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>机器人之梦 ROBOT DREAMS · 拉片报告</title>
+<style>
+  :root{
+    --paper:#FAF3E7; --card:#FFFDF7; --ink:#35322C; --ink-soft:#6b675f;
+    --coral:#E4572E; --teal:#2A9D8F; --mustard:#E9C46A; --blue:#7FB7BE;
+    --plum:#B56576; --green:#8AB17D; --sand:#F2CC8F; --indigo:#5F6CAF;
+    --shadow:4px 4px 0 rgba(53,50,44,.14);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Futura","Avenir Next","Trebuchet MS","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.7; padding-bottom:60px;
+    background-image:radial-gradient(rgba(53,50,44,.05) 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+  .wrap{max-width:1080px; margin:0 auto; padding:0 22px;}
+  h1,h2,h3{line-height:1.25;}
+  section{margin-top:64px;}
+  .sec-title{
+    display:flex; align-items:center; gap:12px; font-size:26px; letter-spacing:2px; margin-bottom:8px;
+  }
+  .sec-title .dot{width:14px;height:14px;border-radius:50%;background:var(--coral);border:2px solid var(--ink);flex:none;}
+  .sec-sub{color:var(--ink-soft); font-size:14px; margin-bottom:22px;}
+
+  /* ---------- hero ---------- */
+  header.hero{padding-top:52px;}
+  .hero-grid{display:grid; grid-template-columns:340px 1fr; gap:44px; align-items:center;}
+  .poster-frame{
+    background:var(--card); border:3px solid var(--ink); border-radius:16px;
+    padding:12px; box-shadow:var(--shadow); transform:rotate(-2deg); transition:transform .3s;
+  }
+  .poster-frame:hover{transform:rotate(0deg) scale(1.02);}
+  .poster-frame img{display:block; width:100%; border-radius:8px; border:2px solid var(--ink);}
+  .poster-cap{font-size:12px; color:var(--ink-soft); text-align:center; padding-top:8px; letter-spacing:1px;}
+  .title-en{font-size:15px; letter-spacing:8px; color:var(--coral); font-weight:700;}
+  .title-cn{font-size:52px; letter-spacing:6px; margin:6px 0 10px;}
+  .meta-chips{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0 18px;}
+  .chip{
+    background:var(--card); border:2px solid var(--ink); border-radius:999px;
+    padding:3px 14px; font-size:13px; box-shadow:2px 2px 0 rgba(53,50,44,.12);
+  }
+  .chip.hot{background:var(--mustard);}
+  .synopsis{font-size:15.5px; text-align:justify; background:var(--card); border:2px solid var(--ink);
+    border-radius:14px; padding:18px 22px; box-shadow:var(--shadow);}
+  .themes{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; font-size:14px;}
+  .theme-tag{border:2px dashed var(--ink); border-radius:10px; padding:2px 12px; background:rgba(255,253,247,.7);}
+
+  /* ---------- characters ---------- */
+  .char-grid{display:grid; grid-template-columns:1fr 1fr; gap:26px;}
+  .char-card{
+    background:var(--card); border:3px solid var(--ink); border-radius:18px; box-shadow:var(--shadow);
+    padding:26px; display:flex; gap:24px; align-items:center; transition:transform .25s;
+  }
+  .char-card:hover{transform:translateY(-4px);}
+  .char-avatar{width:150px; height:150px; border-radius:50%; border:3px solid var(--ink); flex:none;
+    display:flex; align-items:center; justify-content:center;}
+  .char-avatar svg{width:118px; height:118px;}
+  .char-name{font-size:24px; letter-spacing:3px;}
+  .char-en{font-size:12px; letter-spacing:4px; color:var(--ink-soft); margin-bottom:8px;}
+  .char-desc{font-size:14px; color:var(--ink-soft);}
+
+  /* ---------- timeline ---------- */
+  .tl-card{background:var(--card); border:3px solid var(--ink); border-radius:18px; box-shadow:var(--shadow); padding:26px;}
+  .tl-hint{font-size:13px; color:var(--ink-soft); margin-bottom:14px;}
+  .tl-canvas{position:relative; user-select:none; cursor:crosshair;}
+  .tl-ruler{position:relative; height:26px; border-bottom:2px solid var(--ink);}
+  .tl-ruler .tick{position:absolute; bottom:0; width:2px; height:8px; background:var(--ink-soft);}
+  .tl-ruler .tick.major{height:13px; background:var(--ink);}
+  .tl-ruler .tlabel{position:absolute; bottom:14px; transform:translateX(-50%); font-size:11px; color:var(--ink-soft); letter-spacing:1px;}
+  .tl-lanes{position:relative; margin-top:10px;}
+  .tl-lane{position:relative; height:36px; margin-bottom:6px;}
+  .band{position:absolute; top:2px; height:32px; border:2px solid var(--ink); border-radius:9px;
+    display:flex; align-items:center; padding:0 8px; font-size:11.5px; font-weight:700; color:#fff;
+    overflow:hidden; white-space:nowrap; text-overflow:ellipsis; cursor:pointer;
+    text-shadow:0 1px 2px rgba(0,0,0,.35); transition:filter .2s;}
+  .band:hover{filter:brightness(1.08);}
+  .tl-segs{position:relative; height:30px; margin-top:4px;}
+  .seg{position:absolute; top:4px; height:22px; min-width:7px; border:2px solid var(--ink); border-radius:7px;
+    cursor:pointer; transition:transform .15s, filter .15s;}
+  .seg:hover{transform:scaleY(1.25); filter:brightness(1.1); z-index:5;}
+  .seg.active{outline:3px solid var(--ink); outline-offset:2px; z-index:6; transform:scaleY(1.3);}
+  .tl-scrub{position:absolute; top:0; bottom:0; width:2px; background:var(--coral); pointer-events:none; display:none; z-index:8;}
+  .tl-scrub .bubble{position:absolute; top:-30px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); font-size:11px; padding:2px 8px; border-radius:6px; white-space:nowrap;}
+  .tl-legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .lg{display:flex; align-items:center; gap:6px; font-size:12px; border:1.5px solid var(--ink);
+    border-radius:999px; padding:2px 10px; background:rgba(255,253,247,.8); cursor:pointer;}
+  .lg i{width:10px; height:10px; border-radius:3px; border:1.5px solid var(--ink); display:inline-block;}
+
+  .detail{margin-top:24px; border-top:3px dashed rgba(53,50,44,.3); padding-top:22px;
+    display:grid; grid-template-columns:1.05fr .95fr; gap:26px;}
+  .d-left .d-super{display:inline-block; font-size:12px; font-weight:700; color:#fff; border:2px solid var(--ink);
+    border-radius:999px; padding:2px 12px; margin-bottom:10px; text-shadow:0 1px 2px rgba(0,0,0,.3);}
+  .d-title{font-size:24px; letter-spacing:2px;}
+  .d-en{font-size:12px; letter-spacing:3px; color:var(--ink-soft); margin:2px 0 12px;}
+  .d-time{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .d-time .chip{font-variant-numeric:tabular-nums; font-weight:700;}
+  .d-desc{font-size:14.5px; text-align:justify;}
+  .d-ents{margin-top:14px; display:flex; flex-wrap:wrap; gap:8px;}
+  .d-ents .chip{font-size:12px; background:var(--paper);}
+  .d-nav{margin-top:18px; display:flex; gap:10px;}
+  .d-nav button{
+    font:inherit; font-size:13px; font-weight:700; letter-spacing:2px; cursor:pointer;
+    background:var(--mustard); border:2px solid var(--ink); border-radius:10px; padding:6px 16px;
+    box-shadow:2px 2px 0 rgba(53,50,44,.2); transition:transform .1s;
+  }
+  .d-nav button:hover{transform:translateY(-2px);}
+  .d-right img{width:100%; display:block; border:3px solid var(--ink); border-radius:12px; box-shadow:var(--shadow);}
+  .d-cap{font-size:12px; color:var(--ink-soft); margin-top:8px; text-align:center;}
+
+  /* ---------- key events ---------- */
+  .key-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  .key-card{background:var(--card); border:3px solid var(--ink); border-radius:14px; overflow:hidden;
+    box-shadow:var(--shadow); cursor:pointer; transition:transform .2s;}
+  .key-card:hover{transform:translateY(-5px) rotate(-.5deg);}
+  .key-card img{width:100%; height:150px; object-fit:cover; display:block; border-bottom:3px solid var(--ink);}
+  .key-body{padding:14px 16px;}
+  .key-time{display:inline-block; background:var(--coral); color:#fff; border:2px solid var(--ink);
+    border-radius:8px; font-size:12px; font-weight:700; padding:1px 10px; margin-bottom:8px;
+    font-variant-numeric:tabular-nums;}
+  .key-title{font-size:16px; letter-spacing:1px; margin-bottom:4px;}
+  .key-desc{font-size:12.5px; color:var(--ink-soft);}
+
+  footer{margin-top:70px; text-align:center; font-size:12.5px; color:var(--ink-soft); letter-spacing:1px;}
+  footer .line{width:120px; height:3px; background:var(--ink); margin:0 auto 16px; border-radius:2px;}
+
+  @media (max-width:860px){
+    .hero-grid{grid-template-columns:1fr;}
+    .poster-frame{max-width:320px; margin:0 auto;}
+    .char-grid,.detail{grid-template-columns:1fr;}
+    .key-grid{grid-template-columns:1fr 1fr;}
+    .title-cn{font-size:38px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <div class="hero-grid">
+    <div>
+      <div class="poster-frame">
+        <img src="assert/image-92805e9f99e99dd1.png" alt="Robot Dreams 海报">
+        <div class="poster-cap">ROBOT DREAMS · 2023</div>
+      </div>
+    </div>
+    <div>
+      <div class="title-en">ROBOT&nbsp;DREAMS</div>
+      <h1 class="title-cn">机器人之梦</h1>
+      <div class="meta-chips">
+        <span class="chip">2023 · 西班牙 / 法国</span>
+        <span class="chip">导演 · 巴勃罗·贝格尔 Pablo Berger</span>
+        <span class="chip">改编自 Sara Varon 同名漫画</span>
+        <span class="chip">片长 ≈ 98 分钟</span>
+        <span class="chip">全程无对白</span>
+        <span class="chip hot">第96届奥斯卡 最佳动画长片 提名</span>
+        <span class="chip hot">第51届安妮奖 最佳独立动画长片</span>
+        <span class="chip hot">第36届欧洲电影奖 最佳动画片</span>
+      </div>
+      <div class="synopsis">
+        1980 年代的纽约，孤独的狗从电视购物里订购了一台「Amica 2000」伴侣机器人。机器人醒来后，他们一起滑旱冰、划船、吃热狗、去海滩，度过了整个夏天。直到海水让机器人锈死在关闭的沙滩上，一段友谊被迫按下暂停键。四季流转，狗与机器人各自经历梦境与离别：狗遇见了鸭子与滑雪旅伴，机器人被兔子一家、小鸟一家短暂陪伴，最终被浣熊从废铁堆里重新组装。当他们再次在人海中相遇，只隔着一扇圆窗、一条街，用一支熟悉的歌彼此致意——全片没有一句台词，却把友谊、孤独、思念与「如何好好告别」讲得温柔又准确。
+      </div>
+      <div class="themes">
+        <strong>主题</strong>
+        <span class="theme-tag">友谊</span><span class="theme-tag">孤独</span>
+        <span class="theme-tag">梦境</span><span class="theme-tag">重逢</span>
+        <span class="theme-tag">四季流转</span>
+        <strong style="margin-left:10px;">基调</strong>
+        <span class="theme-tag">忧郁</span><span class="theme-tag">奇想</span><span class="theme-tag">温暖</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="wrap" id="characters">
+  <div class="sec-title"><span class="dot"></span>主角剪影</div>
+  <div class="sec-sub">两位主角的几何剪影 —— 与本片扁平、温柔的手绘气质一致。</div>
+  <div class="char-grid">
+    <div class="char-card">
+      <div class="char-avatar" style="background:var(--mustard);">
+        <svg viewBox="0 0 200 200" aria-label="狗 剪影">
+          <g fill="#35322C">
+            <path d="M62 108 q-22 -6 -26 -26 q14 2 24 12 z"/>
+            <rect x="58" y="92" width="74" height="56" rx="24"/>
+            <rect x="68" y="138" width="15" height="42" rx="7"/>
+            <rect x="104" y="138" width="15" height="42" rx="7"/>
+            <rect x="116" y="76" width="28" height="28" rx="10"/>
+            <circle cx="142" cy="66" r="26"/>
+            <rect x="152" y="58" width="36" height="18" rx="9"/>
+            <circle cx="188" cy="66" r="6"/>
+            <ellipse cx="128" cy="80" rx="10" ry="24" transform="rotate(14 128 80)"/>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <div class="char-name">狗</div>
+        <div class="char-en">DOG</div>
+        <div class="char-desc">独居曼哈顿的温柔小狗，会对着电视吃微波晚餐，也会为一个机器人拼尽全力。他的每一次新友谊，都带着旧朋友的影子。</div>
+      </div>
+    </div>
+    <div class="char-card">
+      <div class="char-avatar" style="background:var(--blue);">
+        <svg viewBox="0 0 200 200" aria-label="机器人 剪影">
+          <g fill="#35322C">
+            <rect x="97" y="10" width="6" height="14"/>
+            <circle cx="100" cy="9" r="6"/>
+            <rect x="68" y="22" width="64" height="48" rx="16"/>
+            <rect x="92" y="68" width="16" height="12"/>
+            <rect x="64" y="78" width="72" height="62" rx="14"/>
+            <rect x="44" y="82" width="14" height="50" rx="7"/>
+            <rect x="142" y="82" width="14" height="50" rx="7"/>
+            <rect x="78" y="138" width="16" height="40" rx="8"/>
+            <rect x="106" y="138" width="16" height="40" rx="8"/>
+            <rect x="70" y="174" width="28" height="11" rx="5"/>
+            <rect x="102" y="174" width="28" height="11" rx="5"/>
+          </g>
+          <g fill="#7FB7BE">
+            <circle cx="88" cy="44" r="6"/>
+            <circle cx="112" cy="44" r="6"/>
+            <rect x="90" y="56" width="20" height="5" rx="2.5"/>
+            <circle cx="100" cy="104" r="9"/>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <div class="char-name">机器人</div>
+        <div class="char-en">ROBOT</div>
+        <div class="char-desc">天真而忠诚的 Amica 2000。被锈在沙滩上的那个冬天，他的所有梦境，都是回到狗的身边。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="timeline">
+  <div class="sec-title"><span class="dot" style="background:var(--teal)"></span>交互式时间轴</div>
+  <div class="sec-sub">10 条剧情弧 · 29 个叙事片段。移动鼠标查看时间，点击色块查看片段的起止时间与描述。</div>
+  <div class="tl-card">
+    <div class="tl-hint">▸ 上层色带 = 剧情弧（Super Events）；下层色块 = 叙事片段（点击查看详情）；悬停任意位置可查看对应时间码。</div>
+    <div class="tl-canvas" id="tlCanvas">
+      <div class="tl-ruler" id="tlRuler"></div>
+      <div class="tl-lanes" id="tlLanes"></div>
+      <div class="tl-segs" id="tlSegs"></div>
+      <div class="tl-scrub" id="tlScrub"><div class="bubble" id="tlBubble">00:00</div></div>
+    </div>
+    <div class="tl-legend" id="tlLegend"></div>
+
+    <div class="detail" id="detail">
+      <div class="d-left">
+        <span class="d-super" id="dSuper"></span>
+        <div class="d-title" id="dTitle"></div>
+        <div class="d-en" id="dEn"></div>
+        <div class="d-time">
+          <span class="chip" id="dStart"></span>
+          <span class="chip" id="dEnd"></span>
+          <span class="chip" id="dDur"></span>
+        </div>
+        <div class="d-desc" id="dDesc"></div>
+        <div class="d-ents" id="dEnts"></div>
+        <div class="d-nav">
+          <button id="btnPrev">← 上一段</button>
+          <button id="btnNext">下一段 →</button>
+        </div>
+      </div>
+      <div class="d-right">
+        <img id="dImg" src="" alt="片段截图">
+        <div class="d-cap" id="dCap"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="keys">
+  <div class="sec-title"><span class="dot" style="background:var(--mustard)"></span>关键事件与画面</div>
+  <div class="sec-sub">十个改变故事走向的瞬间（点击卡片可定位到时间轴）。</div>
+  <div class="key-grid" id="keyGrid"></div>
+</section>
+
+<footer>
+  <div class="line"></div>
+  机器人之梦 ROBOT DREAMS (2023) · 拉片报告<br>
+  逐段数据基于影片视觉记忆图谱（10 剧情弧 / 29 叙事片段）· 截图取自原片 · 2026-08-07 生成
+</footer>
+
+<script>
+const FRAMES={
+"k_rust":"assert/image-39c97889212008fc.jpg",
+"m_0000":"assert/image-6dec82f160f3548c.jpg",
+"m_0001":"assert/image-5107ba92bd35cd6b.jpg",
+"m_0002":"assert/image-476de8d34b8851cf.jpg",
+"m_0003":"assert/image-1998d3710fc762a1.jpg",
+"m_0004":"assert/image-1a3e8134cd9f7af2.jpg",
+"m_0006":"assert/image-a3ea1ffab15a6c0b.jpg",
+"m_0007":"assert/image-1ff00229117cd0db.jpg",
+"m_0008":"assert/image-ad32d01c8f0c4922.jpg",
+"m_0009":"assert/image-623b9f289c161aba.jpg",
+"m_0010":"assert/image-3e34c063c470d463.jpg",
+"m_0011":"assert/image-87464d424b1ae0c1.jpg",
+"m_0012":"assert/image-32e7288104edcf18.jpg",
+"m_0013":"assert/image-ab0cbc9b781f27b8.jpg",
+"m_0014":"assert/image-bb50b5f16e231317.jpg",
+"m_0015":"assert/image-a07730c0b96a94e3.jpg",
+"m_0016":"assert/image-d021f62819c52a98.jpg",
+"m_0017":"assert/image-b3896a8b4bb1d7c8.jpg",
+"m_0018":"assert/image-2f4b98e3e64614d5.jpg",
+"m_0019":"assert/image-703ee12d0852ee1a.jpg",
+"m_0020":"assert/image-a5e10d4e6244cf83.jpg",
+"m_0021":"assert/image-96dcd086cccaacbb.jpg",
+"m_0022":"assert/image-e98db13dc393c050.jpg",
+"m_0023":"assert/image-dfc012020f8125d9.jpg",
+"m_0024":"assert/image-8cacb181a53595c8.jpg",
+"m_0025":"assert/image-d5d7184da3281bd8.jpg",
+"m_0026":"assert/image-493c7687b359ba64.jpg",
+"m_0027":"assert/image-192988c39e1c14ef.jpg",
+"m_0028":"assert/image-93ad3275fcf57ce9.jpg"
+};
+const TOTAL = 5895;
+const SUPERS = [
+  {id:1,  t:"狗的孤独与机器人诞生",       s:0,    e:464,  c:"#F4A259", lane:0},
+  {id:2,  t:"初次出游与海滩事故",         s:464,  e:1230, c:"#E4572E", lane:0},
+  {id:3,  t:"营救失败与兔子们的发现",     s:1230, e:1878, c:"#7FB7BE", lane:0},
+  {id:4,  t:"机器人的超现实冬梦",         s:1878, e:2790, c:"#5F6CAF", lane:0},
+  {id:5,  t:"狗的冬季冒险与梦",           s:2235, e:3147, c:"#2A9D8F", lane:1},
+  {id:6,  t:"橙色小鸟的巢与城市旅程",     s:3147, e:3600, c:"#E9C46A", lane:0},
+  {id:7,  t:"狗与鸭子：友谊与告别",       s:3600, e:4092, c:"#8AB17D", lane:0},
+  {id:8,  t:"浣熊重组机器人与新羁绊",     s:4092, e:5064, c:"#B56576", lane:0},
+  {id:9,  t:"夏日蒙太奇与重逢",           s:5064, e:5636, c:"#F2CC8F", lane:0},
+  {id:10, t:"片尾字幕",                   s:5636, e:5895, c:"#9A8C98", lane:0},
+];
+const SEGS = [
+  {se:1, s:0, e:252, t:"开场字幕与孤独的狗", en:"OPENING CREDITS & THE LONELY DOG", img:"m_0000",
+   d:"影片以各制片公司标志与开场字幕开始。镜头穿过夜晚的城市街道，落在狗的公寓：他看电视、加热微波晚餐，被一则「Amica 2000」伴侣机器人的电视购物广告吸引，拨打电话订购。片段以片名卡「Robot Dreams」收尾。",
+   ent:["狗","公寓","电视购物机器人"]},
+  {se:1, s:252, e:464, t:"组装机器人", en:"ASSEMBLING THE ROBOT", img:"m_0001",
+   d:"次日清晨快递车到来，狗拆开装满零件的大箱子，对照说明书逐一组装。通电那一刻，机器人睁开眼睛微笑，两个新朋友一起出门。",
+   ent:["狗","机器人","说明书"]},
+  {se:2, s:464, e:504, t:"游乐场木板道", en:"PLAYLAND BOARDWALK", img:"m_0002",
+   d:"机器人和狗来到 Playland 游乐场的木板道，沉浸在游戏厅的热闹里，打游戏、吃蛋筒冰淇淋，随后走向海滩。",
+   ent:["机器人","狗","冰淇淋"]},
+  {se:2, s:504, e:564, t:"海滩漫步 · 下海", en:"DAY AT THE BEACH", img:"m_0003",
+   d:"两人沿着海滨木板道漫步，机器人决定下海与猪群同游。然而金属身体在咸水中迅速锈蚀，他沉入海底，动弹不得。",
+   ent:["机器人","狗","大海"]},
+  {se:2, s:564, e:912, t:"城市冒险与公路旅行", en:"CITY ADVENTURES & ROAD TRIP", img:"m_0004",
+   d:"影片穿插两人的城市冒险蒙太奇：公园里滑旱冰、划船、吃热狗；随后驾车踏上公路旅行，在车里吃零食，一路驶向 Playland。",
+   ent:["旱冰鞋","划艇","热狗摊"]},
+  {se:2, s:912, e:1230, t:"海滩事故", en:"PLAYLAND ADVENTURE & ACCIDENT", img:"k_rust",
+   d:"机器人和狗享受游乐场与海滩：街机、冰淇淋、晒太阳。快乐戛然而止——机器人下水后锈住停机，狗潜入海中试图营救。",
+   ent:["机器人","狗","大海"]},
+  {se:3, s:1230, e:1590, t:"梦境与营救失败", en:"THE DREAM & THE JOURNEY", img:"m_0006",
+   d:"狗在夜晚的海滩忧郁徘徊，仿佛在木板道上看见机器人的身影——这是一场梦，他被七点的闹钟惊醒。他去图书馆查资料、乘出租车赶到 Coney Island，却发现海滩与游乐场已季节性关闭；他隔着铁丝网望见被困的机器人，试图剪锁闯入却被猩猩警察拦下。",
+   ent:["狗","铁丝网","猩猩警察"]},
+  {se:3, s:1590, e:1878, t:"兔子们发现机器人", en:"THE ROBOT & THE RABBITS", img:"m_0007",
+   d:"三只划船的兔子在沙滩上发现锈住的机器人，试着搬动它、给关节上油；梦境般的段落里，机器人的双腿脱落、独自走进城市，随后画面回到海滩。兔子们把机器人的身体抬上小船划走。",
+   ent:["兔子兄弟","划艇","油壶"]},
+  {se:4, s:1878, e:2050, t:"梦 · 万圣节之夜", en:"HALLOWEEN NIGHT", img:"m_0008",
+   d:"机器人的梦里，他在公寓准备万圣节，扮成吸血鬼出门看trick-or-treat的人群；无法融入后回到家中，把糖果分给扮成科学怪人的孩子。梦以机器人在淋浴间冲掉「假血」结束。",
+   ent:["机器人","万圣节装扮","糖果"]},
+  {se:4, s:2050, e:2235, t:"梦 · 雪城漫步", en:"SNOWY CITY WALK", img:"m_0009",
+   d:"梦中机器人站在门口看雪落下，被雪掩埋又抖落起身；他穿过落雪的城市，与狗相遇，一同走向 Coney Island 的入口。画面与机器人躺在沙滩上的镜头交叉剪辑。",
+   ent:["机器人","狗","雪夜"]},
+  {se:5, s:2235, e:2475, t:"狗的滑雪之旅", en:"DOG'S SKI TRIP", img:"m_0010",
+   d:"狗加热微波晚餐时看到报纸上的滑雪旅行广告，打电话报名。他在山上滑雪橇、滑雪，与缆车上的鸟乘客互动、撞进树丛；片段以他独自坐上夜车回家结束。",
+   ent:["狗","滑雪场","夜车"]},
+  {se:4, s:2475, e:2790, t:"梦 · 迷幻世界", en:"PSYCHEDELIC DREAM", img:"m_0011",
+   d:"孤独的机器人走过荒凉雪地，背景是静止的摩天轮；他推开一扇门，门后是绚丽的迷幻梦境：黄砖路、彩虹、微笑的花。他在这个眩晕的世界里漫游，直到按下控制台的按钮，梦结束。",
+   ent:["机器人","黄砖路","花"]},
+  {se:5, s:2790, e:2922, t:"梦 · 雪人保龄球赛", en:"SNOWMAN BOWLING MATCH", img:"m_0012",
+   d:"狗的梦里，他在雪城遇见雪人，一起去保龄球馆对决：雪人轻松全中，狗却屡屡失误、滑稽收场。最后狗在床上醒来——原来只是一场梦。",
+   ent:["狗","雪人","保龄球馆"]},
+  {se:5, s:2922, e:3147, t:"梦醒时分 · 冰封的早晨", en:"ROBOT'S BOWLING DREAM & MORNING", img:"m_0013",
+   d:"机器人同样梦见保龄球赛，连胜各路动物后倒在球道上。梦醒时他仍冻在关闭游乐场的沙滩上，冰雪初融；另一侧，狗独自吃着麦片，望向窗外的 Playland。",
+   ent:["机器人","狗","冰封海滩"]},
+  {se:6, s:3147, e:3407, t:"胸腔里的鸟巢", en:"THE BIRD'S NEST", img:"m_0014",
+   d:"绿头小鸟发现躺在沙滩上的机器人，在他敞开的胸腔里筑巢、产卵、孵出雏鸟。雏鸟长大后，鸟妈妈带着绿色雏鸟飞走，留下的橙色小鸟与机器人建立起特别的感情。",
+   ent:["机器人","小鸟一家","橙色雏鸟"]},
+  {se:6, s:3407, e:3540, t:"橙色小鸟的告别", en:"FAREWELL OF THE ORANGE BIRD", img:"m_0015",
+   d:"鸟儿一家追着被风吹走的纸片，落在机器人肩头片刻欢愉，但迁徙的季节到了。夕阳下的海滩与栈桥远景里，橙色小鸟与机器人依依惜别，这段短暂的羁绊也走向终点。",
+   ent:["橙色小鸟","机器人","落日海滩"]},
+  {se:6, s:3540, e:3556, t:"鲨鱼与橙色小鸟", en:"SHARK & BIRD", img:"m_0016",
+   d:"特写：睁大眼睛的鲨鱼手里托着小小的橙色小鸟；镜头拉远，是暮色中的海滩，背景为栈桥上的摩天轮与过山车——一段温柔的小插曲。",
+   ent:["鲨鱼","橙色小鸟","栈桥"]},
+  {se:6, s:3556, e:3600, t:"城市转场 · 鸟人街行", en:"BIRD NAVIGATES THE CITY", img:"m_0017",
+   d:"转场段落：暮色栈桥与热闹街景之后，戴帽子的鸟角色在巷子里研究地图，穿过繁忙街道，走进餐馆坐在狐狸身旁，出门时露出惊讶的表情。",
+   ent:["鸟角色","城市街道"]},
+  {se:7, s:3600, e:3804, t:"放风筝的冒险", en:"KITE FLYING ADVENTURE", img:"m_0018",
+   d:"狗去风筝店买风筝，却在公园里怎么也放不起来。骑滑板车的酷鸭子出手相助，两人一起放飞大风筝。狗疲惫而快乐地回家。",
+   ent:["狗","鸭子","大风筝"]},
+  {se:7, s:3808, e:3972, t:"钓鱼之旅", en:"FISHING TRIP", img:"m_0019",
+   d:"狗和鸭子去钓鱼：买鱼饵、徒步进山、在湖边扎营。狗用虫子、奶酪轮番尝试却屡屡失败，鸭子却信手拈来。夜幕降临，两人收拾离开。",
+   ent:["狗","鸭子","湖边"]},
+  {se:7, s:3976, e:4092, t:"搬家日 · 离别", en:"MOVING DAY", img:"m_0020",
+   d:"狗醒来把行李打包进纸箱，告别公寓楼，走过城市街道。他收到鸭子的明信片：「我搬去欧洲了！」——带着行李走向新生活。",
+   ent:["狗","明信片","纸箱"]},
+  {se:8, s:4092, e:4340, t:"猴子的海滩救援", en:"MONKEY'S BEACH RESCUE", img:"m_0021",
+   d:"猴子在沙滩上发现被沙子掩埋的机器人，把它挖出来，用红色小拖车拉到「Pedford and Son」废品场。大鳄鱼用工具和废铁修理机器人，小蜥蜴在一旁围观。",
+   ent:["猴子","鳄鱼","废品场"]},
+  {se:8, s:4340, e:4476, t:"狗的海滩寻找", en:"DOG'S SEARCH AT THE BEACH", img:"m_0022",
+   d:"狗看到冰箱上的便条：「海滩 6 月 18 日开放，去把机器人找回来！！」他驱车赶到海滩，用望远镜搜寻、甚至在沙里挖出一个大坑，引来人群围观——但机器人已不在原地。",
+   ent:["狗","便条","海滩"]},
+  {se:8, s:4476, e:4756, t:"浣熊重组机器人", en:"THE ROBOT CONSTRUCTION", img:"m_0023",
+   d:"浣熊开车到废品场，从废铁堆里捡回机器人的头和身体部件，运回工作室，对照《大众机械》杂志，细致地重新组装并唤醒了机器人。",
+   ent:["浣熊","机器人部件","工作室"]},
+  {se:8, s:4756, e:5064, t:"苏醒与新生活", en:"AWAKENING & APARTMENT LIFE", img:"m_0024",
+   d:"重组后的机器人起初被浣熊吓了一跳，两人很快建立感情。他们去天台看城市夜景、去机器人商店挑配件，回家后机器人把墙壁刷成新的颜色；最后两人一起走进城市。",
+   ent:["浣熊","黄色机器人","天台"]},
+  {se:9, s:5064, e:5356, t:"夏日蒙太奇", en:"SUMMER MONTAGE", img:"m_0025",
+   d:"两段新生活的平行蒙太奇：浣熊与黄色机器人逛街吃披萨、在天台看烟花；狗与新伙伴在公园长椅喝汽水、去海滩晒太阳玩沙滩球，最后以天台烧烤收尾。",
+   ent:["浣熊","黄色机器人","狗","新伙伴"]},
+  {se:9, s:5356, e:5460, t:"人海中的相遇", en:"MEETING IN THE CITY", img:"m_0026",
+   d:"街上，机器人与狗各自带着新伙伴在斑马线相遇。命运让人海中的他们再次交错，机器人还把狗背了起来；人行道上，浣熊拿着锅铲出现。",
+   ent:["黄色机器人","狗","斑马线"]},
+  {se:9, s:5460, e:5636, t:"隔窗相望与共舞", en:"WINDOW COMMUNICATION & DANCE", img:"m_0027",
+   d:"机器人在公寓的圆窗里认出了楼下的狗。影片用分屏呈现两人隔空相望，随着收音机里的音乐「隔空共舞」——他们不再靠近彼此，而是确认彼此安好。这是全片最温柔的重逢。",
+   ent:["黄色机器人","狗","收音机"]},
+  {se:10, s:5636, e:5895, t:"片尾字幕", en:"END CREDITS", img:"m_0028",
+   d:"淡蓝色背景上滚动完整片尾字幕，依次致敬导演 Pablo Berger、制片、动画团队、音乐部门与各制片公司，以版权信息收尾。",
+   ent:["字幕"]},
+];
+const KEYS = [
+  {seg:1,  time:400,  t:"机器人苏醒",       d:"通电那一刻，机器人睁眼微笑，友谊开始。"},
+  {seg:2,  time:490,  t:"木板道的冰淇淋",   d:"游乐场木板道上共享冰淇淋，最明亮的夏天。"},
+  {seg:5,  time:1180, t:"海滩锈蚀事故",     d:"海水锈住了机器人，也锈住了狗的整个夏天。"},
+  {seg:6,  time:1400, t:"铁丝网外的凝望",   d:"海滩季节性关闭，狗只能隔着铁丝网看望朋友。"},
+  {seg:7,  time:1700, t:"兔子们的小船",     d:"兔子兄弟抬走锈住的机器人，命运的齿轮开始转动。"},
+  {seg:11, time:2650, t:"迷幻之梦",         d:"机器人推开门，门后是黄砖路、彩虹与微笑的花。"},
+  {seg:14, time:3280, t:"胸腔里的鸟巢",     d:"小鸟在机器人胸腔筑巢，锈住的身体也有生命温度。"},
+  {seg:18, time:3700, t:"与鸭子放风筝",     d:"滑板车鸭子帮狗放飞大风筝，新友谊如约而至。"},
+  {seg:23, time:4620, t:"浣熊重组机器人",   d:"废铁堆里，浣熊把旧朋友一螺丝一螺丝地拼回新生。"},
+  {seg:27, time:5550, t:"隔空共舞",         d:"圆窗与街道之间，两人随同一支歌起舞——最温柔的重逢。"},
+];
+
+const fmt = s => { s=Math.max(0,Math.round(s)); const m=Math.floor(s/60), ss=s%60;
+  return String(m).padStart(2,"0")+":"+String(ss).padStart(2,"0"); };
+const pct = v => (v/TOTAL*100);
+const $ = id => document.getElementById(id);
+
+/* ruler */
+(function(){
+  const r = $("tlRuler");
+  for(let t=0;t<=TOTAL;t+=300){
+    const major = t%600===0;
+    const tick = document.createElement("div");
+    tick.className = "tick"+(major?" major":"");
+    tick.style.left = pct(t)+"%";
+    r.appendChild(tick);
+    if(major){
+      const lb = document.createElement("div");
+      lb.className="tlabel"; lb.style.left=pct(t)+"%"; lb.textContent=fmt(t);
+      r.appendChild(lb);
+    }
+  }
+})();
+
+/* lanes with super-event bands */
+(function(){
+  const lanes = $("tlLanes");
+  for(let i=0;i<2;i++){
+    const lane = document.createElement("div"); lane.className="tl-lane";
+    SUPERS.filter(s=>s.lane===i).forEach(s=>{
+      const b=document.createElement("div"); b.className="band";
+      b.style.left=pct(s.s)+"%"; b.style.width=(pct(s.e)-pct(s.s))+"%";
+      b.style.background=s.c; b.textContent=s.t; b.title=s.t+"  "+fmt(s.s)+" – "+fmt(s.e);
+      lane.appendChild(b);
+    });
+    lanes.appendChild(lane);
+  }
+})();
+
+/* segment blocks */
+let activeSeg = -1;
+(function(){
+  const row = $("tlSegs");
+  SEGS.forEach((sg,i)=>{
+    const el=document.createElement("div"); el.className="seg";
+    el.style.left=pct(sg.s)+"%"; el.style.width=Math.max(pct(sg.e)-pct(sg.s),0.6)+"%";
+    el.style.background=SUPERS[sg.se-1].c;
+    el.title = "#"+(i+1)+" "+sg.t+"  "+fmt(sg.s)+" – "+fmt(sg.e);
+    el.addEventListener("click", ev=>{ ev.stopPropagation(); selectSeg(i); });
+    row.appendChild(el);
+  });
+})();
+
+/* legend */
+(function(){
+  const lg=$("tlLegend");
+  SUPERS.forEach(s=>{
+    const el=document.createElement("span"); el.className="lg";
+    el.innerHTML='<i style="background:'+s.c+'"></i>'+s.t;
+    el.title=fmt(s.s)+" – "+fmt(s.e);
+    lg.appendChild(el);
+  });
+})();
+
+/* scrub */
+(function(){
+  const canvas=$("tlCanvas"), scrub=$("tlScrub"), bubble=$("tlBubble");
+  canvas.addEventListener("mousemove", e=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=Math.min(Math.max(e.clientX-rect.left,0),rect.width);
+    const t=x/rect.width*TOTAL;
+    scrub.style.display="block"; scrub.style.left=x+"px";
+    bubble.textContent=fmt(t);
+  });
+  canvas.addEventListener("mouseleave", ()=>{ scrub.style.display="none"; });
+})();
+
+/* detail panel */
+function selectSeg(i){
+  activeSeg=i;
+  const sg=SEGS[i], su=SUPERS[sg.se-1];
+  document.querySelectorAll(".seg").forEach((el,j)=>el.classList.toggle("active", j===i));
+  $("dSuper").textContent="剧情弧 "+sg.se+" · "+su.t;
+  $("dSuper").style.background=su.c;
+  $("dTitle").textContent="#"+(i+1)+" "+sg.t;
+  $("dEn").textContent=sg.en;
+  $("dStart").textContent="起 "+fmt(sg.s);
+  $("dEnd").textContent="止 "+fmt(sg.e);
+  $("dDur").textContent="时长 "+fmt(sg.e-sg.s);
+  $("dDesc").textContent=sg.d;
+  const ents=$("dEnts"); ents.innerHTML="";
+  (sg.ent||[]).forEach(e=>{
+    const c=document.createElement("span"); c.className="chip"; c.textContent=e; ents.appendChild(c);
+  });
+  $("dImg").src=FRAMES[sg.img]||"";
+  $("dCap").textContent="片段截图 · "+fmt(sg.s)+" – "+fmt(sg.e);
+}
+$("btnPrev").addEventListener("click", ()=>selectSeg((activeSeg-1+SEGS.length)%SEGS.length));
+$("btnNext").addEventListener("click", ()=>selectSeg((activeSeg+1)%SEGS.length));
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") selectSeg((activeSeg-1+SEGS.length)%SEGS.length);
+  if(e.key==="ArrowRight") selectSeg((activeSeg+1)%SEGS.length);
+});
+
+/* key events */
+(function(){
+  const grid=$("keyGrid");
+  KEYS.forEach(k=>{
+    const sg=SEGS[k.seg];
+    const card=document.createElement("div"); card.className="key-card";
+    card.innerHTML =
+      '<img src="'+(FRAMES[sg.img]||'')+'" alt="'+k.t+'">'+
+      '<div class="key-body"><span class="key-time">'+fmt(k.time)+'</span>'+
+      '<div class="key-title">'+k.t+'</div><div class="key-desc">'+k.d+'</div></div>';
+    card.addEventListener("click", ()=>{
+      selectSeg(k.seg);
+      document.getElementById("timeline").scrollIntoView({behavior:"smooth"});
+    });
+    grid.appendChild(card);
+  });
+})();
+
+selectSeg(27);
+</script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model a desk lamp from scratch, then render it with Cycles</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fbfbfa; color: #1a1a1a;
+         font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 32px; letter-spacing: -0.01em; }
+  h1 .tag { display: inline-block; vertical-align: middle; margin-left: 10px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: #5b4bdb;
+            background: #efeafe; border: 1px solid #ddd4fb; border-radius: 999px;
+            padding: 2px 10px; }
+  .who { font-size: 11px; font-weight: 600; text-transform: uppercase;
+         letter-spacing: 0.06em; color: #8a8a85; margin-bottom: 6px; }
+  .u, .a { margin: 24px 0; }
+  .bubble { word-wrap: break-word; overflow-wrap: break-word; }
+  .u .bubble { color: #111; }
+  .a .bubble { color: #333; }
+  .bubble p { margin: 0 0 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble h2 { font-size: 17px; margin: 18px 0 8px; }
+  .bubble h3 { font-size: 15px; margin: 16px 0 6px; }
+  .bubble h4 { font-size: 14px; margin: 14px 0 6px; color: #444; }
+  .bubble ul, .bubble ol { margin: 6px 0 10px; padding-left: 22px; }
+  .bubble li { margin: 2px 0; }
+  .bubble code { background: #f0f0ec; padding: 1px 5px; border-radius: 4px;
+                 font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; }
+  .bubble pre.md { background: #f4f4f1; padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  .bubble pre.md code { background: none; padding: 0; }
+  .bubble blockquote { margin: 8px 0; padding: 2px 12px; border-left: 3px solid #d9d9d4;
+                       color: #555; }
+  .bubble a { color: #5b4bdb; }
+  .bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13px; display: block;
+                  overflow-x: auto; max-width: 100%; }
+  .bubble th, .bubble td { border: 1px solid #e0e0db; padding: 6px 10px; text-align: left;
+                           vertical-align: top; }
+  .bubble th { background: #f4f4f1; font-weight: 600; }
+  .t { margin: 12px 0; padding-left: 14px; border-left: 2px solid #e5e5e0; }
+  .tline { display: flex; gap: 8px; align-items: baseline; }
+  .tn { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+        font-weight: 600; color: #5b4bdb; }
+  .ts { color: #8a8a85; font-size: 13px; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap; }
+  pre.out { margin: 8px 0 0; padding: 10px 12px; background: #f4f4f1;
+            border-radius: 6px; font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+            white-space: pre-wrap; word-break: break-word; max-height: 320px;
+            overflow: auto; color: #444; }
+  pre.out.err { background: #fdf0ef; color: #b3261e; }
+  pre.args { margin: 8px 0 0; padding: 10px 12px; background: #f3f2fb;
+             border: 1px solid #e7e4fb; border-radius: 6px;
+             font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+             white-space: pre-wrap; word-break: break-word; max-height: 300px;
+             overflow: auto; color: #444; }
+  details.think { margin: 16px 0; }
+  details.think > summary { cursor: pointer; color: #8a8a85; font-size: 13px;
+                            list-style: none; }
+  details.think .bubble { margin-top: 8px; padding-left: 14px; border-left: 2px solid #e5e5e0;
+                          color: #666; }
+  .frames-note { margin: 8px 0 4px; color: #8a8a85; font-size: 12px; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px;
+           scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .strip figure { flex: 0 0 auto; margin: 0; scroll-snap-align: start; text-align: center; }
+  .strip img { height: 150px; width: auto; max-width: none; border: 1px solid #e5e5e0;
+               border-radius: 6px; cursor: zoom-in; display: block; background: #fff; }
+  .strip figcaption { margin-top: 4px; color: #8a8a85; font-size: 11px;
+                      font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .strip::-webkit-scrollbar { height: 8px; }
+  .strip::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 4px; }
+  #lb { display: none; position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
+        background: rgba(0,0,0,.85); align-items: center; justify-content: center; }
+  #lb.on { display: flex; }
+  #lb img { max-width: 94vw; max-height: 94vh; border-radius: 6px; }
+</style></head><body><main>
+<h1>Model a desk lamp from scratch, then render it with Cycles <span class="tag">Claude Code</span></h1>
+<div class="u"><div class="who">User</div><div class="bubble"><p>Model a desk lamp from scratch — articulated arm, weighted base, a shade with a visible bulb<br>inside. Real-world dimensions, brushed metal plus an emissive bulb, lit from inside the scene.<br>Render it with Cycles when it looks right.</p>
+<p>Save the finished scene to /path/to/lamp.blend and the render to<br>/path/to/lamp.png (do this from inside execute_blender_code).</p>
+<p>The Blender MCP tools are already granted — don&#x27;t ask for approval, just start working.</p></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>I&#x27;ll start by checking the Blender connection and the available tooling.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">Skill</span><span class="ts">qwen-mm-plugins-blender:qwen-mm-plugins-blender</span></div><pre class="args">{
+  &quot;skill&quot;: &quot;qwen-mm-plugins-blender:qwen-mm-plugins-blender&quot;,
+  &quot;args&quot;: &quot;Model a desk lamp from scratch: articulated arm, weighted base, shade with visible bulb inside. Real-world dimensions, brushed metal + emissive bulb, lit from inside the scene. Render with Cycles. Save to /path/to/lamp.blend and /path/to/lamp.png&quot;
+}</pre><pre class="out">Launching skill: qwen-mm-plugins-blender:qwen-mm-plugins-blender</pre></div>
+<div class="u"><div class="who">User</div><div class="bubble"><p>Base directory for this skill: /path/to/skill</p>
+<p>You build 3D content in Blender by writing Python (via the <code>execute_blender_code</code> tool) against a <strong>running</strong> Blender instance. Quality bar: the result must actually match the request — not a rough pile of primitives, and not a bare unedited import.</p>
+<h3>Prerequisite: a live Blender + addon (started for you on first use)</h3>
+<p>These tools are a <strong>thin client</strong>: they run Python against a <strong>running</strong> Blender carrying the<br>blender-mcp addon (bundled in this plugin), and do <strong>not</strong> launch Blender while serving. Normally you<br>start nothing — just call a tool.</p>
+<ul><li><strong>Default (plugin install):</strong> <code>QWEN_MM_AUTOLAUNCH=1</code> is preset, so the <strong>first tool call</strong> brings</li></ul>
+<p>  Blender up itself: it auto-installs the pinned Blender 4.2.x if missing (Linux-x86_64, rootless,<br>  ~300 MB one-time) and starts it with the bundled addon on <code>$BLENDER_HOST:$BLENDER_PORT</code> (default<br>  <code>localhost:9876</code>). Just call a tool such as <code>get_scene_info</code>; the <strong>first</strong> call may take a minute<br>  or two while it downloads (expected), later calls are instant.</p>
+<ul><li><strong>Don&#x27;t shell out to <code>qwen-mm-plugins-blender --launch-app</code> under a plugin install</strong> — that console</li></ul>
+<p>  entry lives inside the uvx environment, not your shell PATH (<code>command not found</code>). Use it only from<br>  a source checkout, or for a manual / GUI start:<br>  ``<code>bash<br>  python3 src/capabilities/blender/qwen_mm_plugins_blender --launch-app        # headless (xvfb)<br>  python3 src/capabilities/blender/qwen_mm_plugins_blender --launch-app --gui  # real display<br>  </code>``</p>
+<p>Auto-launch can&#x27;t cover two things: (1) auto-download is <strong>Linux-x86_64 only</strong> — elsewhere install<br>Blender yourself (<code>apt install blender</code> | <code>brew install --cask blender</code>); (2) a headless box needs a<br>virtual display (<code>apt install xvfb</code>, needs root). If a tool reports it can&#x27;t connect, it&#x27;s almost<br>always one of these — the error message spells out which; from a checkout, <code>... --check-system</code> lists<br>every missing system tool.</p>
+<h3>Core workflow: build → REFINE → verify (never skip refine)</h3>
+<p>Generating or importing something is only step 1. A bare import, or a loose pile of assets, is NOT an acceptable final result. Always:</p>
+<ol><li><strong>Decompose the request</strong> into concrete objects, real-world sizes, layout, materials, and lighting.</li><li><strong>Get base geometry</strong> — prefer a generator or a ready-made asset <em>when one genuinely fits</em>. If nothing fits well, build it from scratch (primitives + modifiers + bmesh / geometry nodes); do NOT force an ill-fitting asset just to avoid modeling.</li><li><strong>Refine deeply to spec</strong> — transforms (scale/position/orientation) are the bare minimum, not the goal. A good result usually needs substantial work on top of the base: correct proportions and real-world dimensions; edit/add/remove geometry and fix topology; model the details the request implies; combine/kitbash parts from several sources; author or tune materials and shading (not the defaults); set up lighting; and make objects relate correctly to one another (contact, alignment, consistent scale). Keep going until the object truly looks like what was asked.</li><li><strong>Verify and iterate</strong> — render (<code>bpy.ops.render.render</code>) or capture <code>get_viewport_screenshot</code>, compare against the request, and fix the gaps. Repeat until it genuinely matches. Always call <code>get_scene_info</code> after a task to confirm the changes landed.</li></ol>
+<h3>Discover what&#x27;s installed (do this before assuming)</h3>
+<p>Add-on sets differ per machine — introspect the running Blender instead of guessing:</p>
+<pre class='md'><code>import bpy
+print([a.module for a in bpy.context.preferences.addons])           # enabled add-ons
+print([x for x in dir(bpy.ops.mesh) if not x.startswith(&quot;__&quot;)])     # available mesh operators</code></pre>
+<h3>Using add-ons</h3>
+<ul><li><strong>Operator-based add-ons</strong> (Archimesh, A.N.T. Landscape, Tissue, and most add-ons): call the operator directly — operator names (<code>bl_idname</code>) are global and do NOT depend on how the add-on was installed:</li><li>Architecture (rooms/doors/windows/stairs/kitchen): <code>bpy.ops.mesh.archimesh_room()</code>, <code>.archimesh_door()</code>, <code>.archimesh_window()</code>, <code>.archimesh_stairs()</code>, <code>.archimesh_kitchen()</code></li><li>Terrain/landscape: <code>bpy.ops.mesh.landscape_add(...)</code> — if it raises a poll() error, wrap the call in <code>bpy.context.temp_override(...)</code> with a VIEW_3D area + WINDOW region; set smoothing via <code>mesh.polygons[i].use_smooth=True</code> (not <code>shade_smooth()</code>).</li><li>Repeating patterns (brick walls, panels, honeycomb): select a base object + a component object, then <code>bpy.ops.object.tissue_tessellate()</code>.</li></ul>
+<ul><li><strong>Python-API add-ons installed as extensions</strong> (Blender 4.2+): the module lives under the <code>bl_ext.user_default.&lt;id&gt;</code> namespace, NOT the bare name. For MPFB (human generator):</li></ul>
+<p>  ``<code>python<br>  from bl_ext.user_default.mpfb.services.humanservice import HumanService<br>  human = HumanService.create_human()<br>  </code>`<code><br>  Portable form (works whether it&#x27;s a legacy add-on or an extension):<br>  </code>`<code>python<br>  import importlib, bpy<br>  mod = next((m for m in bpy.context.preferences.addons.keys()<br>              if m.split(&#x27;.&#x27;)[-1] == &#x27;mpfb&#x27;), &#x27;mpfb&#x27;)<br>  HumanService = importlib.import_module(mod + &#x27;.services.humanservice&#x27;).HumanService<br>  human = HumanService.create_human()<br>  </code>`<code><br>  </code>create_human()` returns the body mesh only. Apply skin/eyes/teeth (MPFB&#x27;s MaterialService / the installed system-assets pack) so it isn&#x27;t a gray mannequin, then adjust proportions/morphs toward the target.</p>
+<h3>Ready-made assets (download at runtime — then refine)</h3>
+<ul><li>Furniture &amp; finished models: <code>search_sketchfab_models</code> → <code>download_sketchfab_model</code> (check the preview with <code>get_sketchfab_model_preview</code> first).</li><li>Materials / HDRIs / props: <code>search_polyhaven_assets</code> → <code>download_polyhaven_asset</code>; apply a texture with <code>set_texture</code>.</li><li>Generate a custom single item: <code>generate_hyper3d_model_via_text</code> / <code>..._via_images</code> → <code>poll_rodin_job_status</code> → <code>import_generated_asset</code> (or the Hunyuan3D equivalents). Generators are for a single item — don&#x27;t generate a whole scene or the ground in one shot.</li></ul>
+<p>An imported/generated asset is a starting point, not the deliverable. Normalize scale and placement, then refine it to the request: adjust proportions/geometry, fix or replace materials, add missing detail, and combine with other parts. After importing, always check the <code>world_bounding_box</code> and adjust location/scale/rotation so objects sit correctly and don&#x27;t clip. If the closest asset is still a poor match, discard it and build from scratch.</p>
+<h3>Nature without add-ons</h3>
+<ul><li>Scatter (grass/rocks/trees): Geometry Nodes &quot;Distribute Points on Faces&quot; + &quot;Instance on Points&quot;.</li><li>Sky/sun lighting: a world Sky Texture node with <code>sky_type=&#x27;NISHITA&#x27;</code>.</li></ul>
+<h3>Reminder</h3>
+<p>Use generators and ready-made assets when they genuinely fit — but acquiring one is the start, not the finish, and forcing a poor-fit asset is worse than modeling from scratch. The deliverable is a scene/asset that truly matches the request, which usually takes real modeling, material, and lighting work well beyond simple transforms.</p>
+<p>ARGUMENTS: Model a desk lamp from scratch: articulated arm, weighted base, shade with visible bulb inside. Real-world dimensions, brushed metal + emissive bulb, lit from inside the scene. Render with Cycles. Save to /path/to/lamp.blend and /path/to/lamp.png</p></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>I&#x27;ll check the running Blender instance first.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">get_scene_info</span><span class="ts"></span></div><pre class="out">{
+  &quot;name&quot;: &quot;Scene&quot;,
+  &quot;object_count&quot;: 6,
+  &quot;objects&quot;: [
+    {
+      &quot;name&quot;: &quot;Backdrop&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Mug&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.05
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Handle&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Camera&quot;,
+      &quot;type&quot;: &quot;CAMERA&quot;,
+      &quot;location&quot;: [
+        0.34,
+        -0.42,
+        0.16
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Aim&quot;,
+      &quot;type&quot;: &quot;EMPTY&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.05
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;HarshKey&quot;,
+      &quot;type&quot;: &quot;LIGHT&quot;,
+      &quot;location&quot;: [
+        0.55,
+        -0.25,
+        0.7
+      ]
+    }
+  ],
+  &quot;materials_count&quot;: 2
+}</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Existing scene is a mug — I&#x27;ll clear it and check the Blender version and render device.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, sys\n\n# --- wipe the scene completely ---\nbpy.ops.object.select_all(action=&#x27;SELECT&#x27;)\nbpy.ops.object.delete(use_global=True)\nfor coll in (bpy.data.meshes, bpy.data.materials, bpy.data.curves,\n             bpy.data.lights, bpy.data.cameras, bpy.data.objects,\n             bpy.data.images, bpy.data.node_groups):\n    for item in list(coll):\n        try: coll.remove(item)\n        except Exception: pass\n\ninfo = {\n    \&quot;blender\&quot;: bpy.app.version_string,\n    \&quot;engine\&quot;: bpy.context.scene.render.engine,\n    \&quot;cycles_available\&quot;: hasattr(bpy.context.scene, \&quot;cycles\&quot;) or \&quot;cycles\&quot; in bpy.context.preferences.addons,\n}\n# probe compute devices\ntry:\n    prefs = bpy.context.preferences.addons[\&quot;cycles\&quot;].preferences\n    prefs.refresh_devices()\n    info[\&quot;device_types\&quot;] = [t[0] for t in prefs.get_device_types(bpy.context)]\n    info[\&quot;devices\&quot;] = [(d.name, d.type) for d in prefs.devices]\nexcept Exception as e:\n    info[\&quot;device_err\&quot;] = repr(e)\n\n# probe Principled BSDF socket names for this version\nnt = bpy.data.materials.new(\&quot;__probe\&quot;).node_tree if False else None\nm = bpy.data.materials.new(\&quot;__probe\&quot;); m.use_nodes = True\nbsdf = m.node_tree.nodes[\&quot;Principled BSDF\&quot;]\ninfo[\&quot;principled_inputs\&quot;] = [s.name for s in bsdf.inputs]\nbpy.data.materials.remove(m)\ninfo\n&quot;
+}</pre><pre class="out">Error executing code: Code execution error: &#x27;bpy_prop_collection[key]: key &quot;Principled BSDF&quot; not found&#x27;</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy\ninfo = {\n    \&quot;blender\&quot;: bpy.app.version_string,\n    \&quot;engine\&quot;: bpy.context.scene.render.engine,\n    \&quot;objects_left\&quot;: [o.name for o in bpy.data.objects],\n}\ntry:\n    prefs = bpy.context.preferences.addons[\&quot;cycles\&quot;].preferences\n    prefs.refresh_devices()\n    info[\&quot;device_types\&quot;] = [t[0] for t in prefs.get_device_types(bpy.context)]\n    info[\&quot;devices\&quot;] = [(d.name, d.type, d.use) for d in prefs.devices]\nexcept Exception as e:\n    info[\&quot;device_err\&quot;] = repr(e)\n\nm = bpy.data.materials.new(\&quot;__probe\&quot;); m.use_nodes = True\ninfo[\&quot;nodes\&quot;] = [(n.name, n.bl_idname) for n in m.node_tree.nodes]\nbsdf = next((n for n in m.node_tree.nodes if n.bl_idname == \&quot;ShaderNodeBsdfPrincipled\&quot;), None)\ninfo[\&quot;principled_inputs\&quot;] = [s.name for s in bsdf.inputs] if bsdf else None\nbpy.data.materials.remove(m)\ninfo\n&quot;
+}</pre><pre class="out">Code executed successfully:</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>The tool needs explicit prints for output.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, json\ninfo = {\n    \&quot;blender\&quot;: bpy.app.version_string,\n    \&quot;engine\&quot;: bpy.context.scene.render.engine,\n    \&quot;objects_left\&quot;: [o.name for o in bpy.data.objects],\n}\ntry:\n    prefs = bpy.context.preferences.addons[\&quot;cycles\&quot;].preferences\n    prefs.refresh_devices()\n    info[\&quot;device_types\&quot;] = [t[0] for t in prefs.get_device_types(bpy.context)]\n    info[\&quot;devices\&quot;] = [(d.name, d.type, d.use) for d in prefs.devices]\nexcept Exception as e:\n    info[\&quot;device_err\&quot;] = repr(e)\n\nm = bpy.data.materials.new(\&quot;__probe\&quot;); m.use_nodes = True\ninfo[\&quot;nodes\&quot;] = [(n.name, n.bl_idname) for n in m.node_tree.nodes]\nbsdf = next((n for n in m.node_tree.nodes if n.bl_idname == \&quot;ShaderNodeBsdfPrincipled\&quot;), None)\ninfo[\&quot;principled_inputs\&quot;] = [s.name for s in bsdf.inputs] if bsdf else None\nbpy.data.materials.remove(m)\nprint(json.dumps(info, indent=1))\n&quot;
+}</pre><pre class="out">Code executed successfully: {
+ &quot;blender&quot;: &quot;5.2.0 LTS&quot;,
+ &quot;engine&quot;: &quot;CYCLES&quot;,
+ &quot;objects_left&quot;: [],
+ &quot;device_types&quot;: [
+  &quot;NONE&quot;,
+  &quot;METAL&quot;
+ ],
+ &quot;devices&quot;: [
+  [
+   &quot;Apple M5&quot;,
+   &quot;CPU&quot;,
+   false
+  ],
+  [
+   &quot;Apple M5 (GPU - 8 cores)&quot;,
+   &quot;METAL&quot;,
+   true
+  ]
+ ],
+ &quot;nodes&quot;: [
+  [
+   &quot;\u539f\u7406\u5316 BSDF&quot;,
+   &quot;ShaderNodeBsdfPrincipled&quot;
+  ],
+  [
+   &quot;\u6750\u8d28\u8f93\u51fa&quot;,
+   &quot;ShaderNodeOutputMaterial&quot;
+  ]
+ ],
+ &quot;principled_inputs&quot;: [
+  &quot;Base Color&quot;,
+  &quot;Metallic&quot;,
+  &quot;Roughness&quot;,
+  &quot;IOR&quot;,
+  &quot;Alpha&quot;,
+  &quot;Thin Wall&quot;,
+  &quot;Normal&quot;,
+  &quot;Weight&quot;,
+  &quot;Diffuse Roughness&quot;,
+  &quot;Subsurface Weight&quot;,
+  &quot;Subsurface Radius&quot;,
+  &quot;Subsurface Scale&quot;,
+  &quot;Subsurface IOR&quot;,
+  &quot;Subsurface Anisotropy&quot;,
+  &quot;Specular IOR Level&quot;,
+  &quot;Specular Tint&quot;,
+  &quot;Anisotropic&quot;,
+  &quot;Anisotropic Rotation&quot;,
+  &quot;Tangent&quot;,
+  &quot;Transmission Weight&quot;,
+  &quot;Coat Weight&quot;,
+  &quot;Coat Roughness&quot;,
+  &quot;Coat IOR&quot;,
+  &quot;Coat Tint&quot;,
+  &quot;Coat Normal&quot;,
+  &quot;Sheen Weight&quot;,
+  &quot;Sheen Roughness&quot;,
+  &quot;Sheen Tint&quot;,
+  &quot;Emission Color&quot;,
+  &quot;Emission Strength&quot;,
+  &quot;Thin Film Thickness&quot;,
+  &quot;Thin Film IOR&quot;
+ ]
+}</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Blender 5.2 LTS with Metal GPU, localized UI (so I&#x27;ll address nodes by <code>bl_idname</code>, never by name). Building the lamp now — helpers + materials first.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, bmesh, math\nfrom mathutils import Vector, Matrix\n\n# ---------------------------------------------------------------- helpers\ndef new_mesh_obj(name, bm):\n    me = bpy.data.meshes.new(name)\n    bm.to_mesh(me); bm.free()\n    ob = bpy.data.objects.new(name, me)\n    bpy.context.collection.objects.link(ob)\n    return ob\n\ndef autosmooth(ob, axis=Vector((0, 0, 1)), thresh=0.85):\n    \&quot;\&quot;\&quot;side faces smooth, cap faces (normal ~ parallel to axis) flat\&quot;\&quot;\&quot;\n    for p in ob.data.polygons:\n        p.use_smooth = abs(p.normal.normalized().dot(axis)) &lt; thresh\n    return ob\n\ndef tube(p0, p1, r, name, segs=48, r2=None, caps=True):\n    \&quot;\&quot;\&quot;capped cylinder / cone between two world points\&quot;\&quot;\&quot;\n    p0, p1 = Vector(p0), Vector(p1)\n    d = p1 - p0\n    L = d.length\n    bm = bmesh.new()\n    bmesh.ops.create_cone(bm, cap_ends=caps, cap_tris=False, segments=segs,\n                          radius1=r, radius2=(r if r2 is None else r2), depth=L)\n    ob = new_mesh_obj(name, bm)\n    autosmooth(ob)\n    ob.rotation_mode = &#x27;QUATERNION&#x27;\n    ob.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(d.normalized())\n    ob.location = (p0 + p1) / 2\n    return ob\n\ndef cyl(name, r, h, loc, rot=(0, 0, 0), segs=48, r2=None):\n    bm = bmesh.new()\n    bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=segs,\n                          radius1=r, radius2=(r if r2 is None else r2), depth=h)\n    ob = new_mesh_obj(name, bm)\n    autosmooth(ob)\n    ob.location = loc; ob.rotation_euler = rot\n    return ob\n\ndef sphere(name, r, loc, segs=48, rings=24):\n    bm = bmesh.new()\n    bmesh.ops.create_uvsphere(bm, u_segments=segs, v_segments=rings, radius=r)\n    ob = new_mesh_obj(name, bm)\n    for p in ob.data.polygons: p.use_smooth = True\n    ob.location = loc\n    return ob\n\ndef bevel(ob, width=0.0015, segments=3, angle=45.0, clamp=True):\n    m = ob.modifiers.new(\&quot;Bevel\&quot;, &#x27;BEVEL&#x27;)\n    m.width = width; m.segments = segments\n    m.limit_method = &#x27;ANGLE&#x27;; m.angle_limit = math.radians(angle)\n    m.harden_normals = False; m.use_clamp_overlap = clamp\n    return m\n\ndef setmat(ob, mat):\n    ob.data.materials.clear(); ob.data.materials.append(mat)\n    return ob\n\n# stash helpers so later calls can reuse them\nbpy.app.driver_namespace[&#x27;H&#x27;] = dict(\n    new_mesh_obj=new_mesh_obj, autosmooth=autosmooth, tube=tube, cyl=cyl,\n    sphere=sphere, bevel=bevel, setmat=setmat)\n\n# ---------------------------------------------------------------- materials\ndef node(nt, idname, loc):\n    n = nt.nodes.new(idname); n.location = loc; return n\n\ndef base_mat(name):\n    m = bpy.data.materials.new(name); m.use_nodes = True\n    nt = m.node_tree\n    nt.nodes.clear()\n    out = node(nt, \&quot;ShaderNodeOutputMaterial\&quot;, (400, 0))\n    p = node(nt, \&quot;ShaderNodeBsdfPrincipled\&quot;, (100, 0))\n    nt.links.new(p.outputs[0], out.inputs[&#x27;Surface&#x27;])\n    return m, nt, p\n\ndef brushed(name, color, rough_lo, rough_hi, aniso=0.45, streak_scale=(2.0, 2.0, 90.0),\n            metallic=1.0):\n    \&quot;\&quot;\&quot;metal with lengthwise brushed streaks driven by a stretched noise texture\&quot;\&quot;\&quot;\n    m, nt, p = base_mat(name)\n    p.inputs[&#x27;Base Color&#x27;].default_value = (*color, 1)\n    p.inputs[&#x27;Metallic&#x27;].default_value = metallic\n    p.inputs[&#x27;Anisotropic&#x27;].default_value = aniso\n    tc  = node(nt, \&quot;ShaderNodeTexCoord\&quot;, (-900, -200))\n    mp  = node(nt, \&quot;ShaderNodeMapping\&quot;,  (-700, -200))\n    mp.inputs[&#x27;Scale&#x27;].default_value = streak_scale\n    nz  = node(nt, \&quot;ShaderNodeTexNoise\&quot;, (-500, -200))\n    nz.inputs[&#x27;Scale&#x27;].default_value = 6.0\n    nz.inputs[&#x27;Detail&#x27;].default_value = 8.0\n    nz.inputs[&#x27;Roughness&#x27;].default_value = 0.7\n    ramp = node(nt, \&quot;ShaderNodeValToRGB\&quot;, (-300, -200))\n    ramp.color_ramp.elements[0].position = 0.30\n    ramp.color_ramp.elements[0].color = (rough_lo,) * 3 + (1,)\n    ramp.color_ramp.elements[1].position = 0.70\n    ramp.color_ramp.elements[1].color = (rough_hi,) * 3 + (1,)\n    nt.links.new(tc.outputs[&#x27;Object&#x27;], mp.inputs[&#x27;Vector&#x27;])\n    nt.links.new(mp.outputs[&#x27;Vector&#x27;], nz.inputs[&#x27;Vector&#x27;])\n    nt.links.new(nz.outputs[&#x27;Fac&#x27;], ramp.inputs[&#x27;Fac&#x27;])\n    nt.links.new(ramp.outputs[&#x27;Color&#x27;], p.inputs[&#x27;Roughness&#x27;])\n    # faint streak tint in the base colour too, keeps it from reading as plastic\n    bump = node(nt, \&quot;ShaderNodeBump\&quot;, (-100, -420))\n    bump.inputs[&#x27;Strength&#x27;].default_value = 0.12\n    bump.inputs[&#x27;Distance&#x27;].default_value = 0.0004\n    nt.links.new(nz.outputs[&#x27;Fac&#x27;], bump.inputs[&#x27;Height&#x27;])\n    nt.links.new(bump.outputs[&#x27;Normal&#x27;], p.inputs[&#x27;Normal&#x27;])\n    return m\n\nM = {}\nM[&#x27;metal&#x27;]      = brushed(\&quot;BrushedAluminium\&quot;, (0.640, 0.648, 0.655), 0.13, 0.34, aniso=0.55)\nM[&#x27;metal_dark&#x27;] = brushed(\&quot;BrushedSteelDark\&quot;, (0.330, 0.335, 0.345), 0.20, 0.42, aniso=0.45)\nM[&#x27;base_metal&#x27;] = brushed(\&quot;BrushedBaseCast\&quot;,  (0.560, 0.565, 0.575), 0.22, 0.46,\n                          aniso=0.30, streak_scale=(30.0, 30.0, 4.0))\nM[&#x27;spring&#x27;]     = brushed(\&quot;SpringSteel\&quot;,      (0.480, 0.485, 0.500), 0.16, 0.36, aniso=0.6,\n                          streak_scale=(2.0, 2.0, 40.0))\n\n# shade interior: warm-white painted, bounces the bulb light\nm, nt, p = base_mat(\&quot;ShadeInteriorWhite\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.94, 0.93, 0.90, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.42\np.inputs[&#x27;Metallic&#x27;].default_value = 0.0\nM[&#x27;shade_in&#x27;] = m\n\n# felt pad under the base\nm, nt, p = base_mat(\&quot;FeltPad\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.055, 0.055, 0.060, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.92\np.inputs[&#x27;Sheen Weight&#x27;].default_value = 0.5\nM[&#x27;felt&#x27;] = m\n\n# rubber-ish cable\nm, nt, p = base_mat(\&quot;CableRubber\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.030, 0.030, 0.033, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.55\nM[&#x27;cable&#x27;] = m\n\n# bulb glass: warm emission + transmission so the filament shows through\nm, nt, p = base_mat(\&quot;BulbGlass\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (1.0, 1.0, 1.0, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.06\np.inputs[&#x27;IOR&#x27;].default_value = 1.45\np.inputs[&#x27;Transmission Weight&#x27;].default_value = 0.92\np.inputs[&#x27;Emission Color&#x27;].default_value = (1.00, 0.735, 0.455, 1)\np.inputs[&#x27;Emission Strength&#x27;].default_value = 3.2\nM[&#x27;glass&#x27;] = m\n\n# filament: the actual hot source\nm, nt, p = base_mat(\&quot;Filament\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.05, 0.05, 0.05, 1)\np.inputs[&#x27;Emission Color&#x27;].default_value = (1.00, 0.640, 0.300, 1)\np.inputs[&#x27;Emission Strength&#x27;].default_value = 140.0\nM[&#x27;filament&#x27;] = m\n\n# bakelite / dark plastic for the E27 insulator\nm, nt, p = base_mat(\&quot;BakeliteDark\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.045, 0.040, 0.038, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.35\nM[&#x27;bakelite&#x27;] = m\n\n# brass for the bulb screw cap\nm, nt, p = base_mat(\&quot;BrassCap\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.66, 0.50, 0.24, 1)\np.inputs[&#x27;Metallic&#x27;].default_value = 1.0\np.inputs[&#x27;Roughness&#x27;].default_value = 0.30\nM[&#x27;brass&#x27;] = m\n\n# desk: oak-ish, subtle procedural grain\nm, nt, p = base_mat(\&quot;DeskOak\&quot;)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.42\ntc = node(nt, \&quot;ShaderNodeTexCoord\&quot;, (-1000, 0))\nmp = node(nt, \&quot;ShaderNodeMapping\&quot;, (-820, 0)); mp.inputs[&#x27;Scale&#x27;].default_value = (1.0, 14.0, 1.0)\nwv = node(nt, \&quot;ShaderNodeTexWave\&quot;, (-620, 0))\nwv.wave_type = &#x27;BANDS&#x27;; wv.bands_direction = &#x27;Y&#x27;\nwv.inputs[&#x27;Scale&#x27;].default_value = 3.0\nwv.inputs[&#x27;Distortion&#x27;].default_value = 14.0\nwv.inputs[&#x27;Detail&#x27;].default_value = 3.0\nwv.inputs[&#x27;Detail Scale&#x27;].default_value = 1.4\ncr = node(nt, \&quot;ShaderNodeValToRGB\&quot;, (-400, 0))\ncr.color_ramp.elements[0].color = (0.115, 0.062, 0.030, 1)\ncr.color_ramp.elements[1].color = (0.235, 0.135, 0.068, 1)\nnt.links.new(tc.outputs[&#x27;Object&#x27;], mp.inputs[&#x27;Vector&#x27;])\nnt.links.new(mp.outputs[&#x27;Vector&#x27;], wv.inputs[&#x27;Vector&#x27;])\nnt.links.new(wv.outputs[&#x27;Fac&#x27;], cr.inputs[&#x27;Fac&#x27;])\nnt.links.new(cr.outputs[&#x27;Color&#x27;], p.inputs[&#x27;Base Color&#x27;])\nrr = node(nt, \&quot;ShaderNodeMapRange\&quot;, (-400, -260))\nrr.inputs[&#x27;To Min&#x27;].default_value = 0.30\nrr.inputs[&#x27;To Max&#x27;].default_value = 0.52\nnt.links.new(wv.outputs[&#x27;Fac&#x27;], rr.inputs[&#x27;Value&#x27;])\nnt.links.new(rr.outputs[&#x27;Result&#x27;], p.inputs[&#x27;Roughness&#x27;])\nM[&#x27;desk&#x27;] = m\n\n# back wall\nm, nt, p = base_mat(\&quot;WallPaint\&quot;)\np.inputs[&#x27;Base Color&#x27;].default_value = (0.135, 0.140, 0.155, 1)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.80\nM[&#x27;wall&#x27;] = m\n\nbpy.app.driver_namespace[&#x27;M&#x27;] = M\nprint(\&quot;materials:\&quot;, sorted(M))\n&quot;
+}</pre><pre class="out">Code executed successfully: materials: [&#x27;bakelite&#x27;, &#x27;base_metal&#x27;, &#x27;brass&#x27;, &#x27;cable&#x27;, &#x27;desk&#x27;, &#x27;felt&#x27;, &#x27;filament&#x27;, &#x27;glass&#x27;, &#x27;metal&#x27;, &#x27;metal_dark&#x27;, &#x27;shade_in&#x27;, &#x27;spring&#x27;, &#x27;wall&#x27;]</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Now the desk, wall, and the weighted base (built as a proper lathed profile, not stacked cylinders).</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, bmesh, math\nfrom mathutils import Vector\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]\ntube, cyl, sphere, bevel, setmat = H[&#x27;tube&#x27;], H[&#x27;cyl&#x27;], H[&#x27;sphere&#x27;], H[&#x27;bevel&#x27;], H[&#x27;setmat&#x27;]\nnew_mesh_obj, autosmooth = H[&#x27;new_mesh_obj&#x27;], H[&#x27;autosmooth&#x27;]\n\ndef lathe(profile, name, segs=72, smooth_thresh=0.92):\n    \&quot;\&quot;\&quot;revolve a (radius, z) profile around Z into a closed solid\&quot;\&quot;\&quot;\n    bm = bmesh.new()\n    vs = [bm.verts.new((r, 0.0, z)) for r, z in profile]\n    es = [bm.edges.new((vs[i], vs[i + 1])) for i in range(len(vs) - 1)]\n    bmesh.ops.spin(bm, geom=es + vs, angle=math.radians(360), steps=segs,\n                   axis=(0, 0, 1), cent=(0, 0, 0), use_duplicate=False)\n    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)\n    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)\n    ob = new_mesh_obj(name, bm)\n    for p in ob.data.polygons:\n        p.use_smooth = abs(p.normal.normalized().z) &lt; smooth_thresh\n    return ob\nH[&#x27;lathe&#x27;] = lathe\n\n# ============================================================ joint geometry\nD = math.radians\nP0 = Vector((0.0, 0.0, 0.0455))                                    # base pivot\nd_low = Vector((-math.cos(D(78)), 0, math.sin(D(78))))             # lower arm dir\nP1 = P0 + d_low * 0.300                                            # elbow\nd_up = Vector((math.cos(D(-18)), 0, math.sin(D(-18))))             # upper arm dir\nP2 = P1 + d_up * 0.285                                             # head joint\nd_sh = Vector((math.cos(D(-52)), 0, math.sin(D(-52))))             # shade axis\nbpy.app.driver_namespace[&#x27;G&#x27;] = dict(P0=P0, P1=P1, P2=P2,\n                                     d_low=d_low, d_up=d_up, d_sh=d_sh)\n\n# ============================================================ set / room\ndesk = bpy.data.objects.new(\&quot;Desk\&quot;, bpy.data.meshes.new(\&quot;Desk\&quot;))\nbm = bmesh.new()\nbmesh.ops.create_cube(bm, size=1.0)\nbmesh.ops.scale(bm, verts=bm.verts, vec=(1.50, 0.95, 0.042))\nbm.to_mesh(desk.data); bm.free()\nbpy.context.collection.objects.link(desk)\ndesk.location = (0.05, 0.10, -0.021)                               # top surface at z = 0\nbevel(desk, width=0.004, segments=4, angle=50)\nsetmat(desk, M[&#x27;desk&#x27;])\n\nwall = bpy.data.objects.new(\&quot;BackWall\&quot;, bpy.data.meshes.new(\&quot;BackWall\&quot;))\nbm = bmesh.new()\nbmesh.ops.create_cube(bm, size=1.0)\nbmesh.ops.scale(bm, verts=bm.verts, vec=(3.0, 0.04, 1.8))\nbm.to_mesh(wall.data); bm.free()\nbpy.context.collection.objects.link(wall)\nwall.location = (0.0, 0.60, 0.55)\nsetmat(wall, M[&#x27;wall&#x27;])\n\n# ============================================================ weighted base\n# heavy cast disc, 170 mm dia, 31 mm tall, crowned top — lathed profile\nprof = [\n    (0.0000, 0.0000), (0.0500, 0.0000), (0.0755, 0.0000),          # flat underside\n    (0.0820, 0.0022), (0.0848, 0.0062),                            # bottom chamfer\n    (0.0850, 0.0105),                                              # outer wall\n    (0.0842, 0.0152), (0.0800, 0.0205), (0.0725, 0.0250),          # crown shoulder\n    (0.0610, 0.0284), (0.0470, 0.0304), (0.0330, 0.0315),\n    (0.0250, 0.0322), (0.0140, 0.0330), (0.0000, 0.0333),          # domed top\n]\nbase = lathe(prof, \&quot;LampBase\&quot;, segs=96)\nsetmat(base, M[&#x27;base_metal&#x27;])\n\n# felt pad underneath (lifts the base 2 mm off the desk, gives contact shadow)\nfelt = lathe([(0.0000, 0.0000), (0.0740, 0.0000), (0.0760, 0.0008),\n              (0.0760, 0.0020), (0.0000, 0.0020)], \&quot;FeltPad\&quot;, segs=72)\nfelt.location.z = -0.0020\nsetmat(felt, M[&#x27;felt&#x27;])\nbase.location.z = 0.0                                              # base sits on the felt\n\n# pivot housing on top of the base\nhub = lathe([(0.0000, 0.0000), (0.0300, 0.0000), (0.0305, 0.0020),\n             (0.0298, 0.0060), (0.0272, 0.0098), (0.0250, 0.0125),\n             (0.0250, 0.0150), (0.0000, 0.0150)], \&quot;PivotHub\&quot;, segs=72)\nhub.location.z = 0.0300\nsetmat(hub, M[&#x27;metal_dark&#x27;])\n\n# rotation collar the arm actually turns on\ncollar = cyl(\&quot;PivotCollar\&quot;, 0.0175, 0.0090, (0, 0, 0.0480), r2=0.0165)\nbevel(collar, width=0.0008, segments=3)\nsetmat(collar, M[&#x27;metal&#x27;])\n\nprint(\&quot;set + base built:\&quot;, [o.name for o in bpy.data.objects])\nprint(\&quot;P0\&quot;, tuple(round(v,4) for v in P0), \&quot;P1\&quot;, tuple(round(v,4) for v in P1),\n      \&quot;P2\&quot;, tuple(round(v,4) for v in P2))\n&quot;
+}</pre><pre class="out">Code executed successfully: set + base built: [&#x27;BackWall&#x27;, &#x27;Desk&#x27;, &#x27;FeltPad&#x27;, &#x27;LampBase&#x27;, &#x27;PivotCollar&#x27;, &#x27;PivotHub&#x27;]
+P0 (0.0, 0.0, 0.0455) P1 (-0.0624, 0.0, 0.3389) P2 (0.2087, 0.0, 0.2509)</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Now the articulated arm — twin-rod Anglepoise style with real helical tension springs and knurled pivot knobs.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, bmesh, math\nfrom mathutils import Vector\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]\nG = bpy.app.driver_namespace[&#x27;G&#x27;]\ntube, cyl, sphere, bevel, setmat, lathe = H[&#x27;tube&#x27;], H[&#x27;cyl&#x27;], H[&#x27;sphere&#x27;], H[&#x27;bevel&#x27;], H[&#x27;setmat&#x27;], H[&#x27;lathe&#x27;]\nP0, P1, P2, d_low, d_up = G[&#x27;P0&#x27;], G[&#x27;P1&#x27;], G[&#x27;P2&#x27;], G[&#x27;d_low&#x27;], G[&#x27;d_up&#x27;]\nY = Vector((0, 1, 0))\n\ndef orient(ob, direction, origin):\n    ob.rotation_mode = &#x27;QUATERNION&#x27;\n    ob.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(Vector(direction).normalized())\n    ob.location = origin\n    return ob\n\ndef helix(p0, p1, coil_r, wire_r, turns, name, pts_per_turn=14):\n    \&quot;\&quot;\&quot;tension spring running from p0 to p1\&quot;\&quot;\&quot;\n    p0, p1 = Vector(p0), Vector(p1)\n    L = (p1 - p0).length\n    n = int(turns * pts_per_turn) + 1\n    cu = bpy.data.curves.new(name, &#x27;CURVE&#x27;)\n    cu.dimensions = &#x27;3D&#x27;\n    sp = cu.splines.new(&#x27;POLY&#x27;)\n    sp.points.add(n - 1)\n    for i in range(n):\n        t = i / (n - 1)\n        a = t * turns * 2 * math.pi\n        sp.points[i].co = (coil_r * math.cos(a), coil_r * math.sin(a), t * L, 1.0)\n    cu.bevel_depth = wire_r\n    cu.bevel_resolution = 4\n    cu.use_fill_caps = True\n    ob = bpy.data.objects.new(name, cu)\n    bpy.context.collection.objects.link(ob)\n    return orient(ob, p1 - p0, p0)\nH[&#x27;helix&#x27;] = helix; H[&#x27;orient&#x27;] = orient\n\ndef knob(center, side, name, r=0.0108, h=0.0062):\n    \&quot;\&quot;\&quot;knurled adjustment knob on a Y-axis pivot\&quot;\&quot;\&quot;\n    c = Vector(center) + Y * side * h * 0.5\n    k = lathe([(0.0000, 0.0000), (r * 0.55, 0.0000), (r * 0.92, 0.0009),\n               (r, 0.0026), (r, h - 0.0016), (r * 0.90, h - 0.0002),\n               (r * 0.45, h), (0.0000, h)], name, segs=64)\n    k.rotation_euler = (math.radians(-90) if side &gt; 0 else math.radians(90), 0, 0)\n    k.location = c\n    setmat(k, M[&#x27;metal_dark&#x27;])\n    # knurling: radial ridges around the rim\n    ridge = bpy.data.objects.new(name + \&quot;Knurl\&quot;, bpy.data.meshes.new(name + \&quot;Knurl\&quot;))\n    bm = bmesh.new()\n    bmesh.ops.create_cube(bm, size=1.0)\n    bmesh.ops.scale(bm, verts=bm.verts, vec=(0.0016, 0.0016, h * 0.72))\n    bmesh.ops.translate(bm, verts=bm.verts, vec=(r * 0.99, 0, 0))\n    bm.to_mesh(ridge.data); bm.free()\n    bpy.context.collection.objects.link(ridge)\n    setmat(ridge, M[&#x27;metal_dark&#x27;])\n    arr = ridge.modifiers.new(\&quot;Knurl\&quot;, &#x27;ARRAY&#x27;)\n    arr.count = 26; arr.use_relative_offset = False\n    arr.use_object_offset = True\n    piv = bpy.data.objects.new(name + \&quot;KnurlPivot\&quot;, None)\n    bpy.context.collection.objects.link(piv)\n    piv.rotation_euler = (0, 0, math.radians(360 / 26))\n    arr.offset_object = piv\n    ridge.parent = k\n    ridge.matrix_parent_inverse = k.matrix_world.inverted()\n    piv.parent = k\n    piv.matrix_parent_inverse = k.matrix_world.inverted()\n    ridge.location = (0, 0, h * 0.5)\n    return k\n\ndef knuckle(center, r, length, name, knob_r=0.0108):\n    body = cyl(name, r, length, (0, 0, 0), segs=48)\n    body.rotation_euler = (math.radians(90), 0, 0)\n    body.location = center\n    bevel(body, width=0.0007, segments=3)\n    setmat(body, M[&#x27;metal&#x27;])\n    knob(Vector(center) + Y * (length / 2), +1, name + \&quot;KnobA\&quot;, r=knob_r)\n    knob(Vector(center) - Y * (length / 2), -1, name + \&quot;KnobB\&quot;, r=knob_r)\n    return body\n\nROD_R, ROD_OFF = 0.0046, 0.0132\n\n# ---- lower arm: twin rods P0 -&gt; P1 ------------------------------------\nfor s, tag in ((+1, \&quot;L\&quot;), (-1, \&quot;R\&quot;)):\n    r = tube(P0 + Y * s * ROD_OFF + d_low * 0.006,\n             P1 + Y * s * ROD_OFF - d_low * 0.004,\n             ROD_R, f\&quot;LowerRod{tag}\&quot;, segs=32)\n    setmat(r, M[&#x27;metal&#x27;])\n\n# ---- upper arm: twin rods P1 -&gt; P2 -----------------------------------\nfor s, tag in ((+1, \&quot;L\&quot;), (-1, \&quot;R\&quot;)):\n    r = tube(P1 + Y * s * ROD_OFF + d_up * 0.004,\n             P2 + Y * s * ROD_OFF - d_up * 0.004,\n             ROD_R, f\&quot;UpperRod{tag}\&quot;, segs=32)\n    setmat(r, M[&#x27;metal&#x27;])\n\n# ---- tension springs riding between each rod pair --------------------\nsp1 = helix(P0 + d_low * 0.052, P0 + d_low * 0.262, 0.0072, 0.00115, 38, \&quot;SpringLower\&quot;)\nsetmat(sp1, M[&#x27;spring&#x27;])\nsp2 = helix(P1 + d_up * 0.048, P1 + d_up * 0.238, 0.0072, 0.00115, 34, \&quot;SpringUpper\&quot;)\nsetmat(sp2, M[&#x27;spring&#x27;])\n\n# spring anchor tabs\nfor p, d, nm in ((P0 + d_low * 0.046, d_low, \&quot;AnchorLowA\&quot;), (P0 + d_low * 0.268, d_low, \&quot;AnchorLowB\&quot;),\n                 (P1 + d_up * 0.042, d_up, \&quot;AnchorUpA\&quot;), (P1 + d_up * 0.244, d_up, \&quot;AnchorUpB\&quot;)):\n    a = cyl(nm, 0.0080, 0.0040, (0, 0, 0), r2=0.0072, segs=32)\n    H[&#x27;orient&#x27;](a, d, p)\n    setmat(a, M[&#x27;metal_dark&#x27;])\n\n# ---- pivots ----------------------------------------------------------\nknuckle(P0, 0.0150, 0.0362, \&quot;PivotBase\&quot;, knob_r=0.0118)\nknuckle(P1, 0.0158, 0.0348, \&quot;PivotElbow\&quot;, knob_r=0.0112)\nknuckle(P2, 0.0140, 0.0322, \&quot;PivotHead\&quot;, knob_r=0.0102)\n\nprint(\&quot;arm built. objects:\&quot;, len(bpy.data.objects))\n&quot;
+}</pre><pre class="out">Code executed successfully: arm built. objects: 37</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Now the shade — a lathed thin shell with brushed metal outside and reflective white inside — plus a real A60 bulb with filament.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, bmesh, math\nfrom mathutils import Vector\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]; G = bpy.app.driver_namespace[&#x27;G&#x27;]\ntube, cyl, sphere, bevel, setmat = H[&#x27;tube&#x27;], H[&#x27;cyl&#x27;], H[&#x27;sphere&#x27;], H[&#x27;bevel&#x27;], H[&#x27;setmat&#x27;]\nlathe, helix, orient = H[&#x27;lathe&#x27;], H[&#x27;helix&#x27;], H[&#x27;orient&#x27;]\nP2, d_sh = G[&#x27;P2&#x27;], G[&#x27;d_sh&#x27;]\n\ndef auto_smooth(ob, angle=38.0):\n    for p in ob.data.polygons: p.use_smooth = True\n    try:\n        bpy.ops.object.select_all(action=&#x27;DESELECT&#x27;)\n        ob.select_set(True); bpy.context.view_layer.objects.active = ob\n        bpy.ops.object.shade_auto_smooth(angle=math.radians(angle))\n    except Exception as e:\n        print(\&quot;auto_smooth fallback:\&quot;, e)\n    return ob\nH[&#x27;auto_smooth&#x27;] = auto_smooth\n\n# ======================================================== shade (thin shell)\nT = 0.0019                                                     # wall thickness\nouter = [(0.0168, 0.0000), (0.0242, 0.0060), (0.0332, 0.0160), (0.0424, 0.0295),\n         (0.0514, 0.0455), (0.0592, 0.0630), (0.0654, 0.0812), (0.0699, 0.0982),\n         (0.0724, 0.1112)]\nrim   = [(0.0734, 0.1138), (0.0730, 0.1159), (0.0712, 0.1164)]\ninner = [(r - T, z) for (r, z) in reversed(outer)]\nprof  = outer + rim + inner + [outer[0]]                       # closed loop -&gt; shell\n\nshade = lathe(prof, \&quot;Shade\&quot;, segs=112, smooth_thresh=2.0)       # all-smooth, fixed below\nshade.data.materials.clear()\nshade.data.materials.append(M[&#x27;metal&#x27;])                        # slot 0 = outside\nshade.data.materials.append(M[&#x27;shade_in&#x27;])                     # slot 1 = inside\nfor p in shade.data.polygons:\n    c = p.center\n    radial = Vector((c.x, c.y, 0.0))\n    p.material_index = 0 if radial.length &lt; 1e-9 or p.normal.dot(radial.normalized()) &gt; 0 else 1\nauto_smooth(shade, 34)\norient(shade, d_sh, P2)\n\n# neck / stem: head pivot -&gt; shade throat\nstem = tube(P2 + d_sh * -0.004, P2 + d_sh * 0.016, 0.0098, \&quot;ShadeStem\&quot;, segs=32)\nsetmat(stem, M[&#x27;metal&#x27;])\ncollar = cyl(\&quot;ShadeCollar\&quot;, 0.0182, 0.0068, (0, 0, 0), r2=0.0168, segs=48)\norient(collar, d_sh, P2 + d_sh * 0.0125)\nbevel(collar, width=0.0006, segments=3)\nsetmat(collar, M[&#x27;metal_dark&#x27;])\n\n# ======================================================== lamp holder (E27 socket)\nholder = lathe([(0.0000, 0.0000), (0.0175, 0.0000), (0.0178, 0.0030),\n                (0.0172, 0.0180), (0.0148, 0.0210), (0.0146, 0.0250), (0.0000, 0.0250)],\n               \&quot;LampHolder\&quot;, segs=64)\norient(holder, -d_sh, P2 + d_sh * 0.0475)                      # opens toward the mouth\nsetmat(holder, M[&#x27;bakelite&#x27;])\n\n# ======================================================== A60 bulb\nbulb_prof = [(0.0000, 0.0000), (0.0105, 0.0015), (0.0192, 0.0052), (0.0258, 0.0108),\n             (0.0294, 0.0175), (0.0300, 0.0255), (0.0289, 0.0335), (0.0252, 0.0420),\n             (0.0198, 0.0490), (0.0158, 0.0540), (0.0141, 0.0580), (0.0138, 0.0620),\n             (0.0100, 0.0622), (0.0000, 0.0624)]\nTIP = P2 + d_sh * 0.1005                                        # glass tip, just inside the mouth\nBULB_AX = -d_sh                                                 # tip -&gt; cap\nbulb = lathe(bulb_prof, \&quot;BulbGlass\&quot;, segs=96, smooth_thresh=2.0)\nauto_smooth(bulb, 45)\norient(bulb, BULB_AX, TIP)\nsetmat(bulb, M[&#x27;glass&#x27;])\n\n# brass E27 screw cap + threads\ncap = lathe([(0.0000, 0.0000), (0.0132, 0.0000), (0.0134, 0.0020), (0.0134, 0.0175),\n             (0.0120, 0.0192), (0.0082, 0.0200), (0.0080, 0.0212), (0.0000, 0.0214)],\n            \&quot;BulbCap\&quot;, segs=64)\norient(cap, BULB_AX, TIP + BULB_AX * 0.0615)\nsetmat(cap, M[&#x27;brass&#x27;])\nthread = helix(TIP + BULB_AX * 0.0640, TIP + BULB_AX * 0.0770, 0.0134, 0.0013, 4.5, \&quot;BulbThread\&quot;)\nsetmat(thread, M[&#x27;brass&#x27;])\ntipcon = lathe([(0.0000, 0.0000), (0.0072, 0.0004), (0.0074, 0.0026), (0.0000, 0.0032)],\n               \&quot;BulbTipContact\&quot;, segs=48)\norient(tipcon, BULB_AX, TIP + BULB_AX * 0.0828)\nsetmat(tipcon, M[&#x27;bakelite&#x27;])\n\n# filament: coil on a glass stem, with two support wires\nfil = helix(TIP + BULB_AX * 0.0205, TIP + BULB_AX * 0.0405, 0.0050, 0.00072, 8.5, \&quot;Filament\&quot;)\nsetmat(fil, M[&#x27;filament&#x27;])\nstem_g = tube(TIP + BULB_AX * 0.0620, TIP + BULB_AX * 0.0430, 0.0028, \&quot;BulbStem\&quot;, segs=24)\nsetmat(stem_g, M[&#x27;glass&#x27;])\nfor s, nm in ((+1, \&quot;A\&quot;), (-1, \&quot;B\&quot;)):\n    w = tube(TIP + BULB_AX * 0.0440 + Vector((0, 0.0022 * s, 0)),\n             TIP + BULB_AX * 0.0410 + Vector((0, 0.0050 * s, 0)), 0.0007, \&quot;FilWire\&quot; + nm, segs=12)\n    setmat(w, M[&#x27;filament&#x27;])\n\nprint(\&quot;shade+bulb built. objects:\&quot;, len(bpy.data.objects))\nprint(\&quot;shade mat slots:\&quot;, [m.name for m in shade.data.materials])\nprint(\&quot;inner faces:\&quot;, sum(1 for p in shade.data.polygons if p.material_index == 1),\n      \&quot;outer faces:\&quot;, sum(1 for p in shade.data.polygons if p.material_index == 0))\n&quot;
+}</pre><pre class="out">Code executed successfully: shade+bulb built. objects: 49
+shade mat slots: [&#x27;BrushedAluminium&#x27;, &#x27;ShadeInteriorWhite&#x27;]
+inner faces: 1120 outer faces: 1232</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Adding the power cable, base switch, camera, and the in-scene lighting rig.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, bmesh, math\nfrom mathutils import Vector, Matrix\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]; G = bpy.app.driver_namespace[&#x27;G&#x27;]\ntube, cyl, sphere, bevel, setmat = H[&#x27;tube&#x27;], H[&#x27;cyl&#x27;], H[&#x27;sphere&#x27;], H[&#x27;bevel&#x27;], H[&#x27;setmat&#x27;]\nlathe, orient, auto_smooth = H[&#x27;lathe&#x27;], H[&#x27;orient&#x27;], H[&#x27;auto_smooth&#x27;]\nP2, d_sh = G[&#x27;P2&#x27;], G[&#x27;d_sh&#x27;]\n\n# ======================================================== power cable\ncu = bpy.data.curves.new(\&quot;Cable\&quot;, &#x27;CURVE&#x27;); cu.dimensions = &#x27;3D&#x27;\nsp = cu.splines.new(&#x27;BEZIER&#x27;)\npts = [(-0.0790, 0.0180, 0.0130), (-0.1250, 0.0620, 0.0055), (-0.2100, 0.1050, 0.0026),\n       (-0.3150, 0.0700, 0.0026), (-0.4300, 0.1250, 0.0026), (-0.5600, 0.2350, 0.0026),\n       (-0.6600, 0.3600, 0.0026)]\nsp.bezier_points.add(len(pts) - 1)\nfor bp, co in zip(sp.bezier_points, pts):\n    bp.co = co; bp.handle_left_type = bp.handle_right_type = &#x27;AUTO&#x27;\ncu.bevel_depth = 0.0024; cu.bevel_resolution = 5; cu.use_fill_caps = True\ncable = bpy.data.objects.new(\&quot;Cable\&quot;, cu)\nbpy.context.collection.objects.link(cable)\nsetmat(cable, M[&#x27;cable&#x27;])\n\n# strain relief where the cable leaves the base\nsr = cyl(\&quot;StrainRelief\&quot;, 0.0056, 0.0130, (0, 0, 0), r2=0.0034, segs=32)\norient(sr, Vector((-0.60, 0.55, -0.30)), Vector((-0.0740, 0.0140, 0.0165)))\nsetmat(sr, M[&#x27;bakelite&#x27;])\n\n# ======================================================== toggle switch on the base crown\nsw_base = cyl(\&quot;SwitchBezel\&quot;, 0.0098, 0.0042, (0, 0, 0), r2=0.0092, segs=32)\norient(sw_base, Vector((0.34, -0.30, 0.89)), Vector((0.0400, -0.0360, 0.0300)))\nsetmat(sw_base, M[&#x27;metal_dark&#x27;])\nsw_top = lathe([(0.0000, 0.0000), (0.0062, 0.0000), (0.0064, 0.0016),\n                (0.0048, 0.0032), (0.0000, 0.0036)], \&quot;SwitchButton\&quot;, segs=32)\norient(sw_top, Vector((0.34, -0.30, 0.89)), Vector((0.0400, -0.0360, 0.0330)))\nsetmat(sw_top, M[&#x27;bakelite&#x27;])\n\n# ======================================================== lighting (all in-scene)\nFILC = P2 + d_sh * 0.0305          # filament centroid == where the point light lives\nWARM = (1.0, 0.742, 0.492)         # ~2700 K\n\nld = bpy.data.lights.new(\&quot;BulbLight\&quot;, &#x27;POINT&#x27;)\nld.energy = 34.0\nld.color = WARM\nld.shadow_soft_size = 0.026        # matches the glass envelope\nbulb_light = bpy.data.objects.new(\&quot;BulbLight\&quot;, ld)\nbpy.context.collection.objects.link(bulb_light)\nbulb_light.location = FILC\nfor attr in (\&quot;visible_camera\&quot;, \&quot;visible_glossy\&quot;):\n    try: setattr(bulb_light, attr, attr != \&quot;visible_camera\&quot;)\n    except Exception as e: print(\&quot;vis attr\&quot;, attr, e)\n\n# weak, wide room ambience so the brushed metal has something to reflect\nad = bpy.data.lights.new(\&quot;RoomFill\&quot;, &#x27;AREA&#x27;)\nad.energy = 7.0\nad.color = (0.62, 0.72, 1.0)\nad.shape = &#x27;RECTANGLE&#x27;; ad.size = 1.4; ad.size_y = 1.0\nfill = bpy.data.objects.new(\&quot;RoomFill\&quot;, ad)\nbpy.context.collection.objects.link(fill)\nfill.location = (-0.85, -0.95, 1.05)\nfill.rotation_euler = (math.radians(42), math.radians(-22), math.radians(-30))\n\n# thin rim light to draw the metal silhouette off the dark wall\nrd = bpy.data.lights.new(\&quot;RimLight\&quot;, &#x27;AREA&#x27;)\nrd.energy = 4.0\nrd.color = (0.70, 0.78, 1.0)\nrd.shape = &#x27;RECTANGLE&#x27;; rd.size = 0.9; rd.size_y = 0.35\nrim = bpy.data.objects.new(\&quot;RimLight\&quot;, rd)\nbpy.context.collection.objects.link(rim)\nrim.location = (0.30, 0.52, 0.78)\nrim.rotation_euler = (math.radians(122), 0, math.radians(20))\n\n# world: near-black cool room\nworld = bpy.data.worlds.new(\&quot;Room\&quot;)\nbpy.context.scene.world = world\nworld.use_nodes = True\nwnt = world.node_tree; wnt.nodes.clear()\nwout = wnt.nodes.new(\&quot;ShaderNodeOutputWorld\&quot;); wout.location = (300, 0)\nbg = wnt.nodes.new(\&quot;ShaderNodeBackground\&quot;); bg.location = (0, 0)\nbg.inputs[&#x27;Color&#x27;].default_value = (0.045, 0.055, 0.080, 1)\nbg.inputs[&#x27;Strength&#x27;].default_value = 0.35\nwnt.links.new(bg.outputs[0], wout.inputs[&#x27;Surface&#x27;])\n\n# ======================================================== camera\ncd = bpy.data.cameras.new(\&quot;Camera\&quot;)\ncd.lens = 58.0\ncd.sensor_width = 36.0\ncam = bpy.data.objects.new(\&quot;Camera\&quot;, cd)\nbpy.context.collection.objects.link(cam)\nbpy.context.scene.camera = cam\n\ndef look_at(ob, eye, target, roll=0.0):\n    eye, target = Vector(eye), Vector(target)\n    d = (eye - target).normalized()\n    up = Vector((0, 0, 1))\n    right = up.cross(d)\n    if right.length &lt; 1e-6: right = Vector((1, 0, 0))\n    right.normalize()\n    newup = d.cross(right)\n    ob.matrix_world = Matrix((\n        (right.x, newup.x, d.x, eye.x),\n        (right.y, newup.y, d.y, eye.y),\n        (right.z, newup.z, d.z, eye.z),\n        (0, 0, 0, 1)))\n    if roll: ob.rotation_euler.rotate_axis(&#x27;Z&#x27;, roll)\n    return ob\nH[&#x27;look_at&#x27;] = look_at\nlook_at(cam, (0.60, -0.66, 0.335), (0.075, 0.010, 0.185))\n\n# ======================================================== render settings\nsc = bpy.context.scene\nsc.render.engine = &#x27;CYCLES&#x27;\ntry:\n    prefs = bpy.context.preferences.addons[\&quot;cycles\&quot;].preferences\n    prefs.compute_device_type = &#x27;METAL&#x27;\n    prefs.refresh_devices()\n    for d in prefs.devices: d.use = (d.type == &#x27;METAL&#x27;)\n    sc.cycles.device = &#x27;GPU&#x27;\nexcept Exception as e:\n    print(\&quot;gpu setup:\&quot;, e); sc.cycles.device = &#x27;CPU&#x27;\n\nsc.cycles.samples = 1024\nsc.cycles.use_adaptive_sampling = True\nsc.cycles.adaptive_threshold = 0.01\nsc.cycles.use_denoising = True\ntry:\n    sc.cycles.denoiser = &#x27;OPENIMAGEDENOISE&#x27;\n    sc.cycles.denoising_input_passes = &#x27;RGB_ALBEDO_NORMAL&#x27;\nexcept Exception as e: print(\&quot;denoiser:\&quot;, e)\nsc.cycles.max_bounces = 20\nsc.cycles.transmission_bounces = 14\nsc.cycles.glossy_bounces = 8\nsc.cycles.transparent_max_bounces = 12\ntry: sc.cycles.use_light_tree = True\nexcept Exception: pass\nsc.render.resolution_x, sc.render.resolution_y = 1080, 1350\nsc.render.resolution_percentage = 100\nsc.render.film_transparent = False\nsc.render.filter_size = 1.4\nsc.view_settings.view_transform = &#x27;AgX&#x27;\ntry: sc.view_settings.look = &#x27;AgX - Punchy&#x27;\nexcept Exception as e:\n    print(\&quot;look:\&quot;, e)\n    try: sc.view_settings.look = &#x27;Punchy&#x27;\n    except Exception as e2: print(\&quot;look2:\&quot;, e2)\nsc.view_settings.exposure = 0.0\n\nprint(\&quot;objects:\&quot;, len(bpy.data.objects), \&quot;| device:\&quot;, sc.cycles.device,\n      \&quot;| view:\&quot;, sc.view_settings.view_transform, \&quot;look:\&quot;, sc.view_settings.look)\nprint(\&quot;filament/light at\&quot;, tuple(round(v, 4) for v in FILC))\n&quot;
+}</pre><pre class="out">Code executed successfully: objects: 57 | device: GPU | view: AgX look: AgX - Punchy
+filament/light at (0.2275, 0.0, 0.2268)</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Let me verify real-world dimensions numerically, then do a fast preview render.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, json\nfrom mathutils import Vector\n\nLAMP_PARTS = [o for o in bpy.data.objects\n               if o.type in (&#x27;MESH&#x27;, &#x27;CURVE&#x27;) and o.name not in (&#x27;Desk&#x27;, &#x27;BackWall&#x27;, &#x27;Cable&#x27;)]\nmn = Vector(( 1e9,  1e9,  1e9)); mx = Vector((-1e9, -1e9, -1e9))\nfor o in LAMP_PARTS:\n    for c in o.bound_box if o.type == &#x27;MESH&#x27; else []:\n        w = o.matrix_world @ Vector(c)\n        for i in range(3):\n            mn[i] = min(mn[i], w[i]); mx[i] = max(mx[i], w[i])\n\ndef mm(v): return round(v * 1000, 1)\nreport = {\n    \&quot;lamp_bbox_mm\&quot;: {\&quot;min\&quot;: [mm(v) for v in mn], \&quot;max\&quot;: [mm(v) for v in mx]},\n    \&quot;overall_height_mm\&quot;: mm(mx.z),\n    \&quot;reach_x_mm\&quot;: mm(mx.x),\n    \&quot;base_dia_mm\&quot;: mm(bpy.data.objects[&#x27;LampBase&#x27;].dimensions.x),\n    \&quot;base_height_mm\&quot;: mm(bpy.data.objects[&#x27;LampBase&#x27;].dimensions.z),\n    \&quot;shade_mouth_dia_mm\&quot;: mm(bpy.data.objects[&#x27;Shade&#x27;].dimensions.length if False else 0),\n    \&quot;bulb_dia_mm\&quot;: mm(max(bpy.data.objects[&#x27;BulbGlass&#x27;].dimensions)),\n    \&quot;part_count\&quot;: len(LAMP_PARTS),\n    \&quot;total_tris\&quot;: sum(len(o.data.polygons) for o in LAMP_PARTS if o.type == &#x27;MESH&#x27;),\n}\n# shade mouth: measure the widest ring in world space\nsh = bpy.data.objects[&#x27;Shade&#x27;]\nr_max = max(((sh.matrix_world @ v.co) - sh.matrix_world.translation).length for v in sh.data.vertices)\nreport[\&quot;shade_slant_len_mm\&quot;] = mm(r_max)\nreport[\&quot;shade_dims_mm\&quot;] = [mm(v) for v in sh.dimensions]\nprint(json.dumps(report, indent=1))\n&quot;
+}</pre><pre class="out">Code executed successfully: {
+ &quot;lamp_bbox_mm&quot;: {
+  &quot;min&quot;: [
+   -85.0,
+   -85.0,
+   -2.0
+  ],
+  &quot;max&quot;: [
+   338.2,
+   85.0,
+   354.7
+  ]
+ },
+ &quot;overall_height_mm&quot;: 354.7,
+ &quot;reach_x_mm&quot;: 338.2,
+ &quot;base_dia_mm&quot;: 170.0,
+ &quot;base_height_mm&quot;: 33.3,
+ &quot;shade_mouth_dia_mm&quot;: 0,
+ &quot;bulb_dia_mm&quot;: 62.4,
+ &quot;part_count&quot;: 44,
+ &quot;total_tris&quot;: 10242,
+ &quot;shade_slant_len_mm&quot;: 137.0,
+ &quot;shade_dims_mm&quot;: [
+  146.8,
+  146.8,
+  116.4
+ ]
+}</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Dimensions check out (355 mm tall, 170 mm base, A60/E27 bulb at 62 mm). Preview render:</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 96\nsc.render.resolution_percentage = 55\nsc.render.image_settings.file_format = &#x27;PNG&#x27;\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time()\nbpy.ops.render.render(write_still=True)\nprint(\&quot;preview render %.1fs -&gt; %s\&quot; % (time.time() - t, sc.render.filepath))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview render 88.3s -&gt; /path/to/_preview.png</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-14c41103e87102a0.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Good bones — the articulation, springs, knurled knobs and cable all read correctly. Two real problems: the metal is nearly black (nothing in the environment to reflect) and the bulb isn&#x27;t visible because the shade aims away from camera. Fixing both.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, math\nfrom mathutils import Vector, Matrix\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]; G = bpy.app.driver_namespace[&#x27;G&#x27;]\nP2, d_old = G[&#x27;P2&#x27;], G[&#x27;d_sh&#x27;]\n\n# ---- swivel the head so the camera looks INTO the shade and sees the bulb ----\ntilt, yaw = math.radians(-43.0), math.radians(-33.0)\nd_new = Vector((math.cos(tilt) * math.cos(yaw), math.cos(tilt) * math.sin(yaw), math.sin(tilt)))\nR = d_old.rotation_difference(d_new).to_matrix().to_4x4()\nPIV = Matrix.Translation(P2) @ R @ Matrix.Translation(-P2)\n\nHEAD = [\&quot;Shade\&quot;, \&quot;ShadeStem\&quot;, \&quot;ShadeCollar\&quot;, \&quot;LampHolder\&quot;, \&quot;BulbGlass\&quot;, \&quot;BulbCap\&quot;,\n        \&quot;BulbThread\&quot;, \&quot;BulbTipContact\&quot;, \&quot;Filament\&quot;, \&quot;BulbStem\&quot;, \&quot;FilWireA\&quot;, \&quot;FilWireB\&quot;,\n        \&quot;BulbLight\&quot;]\nfor n in HEAD:\n    o = bpy.data.objects.get(n)\n    if o: o.matrix_world = PIV @ o.matrix_world\nG[&#x27;d_sh&#x27;] = d_new\nprint(\&quot;shade axis -&gt;\&quot;, tuple(round(v, 3) for v in d_new))\nprint(\&quot;bulb light now at\&quot;, tuple(round(v, 3) for v in bpy.data.objects[&#x27;BulbLight&#x27;].location))\n\n# ---- lighting: the bulb stays the key, but the room now exists for the metal to reflect ----\nbpy.data.lights[&#x27;BulbLight&#x27;].energy = 46.0\n\nf = bpy.data.lights[&#x27;RoomFill&#x27;]\nf.energy = 55.0\nf.size, f.size_y = 2.2, 1.5\nf.color = (0.60, 0.70, 1.0)\nfo = bpy.data.objects[&#x27;RoomFill&#x27;]\nfo.location = (-1.05, -1.15, 1.20)\nfo.rotation_euler = (math.radians(46), math.radians(-20), math.radians(-34))\n\nr = bpy.data.lights[&#x27;RimLight&#x27;]\nr.energy = 26.0\nr.size, r.size_y = 1.1, 0.45\nro = bpy.data.objects[&#x27;RimLight&#x27;]\nro.location = (0.34, 0.55, 0.80)\nro.rotation_euler = (math.radians(118), 0, math.radians(22))\n\n# a tall narrow card off frame-right: reads as a long brushed streak down the arm rods\nsd = bpy.data.lights.new(\&quot;StreakCard\&quot;, &#x27;AREA&#x27;)\nsd.energy = 18.0\nsd.color = (0.82, 0.86, 1.0)\nsd.shape = &#x27;RECTANGLE&#x27;; sd.size = 0.16; sd.size_y = 1.30\nstreak = bpy.data.objects.new(\&quot;StreakCard\&quot;, sd)\nbpy.context.collection.objects.link(streak)\nstreak.location = (0.95, -0.42, 0.60)\nstreak.rotation_euler = (math.radians(90), 0, math.radians(96))\n\nwnt = bpy.context.scene.world.node_tree\nbg = next(n for n in wnt.nodes if n.bl_idname == \&quot;ShaderNodeBackground\&quot;)\nbg.inputs[&#x27;Color&#x27;].default_value = (0.050, 0.062, 0.092, 1)\nbg.inputs[&#x27;Strength&#x27;].default_value = 0.9\n\n# ---- calmer wood grain ----\ndm = M[&#x27;desk&#x27;].node_tree\nwv = next(n for n in dm.nodes if n.bl_idname == \&quot;ShaderNodeTexWave\&quot;)\nwv.inputs[&#x27;Distortion&#x27;].default_value = 9.0\nwv.inputs[&#x27;Scale&#x27;].default_value = 2.2\nmp = next(n for n in dm.nodes if n.bl_idname == \&quot;ShaderNodeMapping\&quot;)\nmp.inputs[&#x27;Scale&#x27;].default_value = (1.0, 9.0, 1.0)\n\n# ---- camera: lower and slightly around, to look into the shade mouth ----\nH[&#x27;look_at&#x27;](bpy.data.objects[&#x27;Camera&#x27;], (0.575, -0.640, 0.272), (0.105, -0.020, 0.170))\nbpy.data.cameras[&#x27;Camera&#x27;].lens = 56.0\nprint(\&quot;done\&quot;)\n&quot;
+}</pre><pre class="out">Code executed successfully: shade axis -&gt; (0.613, -0.398, -0.682)
+bulb light now at (0.227, -0.012, 0.23)
+done</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 96\nsc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 5.1s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-2b83bf36f2ba2ada.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Big improvement. Now the bulb reads as a flat white blob rather than a bulb, the wood looks like slats, and the base is blotchy. Fixing those and the framing.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, math\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]\ndef nd(nt, idname, loc):\n    n = nt.nodes.new(idname); n.location = loc; return n\ndef find(nt, idname):\n    return next(n for n in nt.nodes if n.bl_idname == idname)\n\n# ================= 1. make the bulb read AS A BULB, not a white blob =================\n# clear glass with a faint warm glow; the filament becomes the hot visible element\ng = M[&#x27;glass&#x27;].node_tree\np = find(g, \&quot;ShaderNodeBsdfPrincipled\&quot;)\np.inputs[&#x27;Roughness&#x27;].default_value = 0.04\np.inputs[&#x27;Transmission Weight&#x27;].default_value = 1.0\np.inputs[&#x27;IOR&#x27;].default_value = 1.46\np.inputs[&#x27;Emission Strength&#x27;].default_value = 1.1          # was 3.2 — let the glass be glass\np.inputs[&#x27;Emission Color&#x27;].default_value = (1.0, 0.70, 0.40, 1)\n\nf = M[&#x27;filament&#x27;].node_tree\npf = find(f, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npf.inputs[&#x27;Emission Strength&#x27;].default_value = 700.0       # hot coil, clearly visible\npf.inputs[&#x27;Emission Color&#x27;].default_value = (1.0, 0.660, 0.330, 1)\n\n# interior: warm off-white, lower albedo so the bulb has something to contrast against\npi = find(M[&#x27;shade_in&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npi.inputs[&#x27;Base Color&#x27;].default_value = (0.80, 0.775, 0.735, 1)\npi.inputs[&#x27;Roughness&#x27;].default_value = 0.52\n\nbpy.data.lights[&#x27;BulbLight&#x27;].energy = 26.0\nbpy.data.lights[&#x27;BulbLight&#x27;].shadow_soft_size = 0.020\n\n# ================= 2. desk: real wood, not venetian blinds =================\nm = M[&#x27;desk&#x27;]; nt = m.node_tree\nnt.nodes.clear()\nout = nd(nt, \&quot;ShaderNodeOutputMaterial\&quot;, (600, 0))\np = nd(nt, \&quot;ShaderNodeBsdfPrincipled\&quot;, (340, 0))\nnt.links.new(p.outputs[0], out.inputs[&#x27;Surface&#x27;])\ntc = nd(nt, \&quot;ShaderNodeTexCoord\&quot;, (-1200, 0))\n# warp the coordinates first so the grain never repeats mechanically\nwarp = nd(nt, \&quot;ShaderNodeTexNoise\&quot;, (-1020, -260))\nwarp.inputs[&#x27;Scale&#x27;].default_value = 1.4\nwarp.inputs[&#x27;Detail&#x27;].default_value = 3.0\nvadd = nd(nt, \&quot;ShaderNodeVectorMath\&quot;, (-840, -120)); vadd.operation = &#x27;MULTIPLY_ADD&#x27;\nvadd.inputs[1].default_value = (0.28, 0.28, 0.28)\nmapn = nd(nt, \&quot;ShaderNodeMapping\&quot;, (-660, 0))\nmapn.inputs[&#x27;Scale&#x27;].default_value = (1.0, 7.0, 1.0)\ngrain = nd(nt, \&quot;ShaderNodeTexWave\&quot;, (-470, 0))\ngrain.wave_type = &#x27;BANDS&#x27;; grain.bands_direction = &#x27;Y&#x27;\ngrain.wave_profile = &#x27;SIN&#x27;\ngrain.inputs[&#x27;Scale&#x27;].default_value = 1.8\ngrain.inputs[&#x27;Distortion&#x27;].default_value = 19.0\ngrain.inputs[&#x27;Detail&#x27;].default_value = 5.0\ngrain.inputs[&#x27;Detail Scale&#x27;].default_value = 1.6\ngrain.inputs[&#x27;Detail Roughness&#x27;].default_value = 0.6\nnt.links.new(tc.outputs[&#x27;Object&#x27;], vadd.inputs[0])\nnt.links.new(tc.outputs[&#x27;Object&#x27;], warp.inputs[&#x27;Vector&#x27;])\nnt.links.new(warp.outputs[&#x27;Fac&#x27;], vadd.inputs[2])\nnt.links.new(vadd.outputs[&#x27;Vector&#x27;], mapn.inputs[&#x27;Vector&#x27;])\nnt.links.new(mapn.outputs[&#x27;Vector&#x27;], grain.inputs[&#x27;Vector&#x27;])\nramp = nd(nt, \&quot;ShaderNodeValToRGB\&quot;, (-260, 0))\nramp.color_ramp.elements[0].position = 0.20\nramp.color_ramp.elements[0].color = (0.098, 0.052, 0.026, 1)\nramp.color_ramp.elements[1].position = 0.85\nramp.color_ramp.elements[1].color = (0.170, 0.098, 0.050, 1)   # low contrast\nnt.links.new(grain.outputs[&#x27;Fac&#x27;], ramp.inputs[&#x27;Fac&#x27;])\n# broad tonal blotches over the top\nblot = nd(nt, \&quot;ShaderNodeTexNoise\&quot;, (-260, -300))\nblot.inputs[&#x27;Scale&#x27;].default_value = 2.6\nblot.inputs[&#x27;Detail&#x27;].default_value = 4.0\nmix = nd(nt, \&quot;ShaderNodeMix\&quot;, (60, 0)); mix.data_type = &#x27;RGBA&#x27;; mix.blend_type = &#x27;MULTIPLY&#x27;\nmix.inputs[&#x27;Factor&#x27;].default_value = 0.30\nnt.links.new(ramp.outputs[&#x27;Color&#x27;], mix.inputs[6])\nbramp = nd(nt, \&quot;ShaderNodeValToRGB\&quot;, (-60, -300))\nbramp.color_ramp.elements[0].color = (0.72, 0.70, 0.68, 1)\nbramp.color_ramp.elements[1].color = (1.22, 1.20, 1.16, 1)\nnt.links.new(blot.outputs[&#x27;Fac&#x27;], bramp.inputs[&#x27;Fac&#x27;])\nnt.links.new(bramp.outputs[&#x27;Color&#x27;], mix.inputs[7])\nnt.links.new(mix.outputs[2], p.inputs[&#x27;Base Color&#x27;])\n# satin varnish: roughness follows the grain only slightly\nrr = nd(nt, \&quot;ShaderNodeMapRange\&quot;, (60, -420))\nrr.inputs[&#x27;To Min&#x27;].default_value = 0.30\nrr.inputs[&#x27;To Max&#x27;].default_value = 0.44\nnt.links.new(grain.outputs[&#x27;Fac&#x27;], rr.inputs[&#x27;Value&#x27;])\nnt.links.new(rr.outputs[&#x27;Result&#x27;], p.inputs[&#x27;Roughness&#x27;])\nbmp = nd(nt, \&quot;ShaderNodeBump\&quot;, (160, -560))\nbmp.inputs[&#x27;Strength&#x27;].default_value = 0.18\nbmp.inputs[&#x27;Distance&#x27;].default_value = 0.0006\nnt.links.new(grain.outputs[&#x27;Fac&#x27;], bmp.inputs[&#x27;Height&#x27;])\nnt.links.new(bmp.outputs[&#x27;Normal&#x27;], p.inputs[&#x27;Normal&#x27;])\n\n# ================= 3. base: satin machined metal, not dented =================\nbt = M[&#x27;base_metal&#x27;].node_tree\nnz = find(bt, \&quot;ShaderNodeTexNoise\&quot;)\nnz.inputs[&#x27;Scale&#x27;].default_value = 28.0\nnz.inputs[&#x27;Detail&#x27;].default_value = 6.0\nmp = find(bt, \&quot;ShaderNodeMapping\&quot;)\nmp.inputs[&#x27;Scale&#x27;].default_value = (14.0, 14.0, 3.0)\ncr = find(bt, \&quot;ShaderNodeValToRGB\&quot;)\ncr.color_ramp.elements[0].color = (0.26,) * 3 + (1,)\ncr.color_ramp.elements[1].color = (0.36,) * 3 + (1,)\nbp = find(bt, \&quot;ShaderNodeBsdfPrincipled\&quot;)\nbp.inputs[&#x27;Base Color&#x27;].default_value = (0.585, 0.590, 0.600, 1)\nbump = find(bt, \&quot;ShaderNodeBump\&quot;)\nbump.inputs[&#x27;Strength&#x27;].default_value = 0.06\nbump.inputs[&#x27;Distance&#x27;].default_value = 0.00015\n\n# ================= 4. reframe so the shade isn&#x27;t clipped =================\nbpy.data.cameras[&#x27;Camera&#x27;].lens = 50.0\nH[&#x27;look_at&#x27;](bpy.data.objects[&#x27;Camera&#x27;], (0.605, -0.680, 0.278), (0.088, -0.018, 0.172))\nbpy.context.scene.view_settings.exposure = -0.15\nprint(\&quot;tweaks applied\&quot;)\n&quot;
+}</pre><pre class="out">Code executed successfully: tweaks applied</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 128\nsc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 5.1s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-658dc76c8eefdd3a.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Wood went too swirly, and the rim light is visible in frame. Fixing both.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy\nM = bpy.app.driver_namespace[&#x27;M&#x27;]\ndef find(nt, idname, n=0):\n    hits = [x for x in nt.nodes if x.bl_idname == idname]\n    return hits[n]\n\n# ---- wood: long straight-ish oak grain, not burl marble ----\nnt = M[&#x27;desk&#x27;].node_tree\nw = find(nt, \&quot;ShaderNodeTexWave\&quot;)\nw.inputs[&#x27;Scale&#x27;].default_value = 1.1\nw.inputs[&#x27;Distortion&#x27;].default_value = 3.2\nw.inputs[&#x27;Detail&#x27;].default_value = 3.0\nw.inputs[&#x27;Detail Scale&#x27;].default_value = 1.1\nw.inputs[&#x27;Detail Roughness&#x27;].default_value = 0.45\nmapn = find(nt, \&quot;ShaderNodeMapping\&quot;)\nmapn.inputs[&#x27;Scale&#x27;].default_value = (1.0, 26.0, 1.0)     # grain runs along the desk\nvadd = find(nt, \&quot;ShaderNodeVectorMath\&quot;)\nvadd.inputs[1].default_value = (0.05, 0.05, 0.05)          # barely warp\nblot = find(nt, \&quot;ShaderNodeTexNoise\&quot;, 1)\nblot.inputs[&#x27;Scale&#x27;].default_value = 1.8\nmix = find(nt, \&quot;ShaderNodeMix\&quot;)\nmix.inputs[&#x27;Factor&#x27;].default_value = 0.22\nbmp = find(nt, \&quot;ShaderNodeBump\&quot;)\nbmp.inputs[&#x27;Strength&#x27;].default_value = 0.10\n\n# ---- fill/rim/streak lights: contribute light + reflections, never seen directly ----\nfor name in (\&quot;RoomFill\&quot;, \&quot;RimLight\&quot;, \&quot;StreakCard\&quot;):\n    ob = bpy.data.objects[name]\n    try:\n        ob.visible_camera = False\n        print(name, \&quot;hidden from camera rays\&quot;)\n    except Exception as e:\n        print(name, \&quot;visible_camera failed:\&quot;, e)\n\n# ---- bulb envelope a touch more present ----\npg = find(M[&#x27;glass&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npg.inputs[&#x27;Emission Strength&#x27;].default_value = 1.7\nprint(\&quot;ok\&quot;)\n&quot;
+}</pre><pre class="out">Code executed successfully: RoomFill hidden from camera rays
+RimLight hidden from camera rays
+StreakCard hidden from camera rays
+ok</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 128\nsc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 4.3s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-2bfb8248a45e424b.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>The wood needs a different approach (stretched noise, not wave), and that bright blob is the rim light&#x27;s hotspot on a too-close wall.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, math\nM = bpy.app.driver_namespace[&#x27;M&#x27;]\ndef nd(nt, i, loc):\n    n = nt.nodes.new(i); n.location = loc; return n\n\n# ================= wood, rebuilt from stretched noise (fibrous, not marbled) =========\nm = M[&#x27;desk&#x27;]; nt = m.node_tree; nt.nodes.clear()\nout = nd(nt, \&quot;ShaderNodeOutputMaterial\&quot;, (700, 0))\np   = nd(nt, \&quot;ShaderNodeBsdfPrincipled\&quot;, (440, 0))\nnt.links.new(p.outputs[0], out.inputs[&#x27;Surface&#x27;])\ntc  = nd(nt, \&quot;ShaderNodeTexCoord\&quot;, (-1200, 0))\n\n# --- coarse grain: noise squashed 30:1 along the board&#x27;s length -&gt; long fibres\nmp1 = nd(nt, \&quot;ShaderNodeMapping\&quot;, (-1000, 120))\nmp1.inputs[&#x27;Scale&#x27;].default_value = (1.5, 45.0, 1.5)\nn1  = nd(nt, \&quot;ShaderNodeTexNoise\&quot;, (-820, 120))\nn1.inputs[&#x27;Scale&#x27;].default_value = 2.0\nn1.inputs[&#x27;Detail&#x27;].default_value = 7.0\nn1.inputs[&#x27;Roughness&#x27;].default_value = 0.52\nr1  = nd(nt, \&quot;ShaderNodeValToRGB\&quot;, (-620, 120))\nr1.color_ramp.interpolation = &#x27;EASE&#x27;\nr1.color_ramp.elements[0].position = 0.36\nr1.color_ramp.elements[0].color = (0.088, 0.046, 0.023, 1)\nr1.color_ramp.elements[1].position = 0.64\nr1.color_ramp.elements[1].color = (0.168, 0.099, 0.052, 1)\nnt.links.new(tc.outputs[&#x27;Object&#x27;], mp1.inputs[&#x27;Vector&#x27;])\nnt.links.new(mp1.outputs[&#x27;Vector&#x27;], n1.inputs[&#x27;Vector&#x27;])\nnt.links.new(n1.outputs[&#x27;Fac&#x27;], r1.inputs[&#x27;Fac&#x27;])\n\n# --- fine pores / rays: much tighter squash, darkens the grain slightly\nmp2 = nd(nt, \&quot;ShaderNodeMapping\&quot;, (-1000, -220))\nmp2.inputs[&#x27;Scale&#x27;].default_value = (3.0, 150.0, 3.0)\nn2  = nd(nt, \&quot;ShaderNodeTexNoise\&quot;, (-820, -220))\nn2.inputs[&#x27;Scale&#x27;].default_value = 4.0\nn2.inputs[&#x27;Detail&#x27;].default_value = 4.0\nr2  = nd(nt, \&quot;ShaderNodeValToRGB\&quot;, (-620, -220))\nr2.color_ramp.elements[0].position = 0.42\nr2.color_ramp.elements[0].color = (0.62, 0.62, 0.62, 1)\nr2.color_ramp.elements[1].position = 0.66\nr2.color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1)\nnt.links.new(tc.outputs[&#x27;Object&#x27;], mp2.inputs[&#x27;Vector&#x27;])\nnt.links.new(mp2.outputs[&#x27;Vector&#x27;], n2.inputs[&#x27;Vector&#x27;])\nnt.links.new(n2.outputs[&#x27;Fac&#x27;], r2.inputs[&#x27;Fac&#x27;])\n\nmix = nd(nt, \&quot;ShaderNodeMix\&quot;, (-380, 0))\nmix.data_type = &#x27;RGBA&#x27;; mix.blend_type = &#x27;MULTIPLY&#x27;\nmix.inputs[&#x27;Factor&#x27;].default_value = 0.55\nnt.links.new(r1.outputs[&#x27;Color&#x27;], mix.inputs[6])\nnt.links.new(r2.outputs[&#x27;Color&#x27;], mix.inputs[7])\n\n# --- broad tonal variation across the board\nmp3 = nd(nt, \&quot;ShaderNodeMapping\&quot;, (-620, -520))\nmp3.inputs[&#x27;Scale&#x27;].default_value = (1.0, 3.0, 1.0)\nn3  = nd(nt, \&quot;ShaderNodeTexNoise\&quot;, (-440, -520))\nn3.inputs[&#x27;Scale&#x27;].default_value = 1.4\nn3.inputs[&#x27;Detail&#x27;].default_value = 3.0\nr3  = nd(nt, \&quot;ShaderNodeValToRGB\&quot;, (-260, -520))\nr3.color_ramp.elements[0].color = (0.80, 0.79, 0.78, 1)\nr3.color_ramp.elements[1].color = (1.14, 1.12, 1.09, 1)\nnt.links.new(tc.outputs[&#x27;Object&#x27;], mp3.inputs[&#x27;Vector&#x27;])\nnt.links.new(mp3.outputs[&#x27;Vector&#x27;], n3.inputs[&#x27;Vector&#x27;])\nnt.links.new(n3.outputs[&#x27;Fac&#x27;], r3.inputs[&#x27;Fac&#x27;])\nmix2 = nd(nt, \&quot;ShaderNodeMix\&quot;, (-100, 0))\nmix2.data_type = &#x27;RGBA&#x27;; mix2.blend_type = &#x27;MULTIPLY&#x27;\nmix2.inputs[&#x27;Factor&#x27;].default_value = 0.7\nnt.links.new(mix.outputs[2], mix2.inputs[6])\nnt.links.new(r3.outputs[&#x27;Color&#x27;], mix2.inputs[7])\nnt.links.new(mix2.outputs[2], p.inputs[&#x27;Base Color&#x27;])\n\n# --- satin varnish\nrr = nd(nt, \&quot;ShaderNodeMapRange\&quot;, (140, -260))\nrr.inputs[&#x27;To Min&#x27;].default_value = 0.26\nrr.inputs[&#x27;To Max&#x27;].default_value = 0.42\nnt.links.new(n1.outputs[&#x27;Fac&#x27;], rr.inputs[&#x27;Value&#x27;])\nnt.links.new(rr.outputs[&#x27;Result&#x27;], p.inputs[&#x27;Roughness&#x27;])\nbmp = nd(nt, \&quot;ShaderNodeBump\&quot;, (240, -480))\nbmp.inputs[&#x27;Strength&#x27;].default_value = 0.14\nbmp.inputs[&#x27;Distance&#x27;].default_value = 0.0007\nnt.links.new(mix.outputs[2], bmp.inputs[&#x27;Height&#x27;])\nnt.links.new(bmp.outputs[&#x27;Normal&#x27;], p.inputs[&#x27;Normal&#x27;])\n\n# ================= push the wall back, re-aim the rim light off the wall ============\nbpy.data.objects[&#x27;BackWall&#x27;].location = (0.0, 1.05, 0.55)\nro = bpy.data.objects[&#x27;RimLight&#x27;]\nro.location = (0.44, 0.36, 0.90)\nro.rotation_euler = (math.radians(126), 0, math.radians(24))\nbpy.data.lights[&#x27;RimLight&#x27;].energy = 20.0\nbpy.data.lights[&#x27;RimLight&#x27;].size, bpy.data.lights[&#x27;RimLight&#x27;].size_y = 0.7, 0.30\nprint(\&quot;ok\&quot;)\n&quot;
+}</pre><pre class="out">Code executed successfully: ok</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 128\nsc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 4.3s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-0a13d636d04112ca.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Looking like a real product shot now. Final polish on the bulb so the filament reads clearly, then the full-quality render.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy\nM = bpy.app.driver_namespace[&#x27;M&#x27;]\ndef find(nt, i, n=0):\n    return [x for x in nt.nodes if x.bl_idname == i][n]\n\n# clearer glass so the filament, not the envelope, is the bright thing\npg = find(M[&#x27;glass&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npg.inputs[&#x27;Emission Strength&#x27;].default_value = 0.85\n\n# thicker, hotter coil so it reads at render resolution\nfil = bpy.data.objects[&#x27;Filament&#x27;]\nfil.data.bevel_depth = 0.00095\npf = find(M[&#x27;filament&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npf.inputs[&#x27;Emission Strength&#x27;].default_value = 900.0\n\n# warmer shade interior\npi = find(M[&#x27;shade_in&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npi.inputs[&#x27;Base Color&#x27;].default_value = (0.845, 0.795, 0.725, 1)\n\n# support wires slightly thinner than the coil, dimmer\nfor n in (\&quot;FilWireA\&quot;, \&quot;FilWireB\&quot;):\n    o = bpy.data.objects.get(n)\n    if o: o.scale = (0.8, 0.8, 1.0)\n\nimport time\nsc = bpy.context.scene\nold = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 160\nsc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = old\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 4.7s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-2eeabb0e6ed77528.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>The bulb is blown out because clear glass refracts the bright interior through it. Let me tune it and inspect with a close-up.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nfrom mathutils import Vector\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]; G = bpy.app.driver_namespace[&#x27;G&#x27;]\ndef find(nt, i, n=0): return [x for x in nt.nodes if x.bl_idname == i][n]\nd_sh, P2 = G[&#x27;d_sh&#x27;], G[&#x27;P2&#x27;]\n\n# slide the bulb ~11 mm toward the mouth so its neck + cap show, and the envelope\n# sits against the darker rim rather than deep in the white cone\nBULBGRP = [\&quot;BulbGlass\&quot;, \&quot;BulbCap\&quot;, \&quot;BulbThread\&quot;, \&quot;BulbTipContact\&quot;, \&quot;Filament\&quot;,\n           \&quot;BulbStem\&quot;, \&quot;FilWireA\&quot;, \&quot;FilWireB\&quot;, \&quot;LampHolder\&quot;, \&quot;BulbLight\&quot;]\nfor n in BULBGRP:\n    o = bpy.data.objects.get(n)\n    if o: o.location = Vector(o.location) + d_sh * 0.011\n\n# lightly frosted, distinctly warm envelope -&gt; reads as a bulb, not a lens\npg = find(M[&#x27;glass&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npg.inputs[&#x27;Roughness&#x27;].default_value = 0.22\npg.inputs[&#x27;Transmission Weight&#x27;].default_value = 0.95\npg.inputs[&#x27;Base Color&#x27;].default_value = (1.0, 0.93, 0.84, 1)\npg.inputs[&#x27;Emission Strength&#x27;].default_value = 1.4\npg.inputs[&#x27;Emission Color&#x27;].default_value = (1.0, 0.60, 0.28, 1)\n\n# interior a little less blinding so the bulb stands out against it\npi = find(M[&#x27;shade_in&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npi.inputs[&#x27;Base Color&#x27;].default_value = (0.72, 0.675, 0.615, 1)\nbpy.data.lights[&#x27;BulbLight&#x27;].energy = 30.0\n\n# ---- close-up check on the shade ----\ncam = bpy.data.objects[&#x27;Camera&#x27;]\nsaved = cam.matrix_world.copy(); saved_lens = bpy.data.cameras[&#x27;Camera&#x27;].lens\nMOUTH = P2 + d_sh * 0.075\nH[&#x27;look_at&#x27;](cam, MOUTH + Vector((0.19, -0.22, 0.055)), MOUTH)\nbpy.data.cameras[&#x27;Camera&#x27;].lens = 68.0\nsc = bpy.context.scene\no = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 200; sc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_bulb.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;closeup %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = o\ncam.matrix_world = saved; bpy.data.cameras[&#x27;Camera&#x27;].lens = saved_lens\n&quot;
+}</pre><pre class="out">Code executed successfully: closeup 8.1s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_bulb.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_bulb.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-8676c45832338a8b.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Frosting hid the filament. Let me go clear-glass with the filament as the only hot element and more contrast against the interior.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nfrom mathutils import Vector\nH = bpy.app.driver_namespace[&#x27;H&#x27;]; M = bpy.app.driver_namespace[&#x27;M&#x27;]; G = bpy.app.driver_namespace[&#x27;G&#x27;]\ndef find(nt, i, n=0): return [x for x in nt.nodes if x.bl_idname == i][n]\nd_sh, P2 = G[&#x27;d_sh&#x27;], G[&#x27;P2&#x27;]\n\n# clear glass, no self-glow: the coil is the light, the envelope is just glass\npg = find(M[&#x27;glass&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npg.inputs[&#x27;Roughness&#x27;].default_value = 0.03\npg.inputs[&#x27;Transmission Weight&#x27;].default_value = 1.0\npg.inputs[&#x27;Base Color&#x27;].default_value = (1.0, 0.985, 0.965, 1)\npg.inputs[&#x27;Emission Strength&#x27;].default_value = 0.0\n\n# bigger, brighter coil\nfil = bpy.data.objects[&#x27;Filament&#x27;]\nfil.data.bevel_depth = 0.00105\npf = find(M[&#x27;filament&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npf.inputs[&#x27;Emission Strength&#x27;].default_value = 1400.0\n\n# interior: warm cream, no longer competing with the bulb for \&quot;brightest thing\&quot;\npi = find(M[&#x27;shade_in&#x27;].node_tree, \&quot;ShaderNodeBsdfPrincipled\&quot;)\npi.inputs[&#x27;Base Color&#x27;].default_value = (0.62, 0.575, 0.505, 1)\nbpy.data.lights[&#x27;BulbLight&#x27;].energy = 32.0\nbpy.context.scene.view_settings.exposure = 0.15\n\ncam = bpy.data.objects[&#x27;Camera&#x27;]\nsaved, saved_lens = cam.matrix_world.copy(), bpy.data.cameras[&#x27;Camera&#x27;].lens\nMOUTH = P2 + d_sh * 0.075\nH[&#x27;look_at&#x27;](cam, MOUTH + Vector((0.19, -0.22, 0.055)), MOUTH)\nbpy.data.cameras[&#x27;Camera&#x27;].lens = 68.0\nsc = bpy.context.scene\no = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 220; sc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_bulb.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;closeup %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = o\ncam.matrix_world = saved; bpy.data.cameras[&#x27;Camera&#x27;].lens = saved_lens\n&quot;
+}</pre><pre class="out">Code executed successfully: closeup 7.4s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_bulb.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_bulb.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-e745d99312dffaf3.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Bulb now reads correctly — glass envelope with specular edge and a hot coil inside. Checking the wide shot with the new exposure balance:</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\no = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 160; sc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = o\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 3.9s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-9c07d171a6d40406.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>The bulb is clearly visible inside the shade now, and everything in the brief is present. Organizing the scene into collections, then the final high-quality render.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy\n\nsc = bpy.context.scene\nroot = sc.collection\n\ndef get_coll(name):\n    c = bpy.data.collections.get(name)\n    if not c:\n        c = bpy.data.collections.new(name)\n        root.children.link(c)\n    return c\n\nSET      = get_coll(\&quot;Set\&quot;)\nLIGHTING = get_coll(\&quot;Lighting\&quot;)\nLAMP     = get_coll(\&quot;Lamp\&quot;)\nC_BASE   = bpy.data.collections.new(\&quot;Lamp_Base\&quot;);  LAMP.children.link(C_BASE)\nC_ARM    = bpy.data.collections.new(\&quot;Lamp_Arm\&quot;);   LAMP.children.link(C_ARM)\nC_HEAD   = bpy.data.collections.new(\&quot;Lamp_Head\&quot;);  LAMP.children.link(C_HEAD)\n\nBASE_N = {\&quot;LampBase\&quot;, \&quot;FeltPad\&quot;, \&quot;PivotHub\&quot;, \&quot;PivotCollar\&quot;, \&quot;Cable\&quot;, \&quot;StrainRelief\&quot;,\n          \&quot;SwitchBezel\&quot;, \&quot;SwitchButton\&quot;}\nHEAD_N = {\&quot;Shade\&quot;, \&quot;ShadeStem\&quot;, \&quot;ShadeCollar\&quot;, \&quot;LampHolder\&quot;, \&quot;BulbGlass\&quot;, \&quot;BulbCap\&quot;,\n          \&quot;BulbThread\&quot;, \&quot;BulbTipContact\&quot;, \&quot;Filament\&quot;, \&quot;BulbStem\&quot;, \&quot;FilWireA\&quot;, \&quot;FilWireB\&quot;}\nSET_N  = {\&quot;Desk\&quot;, \&quot;BackWall\&quot;, \&quot;Camera\&quot;}\n\ndef move(ob, coll):\n    for c in list(ob.users_collection):\n        c.objects.unlink(ob)\n    coll.objects.link(ob)\n\nfor ob in list(bpy.data.objects):\n    n = ob.name\n    if n in SET_N:                       move(ob, SET)\n    elif ob.type == &#x27;LIGHT&#x27;:             move(ob, LIGHTING)\n    elif n in BASE_N:                    move(ob, C_BASE)\n    elif n in HEAD_N:                    move(ob, C_HEAD)\n    else:                                move(ob, C_ARM)   # rods, springs, pivots, knobs\n\n# the bulb light belongs conceptually to the head, but keep lights together\ncounts = {c.name: len(c.objects) for c in\n          [SET, LIGHTING, C_BASE, C_ARM, C_HEAD]}\nprint(\&quot;collections:\&quot;, counts)\nprint(\&quot;total objects:\&quot;, len(bpy.data.objects))\n&quot;
+}</pre><pre class="out">Code executed successfully: collections: {&#x27;Set&#x27;: 3, &#x27;Lighting&#x27;: 4, &#x27;Lamp_Base&#x27;: 8, &#x27;Lamp_Arm&#x27;: 31, &#x27;Lamp_Head&#x27;: 12}
+total objects: 58</pre></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nsc = bpy.context.scene\nsc.cycles.samples = 1024\nsc.cycles.adaptive_threshold = 0.006\nsc.cycles.use_denoising = True\nsc.render.resolution_x, sc.render.resolution_y = 1080, 1350\nsc.render.resolution_percentage = 100\nsc.render.image_settings.file_format = &#x27;PNG&#x27;\nsc.render.image_settings.color_mode = &#x27;RGB&#x27;\nsc.render.image_settings.color_depth = &#x27;8&#x27;\nsc.render.image_settings.compression = 15\nsc.render.filepath = \&quot;/path/to/lamp.png\&quot;\n\nt = time.time()\nbpy.ops.render.render(write_still=True)\nprint(\&quot;FINAL render %.1fs -&gt; %s\&quot; % (time.time() - t, sc.render.filepath))\n&quot;
+}</pre><pre class="out">Code executed successfully: FINAL render 46.6s -&gt; /path/to/lamp.png</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">lamp.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/lamp.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-d9472b820e9c29c4.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Full res reveals the weak spots: the desk reads as striped laminate, the base has a cloudy smudge, and there&#x27;s a hard light edge at frame left. Fixing those.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, math, time\nM = bpy.app.driver_namespace[&#x27;M&#x27;]\ndef finds(nt, i): return [x for x in nt.nodes if x.bl_idname == i]\n\n# ---------- wood: wider, wavier, varying grain instead of uniform stripes ----------\nnt = M[&#x27;desk&#x27;].node_tree\nmaps = sorted(finds(nt, \&quot;ShaderNodeMapping\&quot;), key=lambda n: -n.location.y)\nnz   = sorted(finds(nt, \&quot;ShaderNodeTexNoise\&quot;), key=lambda n: -n.location.y)\nrmp  = sorted(finds(nt, \&quot;ShaderNodeValToRGB\&quot;), key=lambda n: -n.location.y)\nmixes= sorted(finds(nt, \&quot;ShaderNodeMix\&quot;), key=lambda n: n.location.x)\n\nmaps[0].inputs[&#x27;Scale&#x27;].default_value = (2.0, 22.0, 2.0)     # 11:1, not 30:1\nnz[0].inputs[&#x27;Scale&#x27;].default_value = 1.6\nnz[0].inputs[&#x27;Detail&#x27;].default_value = 8.0\nnz[0].inputs[&#x27;Roughness&#x27;].default_value = 0.62               # octaves -&gt; varied line widths\nrmp[0].color_ramp.elements[0].position = 0.32\nrmp[0].color_ramp.elements[1].position = 0.70\n\nmaps[1].inputs[&#x27;Scale&#x27;].default_value = (4.0, 62.0, 4.0)     # pores, much less stripey\nnz[1].inputs[&#x27;Scale&#x27;].default_value = 3.0\nrmp[1].color_ramp.elements[0].color = (0.80, 0.80, 0.80, 1)  # lower contrast\nrmp[1].color_ramp.elements[1].color = (1.0, 1.0, 1.0, 1)\nmixes[0].inputs[&#x27;Factor&#x27;].default_value = 0.40\n\n# ---------- base: even satin, no cloudy patch ----------\nbt = M[&#x27;base_metal&#x27;].node_tree\nfinds(bt, \&quot;ShaderNodeTexNoise\&quot;)[0].inputs[&#x27;Scale&#x27;].default_value = 65.0\nfinds(bt, \&quot;ShaderNodeMapping\&quot;)[0].inputs[&#x27;Scale&#x27;].default_value = (10.0, 10.0, 2.5)\ncr = finds(bt, \&quot;ShaderNodeValToRGB\&quot;)[0]\ncr.color_ramp.elements[0].color = (0.285,) * 3 + (1,)\ncr.color_ramp.elements[1].color = (0.335,) * 3 + (1,)\nbmp = finds(bt, \&quot;ShaderNodeBump\&quot;)[0]\nbmp.inputs[&#x27;Strength&#x27;].default_value = 0.03\n\n# ---------- soften the fill so no hard edge crosses the wall ----------\nf = bpy.data.lights[&#x27;RoomFill&#x27;]\nf.size, f.size_y = 3.4, 2.4\nf.energy = 68.0\nfo = bpy.data.objects[&#x27;RoomFill&#x27;]\nfo.location = (-1.60, -1.60, 1.55)\nfo.rotation_euler = (math.radians(46), math.radians(-18), math.radians(-36))\n\nsc = bpy.context.scene\no = (sc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath)\nsc.cycles.samples = 160; sc.render.resolution_percentage = 55\nsc.render.filepath = \&quot;/path/to/_preview.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;preview %.1fs\&quot; % (time.time() - t))\nsc.cycles.samples, sc.render.resolution_percentage, sc.render.filepath = o\n&quot;
+}</pre><pre class="out">Code executed successfully: preview 5.4s</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">_preview.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/_preview.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-05546732657b82fd.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Wood and base look right now. Restoring brightness (the fill moved further away) and rendering the final.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nbpy.data.lights[&#x27;RoomFill&#x27;].energy = 118.0     # compensate for the extra distance\nbpy.data.lights[&#x27;RimLight&#x27;].energy = 24.0\nbpy.context.scene.view_settings.exposure = 0.20\n\nsc = bpy.context.scene\nsc.cycles.samples = 1600\nsc.cycles.adaptive_threshold = 0.004\nsc.render.resolution_x, sc.render.resolution_y = 1080, 1350\nsc.render.resolution_percentage = 100\nsc.render.image_settings.file_format = &#x27;PNG&#x27;\nsc.render.filepath = \&quot;/path/to/lamp.png\&quot;\nt = time.time()\nbpy.ops.render.render(write_still=True)\nprint(\&quot;FINAL %.1fs -&gt; %s\&quot; % (time.time() - t, sc.render.filepath))\n&quot;
+}</pre><pre class="out">Code executed successfully: FINAL 78.8s -&gt; /path/to/lamp.png</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">lamp.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/lamp.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-fbfb2ab9bf77832d.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>One artifact left: at frame-left the view sees past the end of the back wall. Widening it and re-rendering.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, time\nw = bpy.data.objects[&#x27;BackWall&#x27;]\nw.scale = (3.2, 1.0, 1.4)          # 3 m -&gt; 9.6 m wide, taller; kills the visible end edge\nprint(\&quot;wall span x:\&quot;, round(-1.5*3.2, 2), \&quot;to\&quot;, round(1.5*3.2, 2),\n      \&quot;| top z:\&quot;, round(0.55 + 0.9*1.4, 2))\n\nsc = bpy.context.scene\nsc.render.filepath = \&quot;/path/to/lamp.png\&quot;\nt = time.time(); bpy.ops.render.render(write_still=True)\nprint(\&quot;FINAL %.1fs -&gt; %s\&quot; % (time.time() - t, sc.render.filepath))\n&quot;
+}</pre><pre class="out">Code executed successfully: wall span x: -4.8 to 4.8 | top z: 1.81
+FINAL 94.9s -&gt; /path/to/lamp.png</pre></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">lamp.png</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/lamp.png&quot;
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-428a0d5129e55b3e.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Clean. Saving the .blend and removing my scratch previews.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_blender_code</span><span class="ts"></span></div><pre class="args">{
+  &quot;code&quot;: &quot;\nimport bpy, os, json\n\nsc = bpy.context.scene\nsc.render.filepath = \&quot;/path/to/lamp.png\&quot;\nsc.frame_current = 1\n\nBLEND = \&quot;/path/to/lamp.blend\&quot;\nbpy.ops.wm.save_as_mainfile(filepath=BLEND, compress=True)\n\n# remove my own scratch previews\nfor f in (\&quot;_preview.png\&quot;, \&quot;_bulb.png\&quot;):\n    p = os.path.join(\&quot;/path/to/blender\&quot;, f)\n    if os.path.exists(p):\n        os.remove(p); print(\&quot;removed\&quot;, f)\n\npng = \&quot;/path/to/lamp.png\&quot;\nout = {\n    \&quot;blend\&quot;: BLEND, \&quot;blend_kb\&quot;: round(os.path.getsize(BLEND) / 1024, 1),\n    \&quot;png\&quot;: png, \&quot;png_kb\&quot;: round(os.path.getsize(png) / 1024, 1),\n    \&quot;resolution\&quot;: [sc.render.resolution_x, sc.render.resolution_y],\n    \&quot;engine\&quot;: sc.render.engine, \&quot;device\&quot;: sc.cycles.device,\n    \&quot;samples\&quot;: sc.cycles.samples, \&quot;denoise\&quot;: sc.cycles.use_denoising,\n    \&quot;view_transform\&quot;: sc.view_settings.view_transform,\n    \&quot;objects\&quot;: len(bpy.data.objects), \&quot;materials\&quot;: len(bpy.data.materials),\n    \&quot;lights\&quot;: [(o.name, o.data.type, round(o.data.energy, 1)) for o in bpy.data.objects if o.type == &#x27;LIGHT&#x27;],\n    \&quot;collections\&quot;: {c.name: len(c.all_objects) for c in bpy.data.collections},\n}\nprint(json.dumps(out, indent=1))\n&quot;
+}</pre><pre class="out">Code executed successfully: 信息: 已另存为 &quot;lamp.blend&quot;
+removed _preview.png
+removed _bulb.png
+{
+ &quot;blend&quot;: &quot;/path/to/lamp.blend&quot;,
+ &quot;blend_kb&quot;: 319.7,
+ &quot;png&quot;: &quot;/path/to/lamp.png&quot;,
+ &quot;png_kb&quot;: 1363.7,
+ &quot;resolution&quot;: [
+  1080,
+  1350
+ ],
+ &quot;engine&quot;: &quot;CYCLES&quot;,
+ &quot;device&quot;: &quot;GPU&quot;,
+ &quot;samples&quot;: 1600,
+ &quot;denoise&quot;: true,
+ &quot;view_transform&quot;: &quot;AgX&quot;,
+ &quot;objects&quot;: 58,
+ &quot;materials&quot;: 14,
+ &quot;lights&quot;: [
+  [
+   &quot;BulbLight&quot;,
+   &quot;POINT&quot;,
+   32.0
+  ],
+  [
+   &quot;RimLight&quot;,
+   &quot;AREA&quot;,
+   24.0
+  ],
+  [
+   &quot;RoomFill&quot;,
+   &quot;AREA&quot;,
+   118.0
+  ],
+  [
+   &quot;StreakCard&quot;,
+   &quot;AREA&quot;,
+   18.0
+  ]
+ ],
+ &quot;collections&quot;: {
+  &quot;Collection&quot;: 0,
+  &quot;Lamp&quot;: 51,
+  &quot;Lamp_Arm&quot;: 31,
+  &quot;Lamp_Base&quot;: 8,
+  &quot;Lamp_Head&quot;: 12,
+  &quot;Lighting&quot;: 4,
+  &quot;Set&quot;: 3
+ }
+}</pre></div>
+<div class="t"><div class="tline"><span class="tn">get_scene_info</span><span class="ts"></span></div><pre class="out">{
+  &quot;name&quot;: &quot;Scene&quot;,
+  &quot;object_count&quot;: 58,
+  &quot;objects&quot;: [
+    {
+      &quot;name&quot;: &quot;BackWall&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        1.05,
+        0.55
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Camera&quot;,
+      &quot;type&quot;: &quot;CAMERA&quot;,
+      &quot;location&quot;: [
+        0.61,
+        -0.68,
+        0.28
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Desk&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.05,
+        0.1,
+        -0.02
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;BulbLight&quot;,
+      &quot;type&quot;: &quot;LIGHT&quot;,
+      &quot;location&quot;: [
+        0.23,
+        -0.02,
+        0.22
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;RimLight&quot;,
+      &quot;type&quot;: &quot;LIGHT&quot;,
+      &quot;location&quot;: [
+        0.44,
+        0.36,
+        0.9
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;RoomFill&quot;,
+      &quot;type&quot;: &quot;LIGHT&quot;,
+      &quot;location&quot;: [
+        -1.6,
+        -1.6,
+        1.55
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;StreakCard&quot;,
+      &quot;type&quot;: &quot;LIGHT&quot;,
+      &quot;location&quot;: [
+        0.95,
+        -0.42,
+        0.6
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;Cable&quot;,
+      &quot;type&quot;: &quot;CURVE&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;FeltPad&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        -0.0
+      ]
+    },
+    {
+      &quot;name&quot;: &quot;LampBase&quot;,
+      &quot;type&quot;: &quot;MESH&quot;,
+      &quot;location&quot;: [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  &quot;materials_count&quot;: 14
+}</pre></div>
+<div class="a"><div class="who">Claude Code</div><div class="bubble"><p>Done. Both files are written and verified.</p>
+<p><strong><code>/path/to/lamp.png</code></strong> — 1080×1350, Cycles on Metal GPU, 1600 adaptive samples + OpenImageDenoise, AgX view transform.<br><strong><code>/path/to/lamp.blend</code></strong> — 58 objects, 14 materials, organized into <code>Lamp/{Base,Arm,Head}</code>, <code>Set</code>, <code>Lighting</code> collections.</p>
+<p><strong>Modelled from scratch</strong> (no imported assets) — primitives, bmesh lathes of hand-authored profiles, and bevelled helix curves:</p>
+<table><thead><tr><th>Part</th><th>Real-world dimension</th></tr></thead><tbody><tr><td>Overall</td><td>355 mm tall, 338 mm forward reach</td></tr><tr><td>Base</td><td>170 mm dia × 33 mm crowned cast disc, 2 mm felt pad</td></tr><tr><td>Arm</td><td>two 300/285 mm segments, twin 9 mm rods</td></tr><tr><td>Shade</td><td>147 mm mouth, 1.9 mm wall shell</td></tr><tr><td>Bulb</td><td>A60 envelope, 62 mm dia, E27 brass cap</td></tr></tbody></table>
+<p><strong>Articulation</strong> is a proper Anglepoise layout: three pivots (base swivel, elbow, head) each a knuckle with knurled adjustment knobs — the knurling is a 26× radial array of ridges, not a texture. Twin parallel rods per segment with a real helical tension spring riding between them, plus anchor tabs. The head also swivels on its collar, which is what aims the shade at the camera.</p>
+<p><strong>Materials</strong> are all procedural. Brushed metal is a Principled metal with anisotropy plus a noise stretched ~45:1 along each part&#x27;s local axis driving roughness and a fine bump, so the streaks run lengthwise down the rods and circumferentially around the shade. The shade is one shell object with two slots — brushed outside, warm off-white inside — assigned by testing each face normal against its radial direction.</p>
+<p><strong>Lighting is entirely in-scene.</strong> The bulb is the key: a clear-glass envelope with a 1400-strength emissive filament coil, plus a co-located 32 W warm point light (hidden from camera rays) doing the heavy lifting for clean sampling. Three low-energy area lights stand in for room ambience and are also hidden from camera rays — they exist so the brushed metal has something to reflect.</p>
+<p>Two notes on judgement calls I made along the way. The bulb initially rendered as a featureless white blob because clear glass refracts the blown-out shade interior straight through itself; I fixed it by dropping the glass&#x27;s own emission to zero, dimming the interior albedo so the filament is the only clipped element, and sliding the bulb 11 mm toward the mouth. Separately, at full resolution the frame&#x27;s left edge was seeing past the end of the back wall, which read as a hard vertical seam — the wall is now 9.6 m wide.</p></div></div>
+</main>
+<div id="lb" onclick="this.classList.remove('on')"><img alt=""></div>
+<script>
+function lb(src){var d=document.getElementById('lb');d.querySelector('img').src=src;d.classList.add('on');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').classList.remove('on');});
+</script>
+</body></html>

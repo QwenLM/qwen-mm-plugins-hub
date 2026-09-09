@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Read a video, then read Figure 2 from a PDF</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fbfbfa; color: #1a1a1a;
+         font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 32px; letter-spacing: -0.01em; }
+  h1 .tag { display: inline-block; vertical-align: middle; margin-left: 10px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: #5b4bdb;
+            background: #efeafe; border: 1px solid #ddd4fb; border-radius: 999px;
+            padding: 2px 10px; }
+  .who { font-size: 11px; font-weight: 600; text-transform: uppercase;
+         letter-spacing: 0.06em; color: #8a8a85; margin-bottom: 6px; }
+  .u, .a { margin: 24px 0; }
+  .bubble { word-wrap: break-word; overflow-wrap: break-word; }
+  .u .bubble { color: #111; }
+  .a .bubble { color: #333; }
+  .bubble p { margin: 0 0 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble h2 { font-size: 17px; margin: 18px 0 8px; }
+  .bubble h3 { font-size: 15px; margin: 16px 0 6px; }
+  .bubble h4 { font-size: 14px; margin: 14px 0 6px; color: #444; }
+  .bubble ul, .bubble ol { margin: 6px 0 10px; padding-left: 22px; }
+  .bubble li { margin: 2px 0; }
+  .bubble code { background: #f0f0ec; padding: 1px 5px; border-radius: 4px;
+                 font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; }
+  .bubble pre.md { background: #f4f4f1; padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  .bubble pre.md code { background: none; padding: 0; }
+  .bubble blockquote { margin: 8px 0; padding: 2px 12px; border-left: 3px solid #d9d9d4;
+                       color: #555; }
+  .bubble a { color: #5b4bdb; }
+  .bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13px; display: block;
+                  overflow-x: auto; max-width: 100%; }
+  .bubble th, .bubble td { border: 1px solid #e0e0db; padding: 6px 10px; text-align: left;
+                           vertical-align: top; }
+  .bubble th { background: #f4f4f1; font-weight: 600; }
+  .t { margin: 12px 0; padding-left: 14px; border-left: 2px solid #e5e5e0; }
+  .tline { display: flex; gap: 8px; align-items: baseline; }
+  .tn { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+        font-weight: 600; color: #5b4bdb; }
+  .ts { color: #8a8a85; font-size: 13px; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap; }
+  pre.out { margin: 8px 0 0; padding: 10px 12px; background: #f4f4f1;
+            border-radius: 6px; font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+            white-space: pre-wrap; word-break: break-word; max-height: 320px;
+            overflow: auto; color: #444; }
+  pre.out.err { background: #fdf0ef; color: #b3261e; }
+  pre.args { margin: 8px 0 0; padding: 10px 12px; background: #f3f2fb;
+             border: 1px solid #e7e4fb; border-radius: 6px;
+             font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+             white-space: pre-wrap; word-break: break-word; max-height: 300px;
+             overflow: auto; color: #444; }
+  details.think { margin: 16px 0; }
+  details.think > summary { cursor: pointer; color: #8a8a85; font-size: 13px;
+                            list-style: none; }
+  details.think .bubble { margin-top: 8px; padding-left: 14px; border-left: 2px solid #e5e5e0;
+                          color: #666; }
+  .frames-note { margin: 8px 0 4px; color: #8a8a85; font-size: 12px; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px;
+           scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .strip figure { flex: 0 0 auto; margin: 0; scroll-snap-align: start; text-align: center; }
+  .strip img { height: 150px; width: auto; max-width: none; border: 1px solid #e5e5e0;
+               border-radius: 6px; cursor: zoom-in; display: block; background: #fff; }
+  .strip figcaption { margin-top: 4px; color: #8a8a85; font-size: 11px;
+                      font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .strip::-webkit-scrollbar { height: 8px; }
+  .strip::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 4px; }
+  #lb { display: none; position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
+        background: rgba(0,0,0,.85); align-items: center; justify-content: center; }
+  #lb.on { display: flex; }
+  #lb img { max-width: 94vw; max-height: 94vh; border-radius: 6px; }
+</style></head><body><main>
+<h1>Read a video, then read Figure 2 from a PDF <span class="tag">Claude Code</span></h1>
+<div class="u"><div class="who">User</div><div class="bubble"><p>@/path/to/Qwen-3.8-VL_v4.mp4 Hello! Could you read this video?</p></div></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>I&#x27;ll read the video for you.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">read_video</span><span class="ts">Qwen-3.8-VL_v4.mp4</span></div><pre class="args">{
+  &quot;video_path&quot;: &quot;/path/to/Qwen-3.8-VL_v4.mp4&quot;
+}</pre><pre class="out">Video: /path/to/Qwen-3.8-VL_v4.mp4 | 150.2s | 300 frames @ 2.0fps [0:00.0–2:30.2] | 384x672 (HxW)</pre><div class="frames-note">300 frames — scroll →</div><div class="strip"><figure><img loading="lazy" src="assert/image-2f79e8acd40b564a.jpg" alt="0:00.0" onclick="lb(this.src)"><figcaption>0:00.0</figcaption></figure><figure><img loading="lazy" src="assert/image-9b3cf919d43415d5.jpg" alt="0:00.5" onclick="lb(this.src)"><figcaption>0:00.5</figcaption></figure><figure><img loading="lazy" src="assert/image-81f5cbd56896c3ac.jpg" alt="0:01.0" onclick="lb(this.src)"><figcaption>0:01.0</figcaption></figure><figure><img loading="lazy" src="assert/image-e0ca0d7e43d57b32.jpg" alt="0:01.5" onclick="lb(this.src)"><figcaption>0:01.5</figcaption></figure><figure><img loading="lazy" src="assert/image-c68dbbc4d497d9bc.jpg" alt="0:02.0" onclick="lb(this.src)"><figcaption>0:02.0</figcaption></figure><figure><img loading="lazy" src="assert/image-32eff4e87f44e8be.jpg" alt="0:02.5" onclick="lb(this.src)"><figcaption>0:02.5</figcaption></figure><figure><img loading="lazy" src="assert/image-2e3621a0cee59cda.jpg" alt="0:03.0" onclick="lb(this.src)"><figcaption>0:03.0</figcaption></figure><figure><img loading="lazy" src="assert/image-a63462a76e565184.jpg" alt="0:03.5" onclick="lb(this.src)"><figcaption>0:03.5</figcaption></figure><figure><img loading="lazy" src="assert/image-dd17652f594c20f8.jpg" alt="0:04.0" onclick="lb(this.src)"><figcaption>0:04.0</figcaption></figure><figure><img loading="lazy" src="assert/image-b32fc91dfd8ef4c2.jpg" alt="0:04.5" onclick="lb(this.src)"><figcaption>0:04.5</figcaption></figure><figure><img loading="lazy" src="assert/image-8d145bd67a4a5945.jpg" alt="0:05.0" onclick="lb(this.src)"><figcaption>0:05.0</figcaption></figure><figure><img loading="lazy" src="assert/image-a5065376fefc694a.jpg" alt="0:05.5" onclick="lb(this.src)"><figcaption>0:05.5</figcaption></figure><figure><img loading="lazy" src="assert/image-1a5456f92019f320.jpg" alt="0:06.0" onclick="lb(this.src)"><figcaption>0:06.0</figcaption></figure><figure><img loading="lazy" src="assert/image-e72b99aea640ab13.jpg" alt="0:06.5" onclick="lb(this.src)"><figcaption>0:06.5</figcaption></figure><figure><img loading="lazy" src="assert/image-9ff4481b5a0eba2c.jpg" alt="0:07.0" onclick="lb(this.src)"><figcaption>0:07.0</figcaption></figure><figure><img loading="lazy" src="assert/image-4729874d39f34109.jpg" alt="0:07.5" onclick="lb(this.src)"><figcaption>0:07.5</figcaption></figure><figure><img loading="lazy" src="assert/image-f0b0056c4b8d12a2.jpg" alt="0:08.0" onclick="lb(this.src)"><figcaption>0:08.0</figcaption></figure><figure><img loading="lazy" src="assert/image-7db9d194e23111cb.jpg" alt="0:08.5" onclick="lb(this.src)"><figcaption>0:08.5</figcaption></figure><figure><img loading="lazy" src="assert/image-704337dc56c9b62d.jpg" alt="0:09.0" onclick="lb(this.src)"><figcaption>0:09.0</figcaption></figure><figure><img loading="lazy" src="assert/image-aba168eb59afff87.jpg" alt="0:09.5" onclick="lb(this.src)"><figcaption>0:09.5</figcaption></figure><figure><img loading="lazy" src="assert/image-68b04638249e1a9c.jpg" alt="0:10.0" onclick="lb(this.src)"><figcaption>0:10.0</figcaption></figure><figure><img loading="lazy" src="assert/image-2825b51c23477446.jpg" alt="0:10.5" onclick="lb(this.src)"><figcaption>0:10.5</figcaption></figure><figure><img loading="lazy" src="assert/image-66f00e0a81293ada.jpg" alt="0:11.1" onclick="lb(this.src)"><figcaption>0:11.1</figcaption></figure><figure><img loading="lazy" src="assert/image-f861c8f36d8aab1e.jpg" alt="0:11.6" onclick="lb(this.src)"><figcaption>0:11.6</figcaption></figure><figure><img loading="lazy" src="assert/image-0d18be0a7847e99f.jpg" alt="0:12.1" onclick="lb(this.src)"><figcaption>0:12.1</figcaption></figure><figure><img loading="lazy" src="assert/image-6e1cba20be7d8c71.jpg" alt="0:12.6" onclick="lb(this.src)"><figcaption>0:12.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8eac8fbc09bd2fbf.jpg" alt="0:13.1" onclick="lb(this.src)"><figcaption>0:13.1</figcaption></figure><figure><img loading="lazy" src="assert/image-5e28a0b0e3f7571b.jpg" alt="0:13.6" onclick="lb(this.src)"><figcaption>0:13.6</figcaption></figure><figure><img loading="lazy" src="assert/image-76f4e1e30fa94b85.jpg" alt="0:14.1" onclick="lb(this.src)"><figcaption>0:14.1</figcaption></figure><figure><img loading="lazy" src="assert/image-58aa18ed4798da15.jpg" alt="0:14.6" onclick="lb(this.src)"><figcaption>0:14.6</figcaption></figure><figure><img loading="lazy" src="assert/image-5b4ce56bb5ef0d33.jpg" alt="0:15.1" onclick="lb(this.src)"><figcaption>0:15.1</figcaption></figure><figure><img loading="lazy" src="assert/image-f7958c7fea60598c.jpg" alt="0:15.6" onclick="lb(this.src)"><figcaption>0:15.6</figcaption></figure><figure><img loading="lazy" src="assert/image-16a04f1dfc145616.jpg" alt="0:16.1" onclick="lb(this.src)"><figcaption>0:16.1</figcaption></figure><figure><img loading="lazy" src="assert/image-cbc6b248cdca762d.jpg" alt="0:16.6" onclick="lb(this.src)"><figcaption>0:16.6</figcaption></figure><figure><img loading="lazy" src="assert/image-12ea9bed40033d69.jpg" alt="0:17.1" onclick="lb(this.src)"><figcaption>0:17.1</figcaption></figure><figure><img loading="lazy" src="assert/image-8465fc8d35a07791.jpg" alt="0:17.6" onclick="lb(this.src)"><figcaption>0:17.6</figcaption></figure><figure><img loading="lazy" src="assert/image-6a4361b55bca8493.jpg" alt="0:18.1" onclick="lb(this.src)"><figcaption>0:18.1</figcaption></figure><figure><img loading="lazy" src="assert/image-f4ed2a9bc92c3636.jpg" alt="0:18.6" onclick="lb(this.src)"><figcaption>0:18.6</figcaption></figure><figure><img loading="lazy" src="assert/image-21f22cbee81ab8a2.jpg" alt="0:19.1" onclick="lb(this.src)"><figcaption>0:19.1</figcaption></figure><figure><img loading="lazy" src="assert/image-94b85e0d051ba4f8.jpg" alt="0:19.6" onclick="lb(this.src)"><figcaption>0:19.6</figcaption></figure><figure><img loading="lazy" src="assert/image-2dc650b238d31be1.jpg" alt="0:20.1" onclick="lb(this.src)"><figcaption>0:20.1</figcaption></figure><figure><img loading="lazy" src="assert/image-2159481d6478055f.jpg" alt="0:20.6" onclick="lb(this.src)"><figcaption>0:20.6</figcaption></figure><figure><img loading="lazy" src="assert/image-6b01e771356410a2.jpg" alt="0:21.1" onclick="lb(this.src)"><figcaption>0:21.1</figcaption></figure><figure><img loading="lazy" src="assert/image-69f545db0ae6c275.jpg" alt="0:21.6" onclick="lb(this.src)"><figcaption>0:21.6</figcaption></figure><figure><img loading="lazy" src="assert/image-571634510110d2f0.jpg" alt="0:22.1" onclick="lb(this.src)"><figcaption>0:22.1</figcaption></figure><figure><img loading="lazy" src="assert/image-eac96b2299166da5.jpg" alt="0:22.6" onclick="lb(this.src)"><figcaption>0:22.6</figcaption></figure><figure><img loading="lazy" src="assert/image-f96bdf1684e28eb9.jpg" alt="0:23.1" onclick="lb(this.src)"><figcaption>0:23.1</figcaption></figure><figure><img loading="lazy" src="assert/image-b8bdaa59857ecd59.jpg" alt="0:23.6" onclick="lb(this.src)"><figcaption>0:23.6</figcaption></figure><figure><img loading="lazy" src="assert/image-6407dc5719f0c5f3.jpg" alt="0:24.1" onclick="lb(this.src)"><figcaption>0:24.1</figcaption></figure><figure><img loading="lazy" src="assert/image-37f1ddc0a7572606.jpg" alt="0:24.6" onclick="lb(this.src)"><figcaption>0:24.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8aebc381b73401d7.jpg" alt="0:25.1" onclick="lb(this.src)"><figcaption>0:25.1</figcaption></figure><figure><img loading="lazy" src="assert/image-4c696054c96285e0.jpg" alt="0:25.6" onclick="lb(this.src)"><figcaption>0:25.6</figcaption></figure><figure><img loading="lazy" src="assert/image-5ea83353ab8235d9.jpg" alt="0:26.1" onclick="lb(this.src)"><figcaption>0:26.1</figcaption></figure><figure><img loading="lazy" src="assert/image-b6faf6a87ff3134f.jpg" alt="0:26.6" onclick="lb(this.src)"><figcaption>0:26.6</figcaption></figure><figure><img loading="lazy" src="assert/image-893e101fe949f9a1.jpg" alt="0:27.1" onclick="lb(this.src)"><figcaption>0:27.1</figcaption></figure><figure><img loading="lazy" src="assert/image-6447ccacb5a7c826.jpg" alt="0:27.6" onclick="lb(this.src)"><figcaption>0:27.6</figcaption></figure><figure><img loading="lazy" src="assert/image-014293776f3177a7.jpg" alt="0:28.1" onclick="lb(this.src)"><figcaption>0:28.1</figcaption></figure><figure><img loading="lazy" src="assert/image-021dd5c043550b89.jpg" alt="0:28.6" onclick="lb(this.src)"><figcaption>0:28.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8f33467b94ecf8a3.jpg" alt="0:29.1" onclick="lb(this.src)"><figcaption>0:29.1</figcaption></figure><figure><img loading="lazy" src="assert/image-5a8de234e86377ba.jpg" alt="0:29.6" onclick="lb(this.src)"><figcaption>0:29.6</figcaption></figure><figure><img loading="lazy" src="assert/image-d4fdbd1492479d4c.jpg" alt="0:30.1" onclick="lb(this.src)"><figcaption>0:30.1</figcaption></figure><figure><img loading="lazy" src="assert/image-50ae646ce9f00217.jpg" alt="0:30.6" onclick="lb(this.src)"><figcaption>0:30.6</figcaption></figure><figure><img loading="lazy" src="assert/image-d31be3bd12d6e4b9.jpg" alt="0:31.1" onclick="lb(this.src)"><figcaption>0:31.1</figcaption></figure><figure><img loading="lazy" src="assert/image-067b7e7c221f6a43.jpg" alt="0:31.6" onclick="lb(this.src)"><figcaption>0:31.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8817414e8555d95d.jpg" alt="0:32.1" onclick="lb(this.src)"><figcaption>0:32.1</figcaption></figure><figure><img loading="lazy" src="assert/image-bce9300a3014cf1d.jpg" alt="0:32.7" onclick="lb(this.src)"><figcaption>0:32.7</figcaption></figure><figure><img loading="lazy" src="assert/image-bc2fa2fe639cbfe9.jpg" alt="0:33.2" onclick="lb(this.src)"><figcaption>0:33.2</figcaption></figure><figure><img loading="lazy" src="assert/image-869e44cb0043fd0b.jpg" alt="0:33.7" onclick="lb(this.src)"><figcaption>0:33.7</figcaption></figure><figure><img loading="lazy" src="assert/image-d80a8fcc49cf42fd.jpg" alt="0:34.2" onclick="lb(this.src)"><figcaption>0:34.2</figcaption></figure><figure><img loading="lazy" src="assert/image-141ee81df110a065.jpg" alt="0:34.7" onclick="lb(this.src)"><figcaption>0:34.7</figcaption></figure><figure><img loading="lazy" src="assert/image-19667c5dfa74b193.jpg" alt="0:35.2" onclick="lb(this.src)"><figcaption>0:35.2</figcaption></figure><figure><img loading="lazy" src="assert/image-b66b7f93404c6a21.jpg" alt="0:35.7" onclick="lb(this.src)"><figcaption>0:35.7</figcaption></figure><figure><img loading="lazy" src="assert/image-44298c4cb0aeae61.jpg" alt="0:36.2" onclick="lb(this.src)"><figcaption>0:36.2</figcaption></figure><figure><img loading="lazy" src="assert/image-8b8edbf059cd64cd.jpg" alt="0:36.7" onclick="lb(this.src)"><figcaption>0:36.7</figcaption></figure><figure><img loading="lazy" src="assert/image-8e5577d747d3235f.jpg" alt="0:37.2" onclick="lb(this.src)"><figcaption>0:37.2</figcaption></figure><figure><img loading="lazy" src="assert/image-88fee8a5d42705bc.jpg" alt="0:37.7" onclick="lb(this.src)"><figcaption>0:37.7</figcaption></figure><figure><img loading="lazy" src="assert/image-aa8e93151ec0d115.jpg" alt="0:38.2" onclick="lb(this.src)"><figcaption>0:38.2</figcaption></figure><figure><img loading="lazy" src="assert/image-15133a6d08487c74.jpg" alt="0:38.7" onclick="lb(this.src)"><figcaption>0:38.7</figcaption></figure><figure><img loading="lazy" src="assert/image-1ba05138c35589de.jpg" alt="0:39.2" onclick="lb(this.src)"><figcaption>0:39.2</figcaption></figure><figure><img loading="lazy" src="assert/image-ae183abc2f173b63.jpg" alt="0:39.7" onclick="lb(this.src)"><figcaption>0:39.7</figcaption></figure><figure><img loading="lazy" src="assert/image-374b73b07d8ca741.jpg" alt="0:40.2" onclick="lb(this.src)"><figcaption>0:40.2</figcaption></figure><figure><img loading="lazy" src="assert/image-dbb846a80fd7ee13.jpg" alt="0:40.7" onclick="lb(this.src)"><figcaption>0:40.7</figcaption></figure><figure><img loading="lazy" src="assert/image-a61cdbb7fd7a8830.jpg" alt="0:41.2" onclick="lb(this.src)"><figcaption>0:41.2</figcaption></figure><figure><img loading="lazy" src="assert/image-32d4b91d37a79171.jpg" alt="0:41.7" onclick="lb(this.src)"><figcaption>0:41.7</figcaption></figure><figure><img loading="lazy" src="assert/image-476f9cb0940ec6cc.jpg" alt="0:42.2" onclick="lb(this.src)"><figcaption>0:42.2</figcaption></figure><figure><img loading="lazy" src="assert/image-cd6bf085ca0478bd.jpg" alt="0:42.7" onclick="lb(this.src)"><figcaption>0:42.7</figcaption></figure><figure><img loading="lazy" src="assert/image-474f77eed48ba583.jpg" alt="0:43.2" onclick="lb(this.src)"><figcaption>0:43.2</figcaption></figure><figure><img loading="lazy" src="assert/image-3b39228eeec81eb7.jpg" alt="0:43.7" onclick="lb(this.src)"><figcaption>0:43.7</figcaption></figure><figure><img loading="lazy" src="assert/image-d8e77e479d34f040.jpg" alt="0:44.2" onclick="lb(this.src)"><figcaption>0:44.2</figcaption></figure><figure><img loading="lazy" src="assert/image-f3bb001e177c1572.jpg" alt="0:44.7" onclick="lb(this.src)"><figcaption>0:44.7</figcaption></figure><figure><img loading="lazy" src="assert/image-d58ecd710cb7d51c.jpg" alt="0:45.2" onclick="lb(this.src)"><figcaption>0:45.2</figcaption></figure><figure><img loading="lazy" src="assert/image-d19745355bdade03.jpg" alt="0:45.7" onclick="lb(this.src)"><figcaption>0:45.7</figcaption></figure><figure><img loading="lazy" src="assert/image-dafb287293d1e00f.jpg" alt="0:46.2" onclick="lb(this.src)"><figcaption>0:46.2</figcaption></figure><figure><img loading="lazy" src="assert/image-0695ec52e4bbdfb2.jpg" alt="0:46.7" onclick="lb(this.src)"><figcaption>0:46.7</figcaption></figure><figure><img loading="lazy" src="assert/image-791ea54c1d69bdaf.jpg" alt="0:47.2" onclick="lb(this.src)"><figcaption>0:47.2</figcaption></figure><figure><img loading="lazy" src="assert/image-9acab1008501c065.jpg" alt="0:47.7" onclick="lb(this.src)"><figcaption>0:47.7</figcaption></figure><figure><img loading="lazy" src="assert/image-5cd161fe15e8b877.jpg" alt="0:48.2" onclick="lb(this.src)"><figcaption>0:48.2</figcaption></figure><figure><img loading="lazy" src="assert/image-e25f8868ad648b80.jpg" alt="0:48.7" onclick="lb(this.src)"><figcaption>0:48.7</figcaption></figure><figure><img loading="lazy" src="assert/image-0e6b515a07ecb325.jpg" alt="0:49.2" onclick="lb(this.src)"><figcaption>0:49.2</figcaption></figure><figure><img loading="lazy" src="assert/image-f1d6324b2f4a07a6.jpg" alt="0:49.7" onclick="lb(this.src)"><figcaption>0:49.7</figcaption></figure><figure><img loading="lazy" src="assert/image-ec9b94bcc0bf3165.jpg" alt="0:50.2" onclick="lb(this.src)"><figcaption>0:50.2</figcaption></figure><figure><img loading="lazy" src="assert/image-3bdaa9761674ad26.jpg" alt="0:50.7" onclick="lb(this.src)"><figcaption>0:50.7</figcaption></figure><figure><img loading="lazy" src="assert/image-f72c7071ce38c581.jpg" alt="0:51.2" onclick="lb(this.src)"><figcaption>0:51.2</figcaption></figure><figure><img loading="lazy" src="assert/image-859393a417c671d9.jpg" alt="0:51.7" onclick="lb(this.src)"><figcaption>0:51.7</figcaption></figure><figure><img loading="lazy" src="assert/image-e9231d21a85017d5.jpg" alt="0:52.2" onclick="lb(this.src)"><figcaption>0:52.2</figcaption></figure><figure><img loading="lazy" src="assert/image-e67926aa3f537464.jpg" alt="0:52.7" onclick="lb(this.src)"><figcaption>0:52.7</figcaption></figure><figure><img loading="lazy" src="assert/image-572e587b8b361617.jpg" alt="0:53.2" onclick="lb(this.src)"><figcaption>0:53.2</figcaption></figure><figure><img loading="lazy" src="assert/image-f52fb3e09fa07761.jpg" alt="0:53.8" onclick="lb(this.src)"><figcaption>0:53.8</figcaption></figure><figure><img loading="lazy" src="assert/image-7e429b3dc4559d20.jpg" alt="0:54.3" onclick="lb(this.src)"><figcaption>0:54.3</figcaption></figure><figure><img loading="lazy" src="assert/image-6a187de65b28e873.jpg" alt="0:54.8" onclick="lb(this.src)"><figcaption>0:54.8</figcaption></figure><figure><img loading="lazy" src="assert/image-18472409fca4cf2d.jpg" alt="0:55.3" onclick="lb(this.src)"><figcaption>0:55.3</figcaption></figure><figure><img loading="lazy" src="assert/image-cc97d58df7dc81ad.jpg" alt="0:55.8" onclick="lb(this.src)"><figcaption>0:55.8</figcaption></figure><figure><img loading="lazy" src="assert/image-1d3c308caf75372d.jpg" alt="0:56.3" onclick="lb(this.src)"><figcaption>0:56.3</figcaption></figure><figure><img loading="lazy" src="assert/image-3df71e68dc8b8b42.jpg" alt="0:56.8" onclick="lb(this.src)"><figcaption>0:56.8</figcaption></figure><figure><img loading="lazy" src="assert/image-a886b61873943167.jpg" alt="0:57.3" onclick="lb(this.src)"><figcaption>0:57.3</figcaption></figure><figure><img loading="lazy" src="assert/image-fba5523f73b3fee7.jpg" alt="0:57.8" onclick="lb(this.src)"><figcaption>0:57.8</figcaption></figure><figure><img loading="lazy" src="assert/image-4985bedeff6e153e.jpg" alt="0:58.3" onclick="lb(this.src)"><figcaption>0:58.3</figcaption></figure><figure><img loading="lazy" src="assert/image-2a8260c0c318f0b3.jpg" alt="0:58.8" onclick="lb(this.src)"><figcaption>0:58.8</figcaption></figure><figure><img loading="lazy" src="assert/image-8fffb52b4bfa5007.jpg" alt="0:59.3" onclick="lb(this.src)"><figcaption>0:59.3</figcaption></figure><figure><img loading="lazy" src="assert/image-7b8013aee87e8381.jpg" alt="0:59.8" onclick="lb(this.src)"><figcaption>0:59.8</figcaption></figure><figure><img loading="lazy" src="assert/image-22ff382c28f1334e.jpg" alt="1:00.3" onclick="lb(this.src)"><figcaption>1:00.3</figcaption></figure><figure><img loading="lazy" src="assert/image-b78a5c56377aa7b6.jpg" alt="1:00.8" onclick="lb(this.src)"><figcaption>1:00.8</figcaption></figure><figure><img loading="lazy" src="assert/image-4de894ed70b2c947.jpg" alt="1:01.3" onclick="lb(this.src)"><figcaption>1:01.3</figcaption></figure><figure><img loading="lazy" src="assert/image-3a2bf72eba5dab9e.jpg" alt="1:01.8" onclick="lb(this.src)"><figcaption>1:01.8</figcaption></figure><figure><img loading="lazy" src="assert/image-82d0b63b4341549f.jpg" alt="1:02.3" onclick="lb(this.src)"><figcaption>1:02.3</figcaption></figure><figure><img loading="lazy" src="assert/image-3c7db56136be62eb.jpg" alt="1:02.8" onclick="lb(this.src)"><figcaption>1:02.8</figcaption></figure><figure><img loading="lazy" src="assert/image-d9c73277ac95da2d.jpg" alt="1:03.3" onclick="lb(this.src)"><figcaption>1:03.3</figcaption></figure><figure><img loading="lazy" src="assert/image-16b7879e2a3d6fb8.jpg" alt="1:03.8" onclick="lb(this.src)"><figcaption>1:03.8</figcaption></figure><figure><img loading="lazy" src="assert/image-8a4c261bfea0177e.jpg" alt="1:04.3" onclick="lb(this.src)"><figcaption>1:04.3</figcaption></figure><figure><img loading="lazy" src="assert/image-d74803c2f64a9b0f.jpg" alt="1:04.8" onclick="lb(this.src)"><figcaption>1:04.8</figcaption></figure><figure><img loading="lazy" src="assert/image-2ef8dbc50908261f.jpg" alt="1:05.3" onclick="lb(this.src)"><figcaption>1:05.3</figcaption></figure><figure><img loading="lazy" src="assert/image-adf3589f75ce243e.jpg" alt="1:05.8" onclick="lb(this.src)"><figcaption>1:05.8</figcaption></figure><figure><img loading="lazy" src="assert/image-c4112edb0fdeec3a.jpg" alt="1:06.3" onclick="lb(this.src)"><figcaption>1:06.3</figcaption></figure><figure><img loading="lazy" src="assert/image-a767347c5ab898fa.jpg" alt="1:06.8" onclick="lb(this.src)"><figcaption>1:06.8</figcaption></figure><figure><img loading="lazy" src="assert/image-d097695c47f78ef8.jpg" alt="1:07.3" onclick="lb(this.src)"><figcaption>1:07.3</figcaption></figure><figure><img loading="lazy" src="assert/image-9759b2ef31e55321.jpg" alt="1:07.8" onclick="lb(this.src)"><figcaption>1:07.8</figcaption></figure><figure><img loading="lazy" src="assert/image-1ebacb8926682abe.jpg" alt="1:08.3" onclick="lb(this.src)"><figcaption>1:08.3</figcaption></figure><figure><img loading="lazy" src="assert/image-75c68353cae504d7.jpg" alt="1:08.8" onclick="lb(this.src)"><figcaption>1:08.8</figcaption></figure><figure><img loading="lazy" src="assert/image-ba506f6202a0ec14.jpg" alt="1:09.3" onclick="lb(this.src)"><figcaption>1:09.3</figcaption></figure><figure><img loading="lazy" src="assert/image-aa6f9bd5688d0f91.jpg" alt="1:09.8" onclick="lb(this.src)"><figcaption>1:09.8</figcaption></figure><figure><img loading="lazy" src="assert/image-6ddb00f5db6b83ab.jpg" alt="1:10.3" onclick="lb(this.src)"><figcaption>1:10.3</figcaption></figure><figure><img loading="lazy" src="assert/image-4524e0caeeb7033c.jpg" alt="1:10.8" onclick="lb(this.src)"><figcaption>1:10.8</figcaption></figure><figure><img loading="lazy" src="assert/image-b77ecc86ff0a9b42.jpg" alt="1:11.3" onclick="lb(this.src)"><figcaption>1:11.3</figcaption></figure><figure><img loading="lazy" src="assert/image-eb8e166382703cee.jpg" alt="1:11.8" onclick="lb(this.src)"><figcaption>1:11.8</figcaption></figure><figure><img loading="lazy" src="assert/image-f2ed5924f1089663.jpg" alt="1:12.3" onclick="lb(this.src)"><figcaption>1:12.3</figcaption></figure><figure><img loading="lazy" src="assert/image-64f96cd2ad718cc6.jpg" alt="1:12.8" onclick="lb(this.src)"><figcaption>1:12.8</figcaption></figure><figure><img loading="lazy" src="assert/image-028b1c3439b34f94.jpg" alt="1:13.3" onclick="lb(this.src)"><figcaption>1:13.3</figcaption></figure><figure><img loading="lazy" src="assert/image-fb2221695bea12f2.jpg" alt="1:13.8" onclick="lb(this.src)"><figcaption>1:13.8</figcaption></figure><figure><img loading="lazy" src="assert/image-b75de2f88fa619f4.jpg" alt="1:14.3" onclick="lb(this.src)"><figcaption>1:14.3</figcaption></figure><figure><img loading="lazy" src="assert/image-6fef4ed9b95a25d7.jpg" alt="1:14.8" onclick="lb(this.src)"><figcaption>1:14.8</figcaption></figure><figure><img loading="lazy" src="assert/image-8a34b656cee0d5fc.jpg" alt="1:15.4" onclick="lb(this.src)"><figcaption>1:15.4</figcaption></figure><figure><img loading="lazy" src="assert/image-0cfe380d2c43acab.jpg" alt="1:15.9" onclick="lb(this.src)"><figcaption>1:15.9</figcaption></figure><figure><img loading="lazy" src="assert/image-5c411c2bc78b5331.jpg" alt="1:16.4" onclick="lb(this.src)"><figcaption>1:16.4</figcaption></figure><figure><img loading="lazy" src="assert/image-642cefb2c32a4377.jpg" alt="1:16.9" onclick="lb(this.src)"><figcaption>1:16.9</figcaption></figure><figure><img loading="lazy" src="assert/image-917b53ffea8990be.jpg" alt="1:17.4" onclick="lb(this.src)"><figcaption>1:17.4</figcaption></figure><figure><img loading="lazy" src="assert/image-f8a7db606b68d106.jpg" alt="1:17.9" onclick="lb(this.src)"><figcaption>1:17.9</figcaption></figure><figure><img loading="lazy" src="assert/image-f947ec007c537f28.jpg" alt="1:18.4" onclick="lb(this.src)"><figcaption>1:18.4</figcaption></figure><figure><img loading="lazy" src="assert/image-c4ec952779704b01.jpg" alt="1:18.9" onclick="lb(this.src)"><figcaption>1:18.9</figcaption></figure><figure><img loading="lazy" src="assert/image-8316401237ad1c0a.jpg" alt="1:19.4" onclick="lb(this.src)"><figcaption>1:19.4</figcaption></figure><figure><img loading="lazy" src="assert/image-f87d4042382a72ee.jpg" alt="1:19.9" onclick="lb(this.src)"><figcaption>1:19.9</figcaption></figure><figure><img loading="lazy" src="assert/image-f24836a16bd160de.jpg" alt="1:20.4" onclick="lb(this.src)"><figcaption>1:20.4</figcaption></figure><figure><img loading="lazy" src="assert/image-a9359f6a6b3f315d.jpg" alt="1:20.9" onclick="lb(this.src)"><figcaption>1:20.9</figcaption></figure><figure><img loading="lazy" src="assert/image-a28006735aa32ed8.jpg" alt="1:21.4" onclick="lb(this.src)"><figcaption>1:21.4</figcaption></figure><figure><img loading="lazy" src="assert/image-c4c44d50510928b8.jpg" alt="1:21.9" onclick="lb(this.src)"><figcaption>1:21.9</figcaption></figure><figure><img loading="lazy" src="assert/image-b2f23645bb953e8c.jpg" alt="1:22.4" onclick="lb(this.src)"><figcaption>1:22.4</figcaption></figure><figure><img loading="lazy" src="assert/image-3eed559251bc9515.jpg" alt="1:22.9" onclick="lb(this.src)"><figcaption>1:22.9</figcaption></figure><figure><img loading="lazy" src="assert/image-5e124734dc63a42f.jpg" alt="1:23.4" onclick="lb(this.src)"><figcaption>1:23.4</figcaption></figure><figure><img loading="lazy" src="assert/image-93cadcf9b83ee2a9.jpg" alt="1:23.9" onclick="lb(this.src)"><figcaption>1:23.9</figcaption></figure><figure><img loading="lazy" src="assert/image-7a817d7879cc554f.jpg" alt="1:24.4" onclick="lb(this.src)"><figcaption>1:24.4</figcaption></figure><figure><img loading="lazy" src="assert/image-86eed9f70cd46780.jpg" alt="1:24.9" onclick="lb(this.src)"><figcaption>1:24.9</figcaption></figure><figure><img loading="lazy" src="assert/image-3ca498a55375d948.jpg" alt="1:25.4" onclick="lb(this.src)"><figcaption>1:25.4</figcaption></figure><figure><img loading="lazy" src="assert/image-9cce2dbbfcd6cac0.jpg" alt="1:25.9" onclick="lb(this.src)"><figcaption>1:25.9</figcaption></figure><figure><img loading="lazy" src="assert/image-f720c3d7ea2cd89d.jpg" alt="1:26.4" onclick="lb(this.src)"><figcaption>1:26.4</figcaption></figure><figure><img loading="lazy" src="assert/image-74ccc69a8d7809b0.jpg" alt="1:26.9" onclick="lb(this.src)"><figcaption>1:26.9</figcaption></figure><figure><img loading="lazy" src="assert/image-47703d9c32dc9da8.jpg" alt="1:27.4" onclick="lb(this.src)"><figcaption>1:27.4</figcaption></figure><figure><img loading="lazy" src="assert/image-839828880d027e75.jpg" alt="1:27.9" onclick="lb(this.src)"><figcaption>1:27.9</figcaption></figure><figure><img loading="lazy" src="assert/image-cd722a58b733066d.jpg" alt="1:28.4" onclick="lb(this.src)"><figcaption>1:28.4</figcaption></figure><figure><img loading="lazy" src="assert/image-086910c6e979ef46.jpg" alt="1:28.9" onclick="lb(this.src)"><figcaption>1:28.9</figcaption></figure><figure><img loading="lazy" src="assert/image-224588d02b7caafd.jpg" alt="1:29.4" onclick="lb(this.src)"><figcaption>1:29.4</figcaption></figure><figure><img loading="lazy" src="assert/image-a3cc384254f6686b.jpg" alt="1:29.9" onclick="lb(this.src)"><figcaption>1:29.9</figcaption></figure><figure><img loading="lazy" src="assert/image-973c6a4aee43e606.jpg" alt="1:30.4" onclick="lb(this.src)"><figcaption>1:30.4</figcaption></figure><figure><img loading="lazy" src="assert/image-04011c9d34805b74.jpg" alt="1:30.9" onclick="lb(this.src)"><figcaption>1:30.9</figcaption></figure><figure><img loading="lazy" src="assert/image-c745749ce815fac8.jpg" alt="1:31.4" onclick="lb(this.src)"><figcaption>1:31.4</figcaption></figure><figure><img loading="lazy" src="assert/image-b3fb31a8ea04fcc9.jpg" alt="1:31.9" onclick="lb(this.src)"><figcaption>1:31.9</figcaption></figure><figure><img loading="lazy" src="assert/image-e1494a088e6ec55d.jpg" alt="1:32.4" onclick="lb(this.src)"><figcaption>1:32.4</figcaption></figure><figure><img loading="lazy" src="assert/image-e913cc70ad704c0a.jpg" alt="1:32.9" onclick="lb(this.src)"><figcaption>1:32.9</figcaption></figure><figure><img loading="lazy" src="assert/image-71e3ba9179752b59.jpg" alt="1:33.4" onclick="lb(this.src)"><figcaption>1:33.4</figcaption></figure><figure><img loading="lazy" src="assert/image-93b833ae3680f8c8.jpg" alt="1:33.9" onclick="lb(this.src)"><figcaption>1:33.9</figcaption></figure><figure><img loading="lazy" src="assert/image-922fbf236ac4c7de.jpg" alt="1:34.4" onclick="lb(this.src)"><figcaption>1:34.4</figcaption></figure><figure><img loading="lazy" src="assert/image-ab07ca47128c74da.jpg" alt="1:34.9" onclick="lb(this.src)"><figcaption>1:34.9</figcaption></figure><figure><img loading="lazy" src="assert/image-36acea287aac1e46.jpg" alt="1:35.4" onclick="lb(this.src)"><figcaption>1:35.4</figcaption></figure><figure><img loading="lazy" src="assert/image-30c522ab2bd01a10.jpg" alt="1:35.9" onclick="lb(this.src)"><figcaption>1:35.9</figcaption></figure><figure><img loading="lazy" src="assert/image-67042011994f9286.jpg" alt="1:36.4" onclick="lb(this.src)"><figcaption>1:36.4</figcaption></figure><figure><img loading="lazy" src="assert/image-40ec5eda3d03bc7a.jpg" alt="1:37.0" onclick="lb(this.src)"><figcaption>1:37.0</figcaption></figure><figure><img loading="lazy" src="assert/image-f4590a2a58add51c.jpg" alt="1:37.5" onclick="lb(this.src)"><figcaption>1:37.5</figcaption></figure><figure><img loading="lazy" src="assert/image-1e0ba00490071e3e.jpg" alt="1:38.0" onclick="lb(this.src)"><figcaption>1:38.0</figcaption></figure><figure><img loading="lazy" src="assert/image-eac286a8971c4f07.jpg" alt="1:38.5" onclick="lb(this.src)"><figcaption>1:38.5</figcaption></figure><figure><img loading="lazy" src="assert/image-f9ad895cd28d81d9.jpg" alt="1:39.0" onclick="lb(this.src)"><figcaption>1:39.0</figcaption></figure><figure><img loading="lazy" src="assert/image-0284d535f6d164b8.jpg" alt="1:39.5" onclick="lb(this.src)"><figcaption>1:39.5</figcaption></figure><figure><img loading="lazy" src="assert/image-f751e7ce3b8c5bd8.jpg" alt="1:40.0" onclick="lb(this.src)"><figcaption>1:40.0</figcaption></figure><figure><img loading="lazy" src="assert/image-4dc407b5d6fe10a1.jpg" alt="1:40.5" onclick="lb(this.src)"><figcaption>1:40.5</figcaption></figure><figure><img loading="lazy" src="assert/image-c1cf2d58ecd3cd74.jpg" alt="1:41.0" onclick="lb(this.src)"><figcaption>1:41.0</figcaption></figure><figure><img loading="lazy" src="assert/image-2bab0c1e27cdb27b.jpg" alt="1:41.5" onclick="lb(this.src)"><figcaption>1:41.5</figcaption></figure><figure><img loading="lazy" src="assert/image-72638c138b4ec7e0.jpg" alt="1:42.0" onclick="lb(this.src)"><figcaption>1:42.0</figcaption></figure><figure><img loading="lazy" src="assert/image-2b6a81325adeceef.jpg" alt="1:42.5" onclick="lb(this.src)"><figcaption>1:42.5</figcaption></figure><figure><img loading="lazy" src="assert/image-3406fc72bcb8cfce.jpg" alt="1:43.0" onclick="lb(this.src)"><figcaption>1:43.0</figcaption></figure><figure><img loading="lazy" src="assert/image-0d001116167ced1e.jpg" alt="1:43.5" onclick="lb(this.src)"><figcaption>1:43.5</figcaption></figure><figure><img loading="lazy" src="assert/image-1d13d16b3d2e9724.jpg" alt="1:44.0" onclick="lb(this.src)"><figcaption>1:44.0</figcaption></figure><figure><img loading="lazy" src="assert/image-cf504f3ca682b4be.jpg" alt="1:44.5" onclick="lb(this.src)"><figcaption>1:44.5</figcaption></figure><figure><img loading="lazy" src="assert/image-24827cdfdc32d3c6.jpg" alt="1:45.0" onclick="lb(this.src)"><figcaption>1:45.0</figcaption></figure><figure><img loading="lazy" src="assert/image-a048bc8760019e97.jpg" alt="1:45.5" onclick="lb(this.src)"><figcaption>1:45.5</figcaption></figure><figure><img loading="lazy" src="assert/image-fc10ec3c398232d2.jpg" alt="1:46.0" onclick="lb(this.src)"><figcaption>1:46.0</figcaption></figure><figure><img loading="lazy" src="assert/image-a9c43058d15a5ecf.jpg" alt="1:46.5" onclick="lb(this.src)"><figcaption>1:46.5</figcaption></figure><figure><img loading="lazy" src="assert/image-9f65c00cbd2eff6c.jpg" alt="1:47.0" onclick="lb(this.src)"><figcaption>1:47.0</figcaption></figure><figure><img loading="lazy" src="assert/image-e4500a07de785df1.jpg" alt="1:47.5" onclick="lb(this.src)"><figcaption>1:47.5</figcaption></figure><figure><img loading="lazy" src="assert/image-bfed0b088de1ee64.jpg" alt="1:48.0" onclick="lb(this.src)"><figcaption>1:48.0</figcaption></figure><figure><img loading="lazy" src="assert/image-395b9270f3a46f78.jpg" alt="1:48.5" onclick="lb(this.src)"><figcaption>1:48.5</figcaption></figure><figure><img loading="lazy" src="assert/image-af13c5ccddba4d42.jpg" alt="1:49.0" onclick="lb(this.src)"><figcaption>1:49.0</figcaption></figure><figure><img loading="lazy" src="assert/image-afcdc7c8c326a33e.jpg" alt="1:49.5" onclick="lb(this.src)"><figcaption>1:49.5</figcaption></figure><figure><img loading="lazy" src="assert/image-9dc68ffefd78fa09.jpg" alt="1:50.0" onclick="lb(this.src)"><figcaption>1:50.0</figcaption></figure><figure><img loading="lazy" src="assert/image-2b435b5f904b4cde.jpg" alt="1:50.5" onclick="lb(this.src)"><figcaption>1:50.5</figcaption></figure><figure><img loading="lazy" src="assert/image-051ebe31c5cb7896.jpg" alt="1:51.0" onclick="lb(this.src)"><figcaption>1:51.0</figcaption></figure><figure><img loading="lazy" src="assert/image-55cc49ad66cb57e3.jpg" alt="1:51.5" onclick="lb(this.src)"><figcaption>1:51.5</figcaption></figure><figure><img loading="lazy" src="assert/image-9a830da199484868.jpg" alt="1:52.0" onclick="lb(this.src)"><figcaption>1:52.0</figcaption></figure><figure><img loading="lazy" src="assert/image-9e70432d2f72c481.jpg" alt="1:52.5" onclick="lb(this.src)"><figcaption>1:52.5</figcaption></figure><figure><img loading="lazy" src="assert/image-4e1118d64fdc4216.jpg" alt="1:53.0" onclick="lb(this.src)"><figcaption>1:53.0</figcaption></figure><figure><img loading="lazy" src="assert/image-3966f7059552784e.jpg" alt="1:53.5" onclick="lb(this.src)"><figcaption>1:53.5</figcaption></figure><figure><img loading="lazy" src="assert/image-c174ac34d2261944.jpg" alt="1:54.0" onclick="lb(this.src)"><figcaption>1:54.0</figcaption></figure><figure><img loading="lazy" src="assert/image-5d252a981b25b125.jpg" alt="1:54.5" onclick="lb(this.src)"><figcaption>1:54.5</figcaption></figure><figure><img loading="lazy" src="assert/image-122761ad36ea23f3.jpg" alt="1:55.0" onclick="lb(this.src)"><figcaption>1:55.0</figcaption></figure><figure><img loading="lazy" src="assert/image-66f4ca25717dfbf8.jpg" alt="1:55.5" onclick="lb(this.src)"><figcaption>1:55.5</figcaption></figure><figure><img loading="lazy" src="assert/image-03f6cc7b698eca72.jpg" alt="1:56.0" onclick="lb(this.src)"><figcaption>1:56.0</figcaption></figure><figure><img loading="lazy" src="assert/image-09399e2cbd71c85a.jpg" alt="1:56.5" onclick="lb(this.src)"><figcaption>1:56.5</figcaption></figure><figure><img loading="lazy" src="assert/image-a5a3bde576e1bd42.jpg" alt="1:57.0" onclick="lb(this.src)"><figcaption>1:57.0</figcaption></figure><figure><img loading="lazy" src="assert/image-6422dc94421cf3fb.jpg" alt="1:57.5" onclick="lb(this.src)"><figcaption>1:57.5</figcaption></figure><figure><img loading="lazy" src="assert/image-b23f376c7fc811e5.jpg" alt="1:58.1" onclick="lb(this.src)"><figcaption>1:58.1</figcaption></figure><figure><img loading="lazy" src="assert/image-617cf06266c9b3a9.jpg" alt="1:58.6" onclick="lb(this.src)"><figcaption>1:58.6</figcaption></figure><figure><img loading="lazy" src="assert/image-834688c8d8c973d0.jpg" alt="1:59.1" onclick="lb(this.src)"><figcaption>1:59.1</figcaption></figure><figure><img loading="lazy" src="assert/image-72c01b8f15b44cf1.jpg" alt="1:59.6" onclick="lb(this.src)"><figcaption>1:59.6</figcaption></figure><figure><img loading="lazy" src="assert/image-4ba26513236ca04f.jpg" alt="2:00.1" onclick="lb(this.src)"><figcaption>2:00.1</figcaption></figure><figure><img loading="lazy" src="assert/image-f11003520aa06601.jpg" alt="2:00.6" onclick="lb(this.src)"><figcaption>2:00.6</figcaption></figure><figure><img loading="lazy" src="assert/image-e2082813b7c51807.jpg" alt="2:01.1" onclick="lb(this.src)"><figcaption>2:01.1</figcaption></figure><figure><img loading="lazy" src="assert/image-c2a9758280a20415.jpg" alt="2:01.6" onclick="lb(this.src)"><figcaption>2:01.6</figcaption></figure><figure><img loading="lazy" src="assert/image-f76a0e2f9ea8063b.jpg" alt="2:02.1" onclick="lb(this.src)"><figcaption>2:02.1</figcaption></figure><figure><img loading="lazy" src="assert/image-47c15b3e9cf5a9e8.jpg" alt="2:02.6" onclick="lb(this.src)"><figcaption>2:02.6</figcaption></figure><figure><img loading="lazy" src="assert/image-ad25f286170434de.jpg" alt="2:03.1" onclick="lb(this.src)"><figcaption>2:03.1</figcaption></figure><figure><img loading="lazy" src="assert/image-8438ed24971c0854.jpg" alt="2:03.6" onclick="lb(this.src)"><figcaption>2:03.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8b54c67399309f84.jpg" alt="2:04.1" onclick="lb(this.src)"><figcaption>2:04.1</figcaption></figure><figure><img loading="lazy" src="assert/image-98df46eff848439b.jpg" alt="2:04.6" onclick="lb(this.src)"><figcaption>2:04.6</figcaption></figure><figure><img loading="lazy" src="assert/image-16537e4594f5ee0c.jpg" alt="2:05.1" onclick="lb(this.src)"><figcaption>2:05.1</figcaption></figure><figure><img loading="lazy" src="assert/image-ac1266e2e8332c09.jpg" alt="2:05.6" onclick="lb(this.src)"><figcaption>2:05.6</figcaption></figure><figure><img loading="lazy" src="assert/image-08e8b7244e9e37a1.jpg" alt="2:06.1" onclick="lb(this.src)"><figcaption>2:06.1</figcaption></figure><figure><img loading="lazy" src="assert/image-8c4f1e9a3160757c.jpg" alt="2:06.6" onclick="lb(this.src)"><figcaption>2:06.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8b2a5dd70adb7d0a.jpg" alt="2:07.1" onclick="lb(this.src)"><figcaption>2:07.1</figcaption></figure><figure><img loading="lazy" src="assert/image-e22df778ebcec87a.jpg" alt="2:07.6" onclick="lb(this.src)"><figcaption>2:07.6</figcaption></figure><figure><img loading="lazy" src="assert/image-2ebfc3c6a1d1625f.jpg" alt="2:08.1" onclick="lb(this.src)"><figcaption>2:08.1</figcaption></figure><figure><img loading="lazy" src="assert/image-a8d9369531577840.jpg" alt="2:08.6" onclick="lb(this.src)"><figcaption>2:08.6</figcaption></figure><figure><img loading="lazy" src="assert/image-b88c8a72f652bef6.jpg" alt="2:09.1" onclick="lb(this.src)"><figcaption>2:09.1</figcaption></figure><figure><img loading="lazy" src="assert/image-95685eb1a5fb9eb1.jpg" alt="2:09.6" onclick="lb(this.src)"><figcaption>2:09.6</figcaption></figure><figure><img loading="lazy" src="assert/image-65427dd7fc9a512a.jpg" alt="2:10.1" onclick="lb(this.src)"><figcaption>2:10.1</figcaption></figure><figure><img loading="lazy" src="assert/image-e8093598b69c2876.jpg" alt="2:10.6" onclick="lb(this.src)"><figcaption>2:10.6</figcaption></figure><figure><img loading="lazy" src="assert/image-285538d49039ab22.jpg" alt="2:11.1" onclick="lb(this.src)"><figcaption>2:11.1</figcaption></figure><figure><img loading="lazy" src="assert/image-e22a18d30c0381ad.jpg" alt="2:11.6" onclick="lb(this.src)"><figcaption>2:11.6</figcaption></figure><figure><img loading="lazy" src="assert/image-8fe4227d518de29c.jpg" alt="2:12.1" onclick="lb(this.src)"><figcaption>2:12.1</figcaption></figure><figure><img loading="lazy" src="assert/image-bc49f26cfa884617.jpg" alt="2:12.6" onclick="lb(this.src)"><figcaption>2:12.6</figcaption></figure><figure><img loading="lazy" src="assert/image-55136244af4286de.jpg" alt="2:13.1" onclick="lb(this.src)"><figcaption>2:13.1</figcaption></figure><figure><img loading="lazy" src="assert/image-3bdca47d17bf4377.jpg" alt="2:13.6" onclick="lb(this.src)"><figcaption>2:13.6</figcaption></figure><figure><img loading="lazy" src="assert/image-deadb4da2c599e5e.jpg" alt="2:14.1" onclick="lb(this.src)"><figcaption>2:14.1</figcaption></figure><figure><img loading="lazy" src="assert/image-5fd43606fd087c58.jpg" alt="2:14.6" onclick="lb(this.src)"><figcaption>2:14.6</figcaption></figure><figure><img loading="lazy" src="assert/image-4dfee3f743d78fd5.jpg" alt="2:15.1" onclick="lb(this.src)"><figcaption>2:15.1</figcaption></figure><figure><img loading="lazy" src="assert/image-3737bff735a6e9af.jpg" alt="2:15.6" onclick="lb(this.src)"><figcaption>2:15.6</figcaption></figure><figure><img loading="lazy" src="assert/image-6db11f0ae263aaa6.jpg" alt="2:16.1" onclick="lb(this.src)"><figcaption>2:16.1</figcaption></figure><figure><img loading="lazy" src="assert/image-16ab6860bbc449a4.jpg" alt="2:16.6" onclick="lb(this.src)"><figcaption>2:16.6</figcaption></figure><figure><img loading="lazy" src="assert/image-130227e7af636ffa.jpg" alt="2:17.1" onclick="lb(this.src)"><figcaption>2:17.1</figcaption></figure><figure><img loading="lazy" src="assert/image-964fa75d091837e7.jpg" alt="2:17.6" onclick="lb(this.src)"><figcaption>2:17.6</figcaption></figure><figure><img loading="lazy" src="assert/image-c4eabca64a502e41.jpg" alt="2:18.1" onclick="lb(this.src)"><figcaption>2:18.1</figcaption></figure><figure><img loading="lazy" src="assert/image-3227cbeb5ea9acb2.jpg" alt="2:18.6" onclick="lb(this.src)"><figcaption>2:18.6</figcaption></figure><figure><img loading="lazy" src="assert/image-e47538b1d6b9cb11.jpg" alt="2:19.1" onclick="lb(this.src)"><figcaption>2:19.1</figcaption></figure><figure><img loading="lazy" src="assert/image-26c7264275e2cf28.jpg" alt="2:19.7" onclick="lb(this.src)"><figcaption>2:19.7</figcaption></figure><figure><img loading="lazy" src="assert/image-35ea87992ee446c6.jpg" alt="2:20.2" onclick="lb(this.src)"><figcaption>2:20.2</figcaption></figure><figure><img loading="lazy" src="assert/image-fb760b3dd038ec90.jpg" alt="2:20.7" onclick="lb(this.src)"><figcaption>2:20.7</figcaption></figure><figure><img loading="lazy" src="assert/image-62ad9b3a7b01de49.jpg" alt="2:21.2" onclick="lb(this.src)"><figcaption>2:21.2</figcaption></figure><figure><img loading="lazy" src="assert/image-bd44fa8b7d379107.jpg" alt="2:21.7" onclick="lb(this.src)"><figcaption>2:21.7</figcaption></figure><figure><img loading="lazy" src="assert/image-91eab3666401255f.jpg" alt="2:22.2" onclick="lb(this.src)"><figcaption>2:22.2</figcaption></figure><figure><img loading="lazy" src="assert/image-1fee71c9eed685b8.jpg" alt="2:22.7" onclick="lb(this.src)"><figcaption>2:22.7</figcaption></figure><figure><img loading="lazy" src="assert/image-2bc331caacc65a63.jpg" alt="2:23.2" onclick="lb(this.src)"><figcaption>2:23.2</figcaption></figure><figure><img loading="lazy" src="assert/image-34db241b3d2b996f.jpg" alt="2:23.7" onclick="lb(this.src)"><figcaption>2:23.7</figcaption></figure><figure><img loading="lazy" src="assert/image-7b77cceff1e2c766.jpg" alt="2:24.2" onclick="lb(this.src)"><figcaption>2:24.2</figcaption></figure><figure><img loading="lazy" src="assert/image-e43f36b8ec128a03.jpg" alt="2:24.7" onclick="lb(this.src)"><figcaption>2:24.7</figcaption></figure><figure><img loading="lazy" src="assert/image-0858c215c83f0976.jpg" alt="2:25.2" onclick="lb(this.src)"><figcaption>2:25.2</figcaption></figure><figure><img loading="lazy" src="assert/image-e91e97a317c9d230.jpg" alt="2:25.7" onclick="lb(this.src)"><figcaption>2:25.7</figcaption></figure><figure><img loading="lazy" src="assert/image-c2dca9b8b229303b.jpg" alt="2:26.2" onclick="lb(this.src)"><figcaption>2:26.2</figcaption></figure><figure><img loading="lazy" src="assert/image-d8ba28d59011dc73.jpg" alt="2:26.7" onclick="lb(this.src)"><figcaption>2:26.7</figcaption></figure><figure><img loading="lazy" src="assert/image-52e052e7a3178be5.jpg" alt="2:27.2" onclick="lb(this.src)"><figcaption>2:27.2</figcaption></figure><figure><img loading="lazy" src="assert/image-c0d90dd454196eee.jpg" alt="2:27.7" onclick="lb(this.src)"><figcaption>2:27.7</figcaption></figure><figure><img loading="lazy" src="assert/image-8c40e6c2c9ee8b27.jpg" alt="2:28.2" onclick="lb(this.src)"><figcaption>2:28.2</figcaption></figure><figure><img loading="lazy" src="assert/image-3d6ab60f4554eed3.jpg" alt="2:28.7" onclick="lb(this.src)"><figcaption>2:28.7</figcaption></figure><figure><img loading="lazy" src="assert/image-eb41e537abb969e7.jpg" alt="2:29.2" onclick="lb(this.src)"><figcaption>2:29.2</figcaption></figure><figure><img loading="lazy" src="assert/image-16534aa09bb0bd44.jpg" alt="2:29.7" onclick="lb(this.src)"><figcaption>2:29.7</figcaption></figure><figure><img loading="lazy" src="assert/image-16534aa09bb0bd44.jpg" alt="2:30.2" onclick="lb(this.src)"><figcaption>2:30.2</figcaption></figure></div></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Yes! I read through the whole video. It&#x27;s a slick <strong>product promo for &quot;Qwen3.8-Max&quot;</strong> (tagline: <em>&quot;See What It Can Do&quot;</em>), a multimodal AI model. It&#x27;s structured as a series of capability showcases, each with its own animated headline. Here&#x27;s the walkthrough:</p>
+<h3>Opening (0:00–0:17)</h3>
+<p>Animated title reveal: <strong>&quot;Qwen3.8-Max&quot;</strong> → <strong>&quot;See What It Can Do.&quot;</strong></p>
+<h3>The capability chapters</h3>
+<table><thead><tr><th>Time</th><th>Headline</th><th>What&#x27;s demoed</th></tr></thead><tbody><tr><td>~0:03</td><td><strong>Read and Understand</strong> — <em>file analysis</em></td><td>Uploads an Alibaba Group annual report PDF, asks it to &quot;analyze this file and create a PDF with graphics and text.&quot; Generates a formatted &quot;Industry Overview &amp; Business Layout&quot; report with stat tiles and charts.</td></tr><tr><td>~0:17</td><td><strong>Everything In Your Work</strong> — <em>research</em></td><td>Highlights the word &quot;Qwen&quot; in text, asks to &quot;research all available info on this brand.&quot; Produces <em>&quot;The Qwen Model Family: A Complete Technical Survey.&quot;</em></td></tr><tr><td>~0:21</td><td><strong>And In Your Life</strong></td><td>Selects photos/videos from an iPhone Library (13,125 items) and uses <code>/hyperframes</code> to <strong>edit a family vlog</strong> — cuts raw clips into a stylized &quot;FAMILY DAY&quot; montage (<em>&quot;Edited by Qwen3.8-Max &amp; Qwen-MM-Plugin&quot;</em>).</td></tr><tr><td>~0:36</td><td><strong>Learn Better</strong> — <em>photo-to-animation (education)</em></td><td>Snaps a photo of a biology exam question (mitosis), auto-generates <strong>explanatory animated videos</strong> (Interphase/DNA replication, chemistry reactions, interactive math function explorer, optics diagrams).</td></tr><tr><td>~0:46</td><td><strong>Build Better</strong> — <em>frontend development</em></td><td>Screenshots a website (&quot;Polyform&quot; 3D studio), asks it to replicate it. Builds a working front-end (a &quot;ChromaWell&quot; art-therapy wellness site).</td></tr><tr><td>~0:59</td><td><strong>Create Better</strong> — <em>3D generation / floor plan</em></td><td>Rebuilds a 2D floor plan into a <strong>3D studio-loft model in Blender</strong>, even self-correcting (&quot;the TV&#x27;s back faces the living room… I&#x27;ll flip it 180°&quot;) and matching furniture (sofas), rendering a full furnished apartment.</td></tr><tr><td>~1:25</td><td><strong>In The Virtual World</strong> — <em>game development</em></td><td><code>/goal Build a working Three.js Hogwarts castle</code>. Runs an agentic coding loop, builds an explorable 3D castle game with debug controls, spells (Lumos/Incendio), portraits, and playable first-person exploration (&quot;Problem Solved!&quot;).</td></tr><tr><td>~1:51</td><td><strong>Follow Every Story</strong> — <em>series analysis</em></td><td>Analyzes a Chinese TV drama (<em>新生 / &quot;Regeneration&quot;</em> on Youku), builds a webpage (&quot;REGEN&quot;) with a Rashomon-style character memory breakdown and a <strong>chronological story timeline</strong> vs. episode timeline.</td></tr><tr><td>~2:10</td><td><strong>Remember Every Hour</strong> — <em>100-hour livestream analysis</em></td><td>Processes a <strong>100-hour</strong> wilderness-survival livestream (&quot;Island 100 Hours&quot;). Shows a 4-phase video-memory pipeline (adaptive segmentation → knowledge subgraph → hierarchical aggregation → semantic embedding/retrieval), then a dashboard with cast, timeline, and a searchable clip library.</td></tr></tbody></table>
+<h3>Recurring themes</h3>
+<ul><li>Everything is driven by <strong>natural-language prompts</strong> typed into a floating chat box (with slash-commands like <code>/hyperframes</code>, <code>/goal</code>, and <code>@folder</code> mentions).</li><li>Consistent tagline pattern: <em>&quot;[Verb] Better / Every [X]&quot;</em> in blue/black type.</li><li>Emphasis on <strong>long-context</strong> (100 hrs of video, 13k photos), <strong>agentic self-correction</strong>, and producing <strong>finished artifacts</strong> (PDFs, websites, 3D scenes, games, dashboards).</li></ul>
+<p>The video ends at 2:29 (fades to black at 2:30). It reads as a <strong>capabilities sizzle reel</strong> positioning Qwen3.8-Max as an all-in-one multimodal agent for reading, researching, editing, teaching, coding, 3D creation, and long-video understanding.</p>
+<p>Want me to focus on any particular section — pull exact on-screen text via OCR, or dig into one of the demos frame-by-frame?</p></div></div>
+<div class="u"><div class="who">User</div><div class="bubble"><p>@Qwen-MM-Plugins/tests/assets/real/qwen3vl.pdf Could you read Figure 2. in this PDF?</p></div></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>I&#x27;ll first locate Figure 2 in the PDF by scanning the early pages.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">Read</span><span class="ts">qwen3vl.pdf</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/qwen3vl.pdf&quot;,
+  &quot;pages&quot;: &quot;1-6&quot;
+}</pre><pre class="out err">pdftoppm is not installed. Install poppler-utils (e.g. `brew install poppler` or `apt-get install poppler-utils`) to enable PDF page rendering.</pre></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>The built-in PDF renderer isn&#x27;t available, but I have the Qwen MM plugin tools. Let me render the early pages to locate Figure 2.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">visualize</span><span class="ts">qwen3vl.pdf</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/qwen3vl.pdf&quot;,
+  &quot;pages&quot;: &quot;1-6&quot;,
+  &quot;budget&quot;: &quot;large&quot;
+}</pre><pre class="out">[PDF Start]
+Total pages: 35 | Showing pages: 1-6
+[Page 1 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-ae09d104faab07c3.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 1 Extracted Text]
+July 25, 2026
+Qwen3-VL Technical Report
+Qwen Team
+https://chat.qwen.ai
+https://huggingface.co/Qwen
+https://modelscope.cn/organization/qwen
+https://github.com/QwenLM/Qwen3-VL
+Abstract
+We introduce Qwen3-VL, the most capable vision–language model in the Qwen series to
+date, achieving superior performance across a broad range of multimodal benchmarks.
+It natively supports interleaved contexts of up to 256K tokens, seamlessly integrating text, images, and video. The model family includes both dense (2B/4B/8B/32B)
+and mixture-of-experts (30B-A3B/235B-A22B) variants to accommodate diverse latency–quality trade-offs. Qwen3-VL delivers three core pillars: (i) markedly stronger
+pure-text understanding, surpassing comparable text-only backbones in several cases;
+(ii) robust long-context comprehension with a native 256K-token window for both text
+and interleaved multimodal inputs, enabling faithful retention, retrieval, and crossreferencing across long documents and videos; and (iii) advanced multimodal reasoning
+across single-image, multi-image, and video tasks, demonstrating leading performance
+on comprehensive evaluations such as MMMU and visual-math benchmarks (e.g., MathVista and MathVision). Architecturally, we introduce three key upgrades: (i) an enhanced
+interleaved-MRoPE for stronger spatial–temporal modeling across images and video; (ii)
+DeepStack integration, which effectively leverages multi-level ViT features to tighten
+vision–language alignment; and (iii) text-based time alignment for video, evolving from
+T-RoPE to explicit textual timestamp alignment for more precise temporal grounding. To
+balance text-only and multimodal learning objectives, we apply square-root reweighting, which boosts multimodal performance without compromising text capabilities.
+We extend pretraining to a context length of 256K tokens and bifurcate post-training
+into non-thinking and thinking variants to address distinct application requirements.
+Furthermore, we allocate additional compute resources to the post-training phase to
+further enhance model performance. Under comparable token budgets and latency
+constraints, Qwen3-VL achieves superior performance in both dense and Mixture-ofExperts (MoE) architectures. We envision Qwen3-VL serving as a foundational engine for
+image-grounded reasoning, agentic decision-making, and multimodal code intelligence
+in real-world workflows.
+1
+[Page 2 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-61885023caceb97b.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 2 Extracted Text]
+1 Introduction
+Vision–language models (VLMs) have achieved substantive progress in recent years, evolving from
+foundational visual perception to advanced multimodal reasoning across images and video. The rapid
+advancement of VLMs has given rise to a rapidly expanding landscape of downstream applications—such
+as long-context understanding, STEM reasoning, GUI comprehension and interaction, and agentic
+workflows. Crucially, these advances must not erode the underlying large language model’s (LLM’s)
+linguistic proficiency; multimodal models are expected to match or surpass their text-only counterparts
+on language benchmarks.
+In this report, we present Qwen3-VL and its advances in both general-purpose and advanced applications.
+Built on the Qwen3 series (?), we instantiate four dense models (2B/4B/8B/32B) and two mixture-ofexperts (MoE) models (30B-A3B / 235B-A22B), each trained with a context window of up to 256K tokens
+to enable long-context understanding. By optimizing the training corpus and training strategy, we
+preserve the underlying LLM’s language proficiency during vision–language (VL) training, thereby
+substantially improving overall capability. We release both non-thinking and thinking variants; the latter
+demonstrates significantly stronger multimodal reasoning capabilities, achieving superior performance
+on complex reasoning tasks.
+We first introduce the architectural improvements, which span three components: 1) Enhanced positional
+encoding. In Qwen2.5-VL, we used MRoPE as a unified positional encoding scheme for text and vision.
+We observed that chunking the embedding dimensions into temporal (t), horizontal (h), and vertical (w)
+groups induces an imbalanced frequency spectrum and hampers long-video understanding. We therefore
+adopt an interleaved MRoPE that distributes t, h, and w uniformly across low- and high-frequency bands,
+yielding more faithful positional representations. 2) DeepStack for cross-layer fusion. To strengthen
+vision–language alignment, we incorporate the pioneering DeepStack (?) mechanism. Visual tokens
+from different layers of the vision encoder are routed to corresponding LLM layers via lightweight
+residual connections, enhancing multi-level fusion without introducing extra context length. 3) Explicit
+video timestamps. We replace the absolute-time alignment via positional encoding used in Qwen2.5-VL
+with explicit timestamp tokens to mark frame groups, providing a simpler and more direct temporal
+representation. In addition, on the optimization side, we move from a per-sample loss to a square-rootnormalized per-token loss, which better balances the contributions of text and multimodal data during
+training.
+To build a more capable and robust vision–language foundation model, we overhauled our training
+data in terms of quality, diversity, and structure. Key upgrades include enhanced caption supervision,
+expanded omni-recognition and OCR coverage, normalized grounding with 3D/spatial reasoning, and
+new corpora for code, long documents, and temporally grounded video. We further infused chain-ofthought reasoning and high-quality, diverse GUI-agent interaction data to bridge perception, reasoning,
+and action. Together, these innovations enable stronger multimodal understanding, precise grounding,
+and tool-augmented intelligence.
+Our training pipeline consists of two stages: pretraining and post-training. Pretraining proceeds in
+four phases: a warm-up alignment phase that updates only the merger (vision–language projection)
+layers while keeping the rest of the model frozen, followed by full-parameter training with progressively
+larger context windows at 8K, 32K, and 256K sequence lengths. Post-training comprises three phases: (i)
+supervised fine-tuning on long chain-of-thought data, (ii) knowledge distillation from stronger teacher
+models, and (iii) reinforcement learning.
+The above innovations equip Qwen3-VL with strong capabilities not only as a robust vision–language
+foundation model but also as a flexible platform for real-world multimodal intelligence—seamlessly integrating perception, reasoning, and action across diverse application domains. In the following sections,
+we present the model architecture, training framework, and extensive evaluations that demonstrate its
+consistent and competitive performance on text, vision, and multimodal reasoning benchmarks.
+2 Model Architecture
+Following Qwen2.5-VL (?), Qwen3-VL adopts a three-module architecture comprising a vision encoder,
+an MLP-based vision–language merger, and a large language model (LLM). Figure 1 depicts the detailed
+model structure.
+Large Language Model: Qwen3-VL is instantiated in three dense variants (Qwen3-VL-2B/4B/8B/32B)
+and two MoE variants (Qwen3-VL-30B-A3B, Qwen3-VL-235B-A22B), all built upon Qwen3 backbones.
+The flagship model, Qwen3-VL-235B-A22B, has 235B total parameters with 22B activated per token. It
+2
+[Page 3 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-e5f873e5b60095c3.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 3 Extracted Text]
+Figure 1: The Qwen3-VL framework integrates a vision encoder and a language model decoder to process
+multimodal inputs, including text, images, and video. The vision encoder is specifically designed to
+handle dynamic, native-resolution visual inputs, mapping them to visual tokens of variable length.
+To enhance perceptual capability and preserve rich visual information, we incorporate the pioneering
+DeepStack mechanism, which injects visual tokens from multiple layers of the vision encoder into
+corresponding layers of the LLM. Furthermore, we adopt Interleaved MRoPE to encode positional
+information for multimodal inputs with a balanced frequency spectrum, and introduce text-based
+timestamp tokens to more effectively capture the temporal structure of video sequences.
+outperforms most VLMs across a broad set of multimodal tasks and surpasses its text-only counterpart
+on the majority of language benchmarks.
+Vision Encoder: We utilize the SigLIP-2 architecture (?) as our vision encoder and continue training
+it with dynamic input resolutions, initialized from official pretrained checkpoints. To accommodate
+dynamic resolutions effectively, we employ 2D-RoPE and interpolate absolute position embeddings based
+on input size, following the methodology of CoMP (?). Specifically, we default to the SigLIP2-SO-400M
+variant and use SigLIP2-Large (300M) for small-scale LLMs (2B and 4B).
+MLP-based Vision-Language Merger: As in Qwen2.5-VL, we use a two-layer MLP to compress 2 × 2
+visual features from the vision encoder into a single visual token, aligned with the LLM’s hidden
+dimension. Additionally, we deploy specialized mergers to support the DeepStack mechanism (?), the
+details of which are fully described in Section 2.2.
+2.1 Interleaved MRoPE
+Qwen2-VL (?) introduced MRoPE to model positional information for multimodal inputs. In its original
+formulation, the embedding dimensions are partitioned into temporal (t), horizontal (h), and vertical (w)
+subspaces, each assigned distinct rotary frequencies. This results in an imbalanced frequency spectrum,
+which subsequent studies have shown to degrade performance on long-video understanding benchmarks.
+To address this, we redesign the frequency allocation by interleaving the t, h, and w components across
+the embedding dimensions (?). This ensures that each spatial–temporal axis is uniformly represented
+across both low- and high-frequency bands. The resulting balanced spectrum mitigates the original
+spectral bias and significantly improves long-range positional modeling for video.
+2.2 DeepStack
+We draw inspiration from DeepStack (?) and inject visual tokens into multiple layers of the LLM.
+Unlike the original DeepStack approach, which stacks tokens from multi-scale visual inputs, we extend
+3
+[Page 4 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-59ed590a40495687.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 4 Extracted Text]
+DeepStack to extract visual tokens from intermediate layers of the Vision Transformer (ViT). This design
+preserves rich visual information, ranging from low- to high-level representations.
+Specifically, as illustrated in Figure 1, we select features from three distinct levels of the vision encoder.
+Subsequently, dedicated vision–language merger modules project these multi-level features into visual
+tokens, which are then added directly to the corresponding hidden states of the first three LLM layers.
+2.3 Video Timestamp
+In Qwen2.5-VL, a time-synchronized variant of MRoPE is employed to endow the model with temporal
+awareness. However, we identify two key limitations of this approach: (1) By tying temporal position
+IDs directly to absolute time, the method produces excessively large and sparse temporal position ids for
+long videos, degrading the model’s ability to understand long temporal contexts. (2) Effective learning
+under this scheme requires extensive and uniformly distributed sampling across various frame rates
+(fps), significantly increasing the cost of training data construction.
+To address these issues, we adopt a textual token–based time encoding strategy (?), wherein each video
+temporal patch is prefixed with a timestamp expressed as a formatted text string—e.g., &lt;3.0 seconds&gt;.
+Furthermore, during training, we generate timestamps in both seconds and HMS (hours:minutes:seconds)
+formats to ensure the model learns to interpret diverse timecode representations. Although this approach
+incurs a modest increase in context length, it enables the model to perceive temporal information more
+effectively and precisely, thereby facilitating time-aware video tasks such as video grounding and dense
+captioning.
+3 Pre-Training
+3.1 Training Recipe
+We first enhance the vision encoder by conducting continuous training with dynamic resolutions based
+on the pre-trained SigLIP-2 model. The overall Qwen3-VL model adopts a three-module architecture,
+comprising this vision encoder, an MLP-based vision–language merger, and a Qwen3 large language
+model (LLM) backbone. Building on this architecture, our pre-training methodology is systematically
+structured into four distinct stages, designed to progressively build capabilities from basic alignment to
+long-context understanding. An overview of these stages is presented in Table 1.
+Table 1: Training setup and hyperparameters across different stages for Qwen3-VL.
+Stage Objective Training Token Budget Sequence Length
+S0 Vision-Language Alignment Merger 67B 8,192
+S1 Multimodal Pre-Training All ~1T 8,192
+S2 Long-Context Pre-Training All ~1T 32,768
+S3 Ultra-Long-Context Adaptation All 100B 262,144
+Stage 0: Vision-Language Alignment. The initial stage (S0) focuses on efficiently bridging the modality
+gap between the vision encoder and the LLM. Crucially, only the parameters of the MLP merger are
+trained during this phase, while both the vision encoder and the LLM backbone remain frozen. We utilize
+a curated dataset of approximately 67B tokens, consisting of high-quality image-caption pairs, visual
+knowledge collections, and optical character recognition (OCR) data. All training is conducted with a
+sequence length of 8,192. This alignment-first approach establishes a solid foundation for cross-modal
+understanding before proceeding to full-parameter training.
+Stage 1: Multimodal Pre-Training. Following the initial alignment, Stage 1 (S1) transitions to fullparameter Multimodal Pre-Training. In this phase, we unfreeze all model components—the vision
+encoder, the merger, and the LLM—for joint end-to-end training. The model is trained on a massive
+and diverse dataset of approximately 1 trillion (1T) tokens. To maintain the LLM’s strong language
+abilities, the data mixture is composed of vision-language (VL) data and text-only data. The VL portion
+is rich and varied, adding interleaved image-text documents, visual grounding tasks, visual question
+answering (VQA), data from STEM domains, and a small amount of video data to introduce temporal
+understanding. The sequence length remains at 8,192.
+Stage 2: Long-Context Pre-Training. Stage 2 (S2) aims to significantly extend the model’s contextual
+processing abilities. A key change in this stage is the quadrupling of the sequence length to 32,768, while
+4
+[Page 5 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-b9051b0ec854f3f2.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 5 Extracted Text]
+all model parameters continue to be trainable. Training is conducted on a dataset of approximately
+1T tokens, with an adjusted data mixture to support long-context tasks. The proportion of text-only
+data is increased to bolster long-form text comprehension, while the remaining VL data incorporates a
+significantly larger volume of video and agent-oriented instruction-following data. This stage is critical
+for enabling the model to process and reason over longer videos and complex, multi-step tasks.
+Stage 3: Ultra-Long-Context Adaptation. The final stage (S3) is a specialized phase designed to push the
+model’s context window to its operational limits. Here, we dramatically increase the sequence length to
+262,144. The model is trained on a more focused 100B token dataset specifically curated for this purpose.
+The data is also composed of text-only data and VL data, with a strong emphasis on long-video and longdocument understanding tasks. This final adaptation solidifies Qwen3-VL’s proficiency in processing
+and analyzing extremely long sequential inputs, a key capability for applications like comprehensive
+document analysis and lengthy video summarization.
+3.2 Pre-Training Data
+3.2.1 Image Caption and Interleaved Text-Image Data
+To build a robust foundation model for general-purpose vision–language understanding, we significantly
+expand and refine two core data modalities: image–caption pairs and interleaved text–image sequences.
+Our strategy emphasizes high-quality, diverse, and semantically rich multimodal grounding, supported
+by purpose-built models and rigorous filtering pipelines.
+Image Caption Data: We curate a large-scale corpus of contemporary, predominantly Chinese–English
+multilingual image–text pairs from web sources and apply a multi-stage refinement pipeline centered
+on a specialized Qwen2.5-VL-32B model fine-tuned for recaptioning. This model leverages the original
+raw text associated with each image to generate more comprehensive, fluent, and fine-grained captions—enriching descriptions of visual elements (e.g., object attributes, spatial layouts, and contextual
+semantics) while simultaneously improving the linguistic quality and informativeness of the textual
+component.
+Deduplication is performed exclusively on the recaptioned text using semantic similarity metrics, ensuring removal of redundant samples without sacrificing visual diversity. To further enhance coverage of
+underrepresented concepts, we apply clustering (???) over visual embeddings to identify sparse regions
+in the data distribution and perform targeted augmentation. The result is a high-fidelity caption dataset
+that balances scale, diversity, and descriptive granularity.
+Interleaved Text-Image Data: We collect diverse real-world multimodal documents sourced from recent
+Chinese and English websites (???). All documents undergo domain classification (?) using a lightweight
+Qwen-based scorer fine-tuned for fine-grained domain identification. Based on validation experiments
+across domains, we systematically exclude harmful or low-value categories—such as advertisements,
+promotional content, and clickbait—using the same efficient scorer to filter out undesirable samples.
+For book-scale interleaved data, we employ a fine-tuned Qwen2.5-VL-7B model to perform high-accuracy
+multimodal parsing, precisely extracting and aligning text with embedded figures, diagrams, and
+photographs. To enable ultra-long context modeling, we construct a specialized subset by merging
+consecutive pages into sequences of up to 256K tokens, preserving natural page order and multimodal
+coherence. During preprocessing, we enforce strict quality controls: (i) pure-text or low-alignment
+segments are removed; (ii) for ultra-long book sequences, we require a minimum page count and a
+minimum image-to-text ratio to ensure meaningful visual–textual interaction throughout the context. This
+yields a clean, diverse, and layout-aware interleaved corpus optimized for both grounded understanding
+and long-range multimodal reasoning.
+3.2.2 Knowledge
+World knowledge is essential for multimodal large language models (MLLMs) to achieve robust visual
+understanding, grounded reasoning, and entity-aware generation across diverse downstream tasks. To
+equip Qwen3-VL with a comprehensive grasp of both real-world and fictional concepts, we construct a
+large-scale pretraining dataset centered on well-defined entities spanning more than a dozen semantic
+categories—including animals, plants, landmarks, food, and everyday objects such as vehicles, electronics,
+and clothing.
+Real-world entities follow a long-tailed distribution: prominent concepts appear frequently with highquality annotations, while the majority are rare. To address this imbalance, we adopt an importance-based
+sampling strategy. High-prominence entities are sampled more heavily to ensure a sufficient learning
+5
+[Page 6 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-6d8a3951feacd4c0.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 6 Extracted Text]
+signal, while low-prominence entities are included in smaller proportions to maintain broad coverage
+without overwhelming the training process. This approach effectively balances data quality, utility, and
+diversity.
+All retained samples undergo a multi-stage refinement pipeline. In addition to standard filtering for
+noise and misalignment, we replace original or sparse captions—such as generic alt-text—with richer,
+LLM-generated descriptions. These enhanced captions not only identify the main entity but also describe
+its visual attributes, surrounding context, spatial layout, and interactions with other objects or people,
+thereby providing a more complete and grounded textual representation.
+Together, these efforts yield a knowledge-rich, context-aware, and discrimination-focused training signal
+that significantly enhances Qwen3-VL’s ability to recognize, reason about, and accurately describe visual
+concepts in real-world scenarios.
+3.2.3 OCR, Document Parsing and Long Document Understanding
+OCR: To enhance OCR performance on real-world images, we curate a dataset of 30 million in-house
+collected samples using a coarse-to-fine pipeline. This pipeline refines OCR annotations by integrating
+pseudo-labels from OCR-specialized models with refinements from Qwen2.5-VL—without any human
+annotation. Expanding beyond the 10 languages supported by Qwen2.5-VL (excluding Chinese and
+English), we incorporate an additional 29 languages, synthesizing approximately 30 million high-quality
+multilingual OCR samples and curating over 1 million internal real-world multilingual images.
+Document Parsing: For document parsing, we collect 3 million PDFs from Common Crawl, evenly
+distributed across 10 document types (300K samples each), along with 4 million internal documents. An
+in-house layout model first predicts the reading order and bounding boxes for textual and non-textual
+regions; Qwen2.5-VL-72B then performs region-specific recognition. The outputs are reassembled into
+position-aware, layout-aligned parsing data.
+To ensure robust parsing across heterogeneous formats, we design a unified annotation framework
+supporting two representations:
+• QwenVL-HTML, which includes fine-grained, element-level bounding boxes;
+• QwenVL-Markdown, where only images and tables are localized, with tables encoded in LaTeX.
+We construct a large-scale synthetic HTML corpus with precise annotations and systematically convert it
+to Markdown format. To further improve model generalization, we generate pseudo-labels on extensive
+collections of real documents and filter them for quality. The final training set combines synthetic and
+high-quality pseudo-labeled data to enhance both scalability and robustness.
+Long Document Understanding: To enhance the model’s ability to understand multi-page PDFs—often
+spanning dozens of pages—we leverage a large-scale corpus of long-document data. First, we synthesize
+long-document parsing sequences by merging single-page document samples. In each sequence, multiple
+page images are placed at the beginning, followed by their corresponding text derived from OCR or
+HTML parsing. Second, we construct long-document visual question answering (VQA) data. Specifically,
+we sample high-quality multi-page PDFs and generate a diverse set of VQA examples that require the
+model to reason across multiple pages and heterogeneous document elements—such as charts, tables,
+figures, and body text. We carefully balance the distribution of question types and ensure that supporting
+evidence draws from a wide range of modalities and layout components, thereby promoting robust,
+grounded, and multi-hop reasoning over extended contexts.
+3.2.4 Grounding and Counting
+Visual grounding is a fundamental capability for multimodal models, enabling them to accurately identify,
+interpret, and localize a wide spectrum of visual targets from specific objects to arbitrary image regions.
+In Qwen3-VL, we systematically enhance grounding proficiency and support two grounding modalities:
+bounding boxes and points. These representations allow for precise and flexible interpretation of image
+content across diverse scenarios and downstream tasks. In addition, we extend the grounding capacity of
+the model to support counting, enabling quantitative reasoning about visual entities. In the following,
+we briefly describe the data construction pipelines for grounding and counting.
+Box-based Grounding: We begin by aggregating widely used open-source datasets, including COCO (?),
+Objects365 (?), OpenImages (?), and RefCOCO/+/g (??). To further enrich data diversity, we developed
+an automated synthesis pipeline that generates high-quality object annotations across a broad range
+of scenarios. This pipeline operates in three stages: (i) object candidates are extracted from unlabeled
+6
+[PDF End]</pre></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Figure 1 is on page 3. Figure 2 isn&#x27;t in pages 1–6, so let me continue scanning.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">visualize</span><span class="ts">qwen3vl.pdf</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/qwen3vl.pdf&quot;,
+  &quot;pages&quot;: &quot;7-12&quot;,
+  &quot;budget&quot;: &quot;large&quot;
+}</pre><pre class="out">[PDF Start]
+Total pages: 35 | Showing pages: 7-12
+[Page 7 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-0afb3d541c1a693a.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 7 Extracted Text]
+images using Qwen2.5-VL; (ii) these candidates are localized and annotated using both open-vocabulary
+detectors (specifically, Grounding DINO (?)) and Qwen2.5-VL; and (iii) the resulting annotations undergo
+quality assessment, with low-confidence or inaccurate ones systematically filtered out. Through this
+approach, we constructed a large-scale, highly diverse box-based grounding dataset spanning a wide
+variety of visual contexts and object categories.
+Point-based Grounding: To ensure robust point-based grounding, we curated a comprehensive dataset
+combining publicly available and synthetically generated pointing annotations. It integrates three
+sources: (i) public pointing and counting annotations from PixMo (?); (ii) object grounding data derived
+from public object detection and instance segmentation benchmarks; and (iii) high-precision pointing
+annotations generated by a dedicated synthesis pipeline designed to target fine-grained image details.
+Counting: Building upon the grounding data, we curated a high-quality subset to form the basis of our
+counting dataset, which includes three distinct task formulations: direct counting, box-based counting,
+and point-based counting. Collectively, these three task types constitute a comprehensive counting
+dataset.
+Different from Qwen2.5-VL, we adopt a normalized coordinate system scaled to the range [0, 1000] in this
+version. This design improves robustness to variations in image resolution and aspect ratio across diverse
+inputs, while also simplifying post-processing and enhancing the usability of predicted coordinates in
+downstream applications.
+3.2.5 Spatial Understanding and 3D Recognition
+To facilitate sophisticated interaction with the physical world, Qwen3-VL is designed with a deep
+understanding of spatial context. This enables the model to interpret spatial relationships, infer object
+affordances, and perform action planning and embodied reasoning. It can also estimate the 3D spatial
+positions of objects from a single monocular image. To support these capabilities, we created two
+comprehensive datasets focused on Spatial Understanding and 3D Grounding.
+Spatial Understanding. Beyond localizing objects, Qwen3-VL is trained to reason about spatial relationships, object affordances, and feasible actions in 2D scenes—capabilities essential for embodied AI
+and interactive applications. To this end, we construct a specialized dataset that goes beyond standard
+grounding by incorporating: (i) relational annotations (e.g., “the cup to the left of the laptop”), (ii)
+affordance labels (e.g., “graspable”, “pressable”, “sittable”), and (iii) action-conditioned queries that
+require planning (e.g., “What should I move first to reach the book behind the monitor?”). These samples
+are derived from both curated real-world scenes and synthetically generated layouts, with natural language queries automatically generated via templated and LLM-based methods to ensure diversity and
+complexity. Critically, all spatial references are expressed relative to other objects or scene frames, rather
+than absolute coordinates, encouraging robust relational reasoning. This training enables Qwen3-VL to
+not only answer “where” questions but also “how” and “what can be done” — forming a foundation for
+agentic interaction with visual environments.
+3D Grounding. To further enhance the model’s ability to understand the physical world from images,
+we constructed a specialized pretraining dataset for 3D visual grounding. We sourced data from public
+collections of diverse indoor and outdoor scenes and reformulated it into a visual question-answering
+format. Each sample consists of: 1) a single-view camera image, 2) a natural language referring expression,
+and 3) the corresponding 9-DoF 3D bounding box annotations in a structured JSON format, specifying
+the object’s spatial position and semantic label. As the 3D bounding boxes are derived from multiple
+sensors and data sources, they exhibit varying camera intrinsic parameters and inherent noise. To this
+end, we filter out heavily occluded and inaccurate labels and follow Omni3D (?) to unify all data into a
+virtual camera coordinate system. We also synthesized a large corpus of descriptive captions to create
+rich textual queries for 3D grounding. These descriptions go beyond naming the object’s category to
+include detailed attributes, layout arrangements, spatial location, visual affordances, and interactions
+with surrounding objects—yielding more fine-grained and grounded referring expressions.
+3.2.6 Code
+We enhance the Qwen3-VL series with dedicated coding capabilities by incorporating two categories of
+code-related data into the training corpus, enabling the model to read, write, and reason about programs
+in both text-only and visually grounded contexts.
+Text-Only Coding. We reuse the extensive code corpus from the Qwen3 and Qwen3-Coder series. This
+large-scale dataset spans a wide range of programming languages and domains—including software
+development, algorithmic problem solving, mathematical reasoning, and agent-oriented tasks—and
+7
+[Page 8 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-5d7c1d832b1fef9a.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 8 Extracted Text]
+establishes the model’s foundational understanding of code syntax, algorithmic logic, and generalpurpose program generation.
+Multimodal Coding. To address tasks requiring both visual understanding and code generation, we
+curate data for a diverse suite of multimodal coding tasks. This dataset, sourced from both open-source
+datasets and internal synthesis pipelines, teaches the model to jointly understand visual inputs and
+generate functional code. The data covers several key tasks, including: converting UI screenshots into
+responsive HTML/CSS; generating editable SVG codes from images (?); solving visual programming
+challenges (?); answering multimodal coding questions (e.g., StackOverflow posts with images); and transcribing visual representations (such as flowcharts, diagrams, and LATEX equations) into their respective
+code or markup. This novel data mixture enables Qwen3-VL to act as a bridge between visual perception
+and executable logic.
+3.2.7 Video
+The video comprehension capabilities of Qwen3-VL have been substantially advanced, enabling robust
+modeling of temporal dynamics across frames, fine-grained perception of spatial relationships, and
+coherent summarization of ultra-long video sequences. This enhancement is underpinned by a data
+processing pipeline featuring two principal innovations:
+Temporal-Aware Video Understanding. (i) Dense Caption Synthesis: For long video sequences, we
+employ a short-to-long caption synthesis strategy to generate holistic, timestamp-interleaved, and
+temporally coherent story-level descriptions. Leveraging in-house captioning models, we further produce
+fine-grained annotations that jointly capture event-level temporal summaries and segment-specific visual
+details. (ii) Spatio-Temporal Video Grounding: We curate and synthesize large-scale video data annotated
+at the levels of objects, actions, and persons to strengthen the model’s spatio-temporal grounding
+capabilities, thereby improving its capacity for fine-grained video understanding.
+Video Data Balancing and Sampling. (i) Source Balancing: To ensure data balance and diversity, we
+assemble a large-scale dataset encompassing various video sources, including instructional content,
+cinematic films, egocentric recordings, etc. Dataset balance is achieved through systematic curation
+guided by metadata such as video titles, duration, and categorical labels. (ii) Length-Adaptive Sampling:
+During pre-training stages, we dynamically adjust sampling parameters, such as frames per second (fps)
+and the maximum number of frames, according to different sequence length constraints. This adaptive
+strategy mitigates information loss associated with suboptimal sampling practices (e.g., overly sparse
+frame selection or excessively low spatial resolution), thus preserving visual details and optimizing
+training efficacy.
+3.2.8 Science, Technology, Engineering, and Mathematics (STEM)
+Multimodal reasoning lies at the heart of Qwen3-VL, with STEM reasoning constituting its most essential
+part. Our philosophy follows a divide-and-conquer strategy: we first develop fine-grained visual
+perception and robust linguistic reasoning capabilities independently, and then integrate them in a
+synergistic manner to achieve effective multimodal reasoning.
+Visual Perception Data. We develop a dedicated synthetic data generation pipeline that constructs
+geometric diagrams through programmatic (code-based) rendering. Using this pipeline, we generate: (i)
+1 million point-grounding samples, such as intersection points, corners, and centers of gravity; and (ii) 2
+million perception-oriented visual question answering pairs targeting fine-grained visual understanding
+of diagrams. To obtain high-fidelity textual descriptions, we further implement a two-stage captioning
+framework: an initial generation phase followed by rigorous model-based verification. Both stages
+employ ensembles of specialized models to ensure accuracy and descriptive granularity. This process
+yields a comprehensive dataset of 6 million richly annotated diagram captions spanning diverse STEM
+disciplines.
+Multi-modal Reasoning Data. The majority of our multi-modal reasoning data consists of over 60
+million K–12 and undergraduate-level exercises, meticulously curated through a rigorous cleaning and
+reformulation pipeline. During quality filtering, we discard low-quality items, including those with
+corrupted images, irrelevant content, or incomplete or incorrect answers. During the reformulation stage,
+we translate exercises between Chinese and English and standardize the format of answers—such as
+step-by-step solution lists, mathematical expressions, and symbolic notations—to ensure consistency
+and uniform presentation. Regarding long CoT problem-solving data, we synthesize over 12 million
+multimodal reasoning samples paired with images. To ensure the continuity and richness of the reasoning
+process, we utilize the original rollouts generated by a strong reasoning model. To guarantee data
+reliability and applicability, each sample’s reasoning trajectory undergoes rigorous validation—combining
+8
+[Page 9 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-304dfeee17848f59.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 9 Extracted Text]
+rule-based checks and model-based verification—and any instances containing ambiguous answers or
+code-switching are explicitly filtered out. Furthermore, to enhance reasoning quality, we retain only
+challenging problems via rejection sampling.
+Linguistic Reasoning Data. In addition to multimodal reasoning data, we also incorporate reasoning
+data from Qwen3, as multimodal reasoning capabilities are largely derived from linguistic reasoning
+competence.
+3.2.9 Agent
+GUI: To endow Qwen3-VL with agentic capability for autonomous interaction with graphical user
+interfaces (GUIs), we curate and synthesize large-scale, cross-platform data spanning desktop, mobile, and
+web environments (???). For GUI interface perception, we leverage metadata, parsing tools, and human
+annotations to construct tasks such as element description, dense captioning, and dense grounding,
+enabling robust understanding of diverse user interfaces. For agentic capability, we assemble multistep task trajectories via a self-evolving trajectory-production framework, complemented by targeted
+human audits; we also carefully design and augment Chain-of-Thought rationales to strengthen planning,
+decision-making, and reflective self-correction during real-world execution.
+Function Calling: For general function calling capabilities with multimodal contexts, we build a multimodal function calling trajectory synthesis pipeline. We first instruct capable models with images to
+generate user queries and their corresponding function definitions. We then sample model function calls
+with rationales and synthesize the function responses. This process is repeated until the user’s query is
+judged to be solved. Between each step, trajectories can be filtered out due to formatting errors. Such a
+pipeline enables us to construct large-scale multimodal function-calling trajectories from vast images,
+without the need to implement executable functions.
+Search: Among the general function calling capabilities, we regard the ability to perform searches as key
+to facilitating knowledge integration for long-tail entities in real-world scenarios. In this case, we collect
+multimodal factual lookup trajectories with online image search and text search tools, encouraging the
+model to perform searches for unfamiliar entities. By doing so, the model learns to gather information
+from the web to generate more accurate responses.
+4 Post-Training
+4.1 Training Recipe
+Our post-training pipeline is a three-stage process designed to refine the model’s instruction-following
+capabilities, bolster its reasoning abilities, and align it with human preferences. The specific data and
+methods for each stage are detailed in the subsequent sections.
+Supervised Fine-Tuning (SFT). The first stage imparts instruction-following abilities and activates latent
+reasoning skills. This is conducted in two phases: an initial phase at a 32k context length, followed by
+an extension to a 256k context window that focuses on long-document and long-video data. To cater
+to different needs, we bifurcate the training data into standard formats for non-thinking models and
+Chain-of-Thought (CoT) formats for thinking models, the latter of which explicitly models the reasoning
+process.
+Strong-to-Weak Distillation. The second stage employs knowledge distillation, where a powerful
+teacher model transfers its capabilities to our student models. Crucially, we perform this distillation using
+text-only data to fine-tune the LLM backbone. This method proves highly effective, yielding significant
+improvements in reasoning abilities across both text-centric and multimodal tasks.
+Reinforcement Learning (RL). The final stage utilizes RL to further enhance model performance and
+alignment. This phase is divided into Reasoning RL and General RL. We apply large-scale reinforcement
+learning across a comprehensive set of text and multimodal domains, including but not limited to math,
+OCR, grounding, and instruction-following, to improve finer-grained capabilities.
+4.2 Cold Start Data
+4.2.1 SFT Data
+Our principal objective is to endow the model with the capacity to address a wide spectrum of realworld scenarios. Building upon the foundational capabilities of Qwen2.5-VL, which is proficient in
+9
+[Page 10 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-c6c09b9c371bc699.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 10 Extracted Text]
+approximately eight core domains and 30 fine-grained subcategories, we have strategically expanded
+its functional scope. This expansion was achieved by integrating insights from community feedback,
+academic literature, and practical applications, facilitating the introduction of novel capabilities. These
+include, but are not limited to, spatial reasoning for embodied intelligence, image-grounded reasoning for
+fine-grained visual understanding, spatio-temporal grounding in videos for robust object tracking, and
+the comprehension of long-context technical documents spanning hundreds of pages. Guided by these
+target tasks and grounded in authentic use cases, we systematically curated the SFT dataset through the
+meticulous selection and synthesis of samples from open-source datasets and web resources. This targeted
+data engineering effort has been instrumental in establishing Qwen3-VL as a more comprehensive and
+robust multimodal foundation model.
+This dataset comprises approximately 1,200,000 samples, strategically composed to foster robust multimodal capabilities. This collection is partitioned into unimodal and multimodal data, with one-third
+consisting of text-only entries and the remaining two-thirds comprising image-text and video-text pairs.
+The integration of multimodal content is specifically designed to enable the model to interpret complex,
+real-world scenarios. To ensure global relevance, the dataset extends beyond its primary Chinese and English corpora to include a diverse set of multilingual samples, thereby broadening its linguistic coverage.
+Furthermore, it simulates realistic conversational dynamics by incorporating both single-turn and multiturn dialogues contextualized within various visual settings, from single-image to multi-image sequences.
+Crucially, the dataset also features interleaved image-text examples engineered to support advanced
+agentic behaviors, such as tool-augmented image search and visually-grounded reasoning. This heterogeneous data composition ensures comprehensive coverage and enhances the dataset’s representativeness
+for training generalizable and sophisticated multimodal agents.
+Given Qwen3-VL’s native support for a 256K token context length, we employ a staged training strategy
+to optimize for computational efficiency. This strategy comprises two phases: an initial one-epoch
+training phase with a sequence length of 32K tokens, followed by a second epoch at the full 256K token
+length. During this latter stage, the model is trained on a curriculum that interleaves long-context inputs
+with data sampled at the 32K token length. The long-context inputs include materials such as hundreds
+of pages of technical documents, entire textbooks, and videos up to two hours in duration.
+The quality of training data is a critical determinant of the performance of vision-language models.
+Datasets derived from open-source and synthetic origins are often plagued by substantial variability
+and noise, including redundant, irrelevant, or low-quality samples. To mitigate these deficiencies, the
+implementation of a rigorous data filtering protocol is indispensable. Accordingly, our data curation
+process incorporates a two-phase filtering pipeline: Query Filtering and Response Filtering.
+Query Filtering. In this initial phase, we leverage Qwen2.5-VL to identify and discard queries that are
+not readily verifiable. Queries with ambiguous instructions are minimally revised to enhance clarity
+while preserving the original semantic intent. Furthermore, web-sourced queries lacking substantive
+content are systematically eliminated. Crucially, all remaining queries undergo a final assessment of their
+complexity and contextual relevance, ensuring only appropriately challenging and pertinent samples are
+retained for the next stage.
+Response Filtering. This phase integrates two complementary strategies:
+• Rule-Based Filtering: A set of predefined heuristics is applied to eliminate responses exhibiting
+qualitative deficiencies, such as repetition, incompleteness, or improper formatting. To maintain
+semantic relevance and uphold ethical principles, we also discard any query-response pairs that are
+off-topic or possess the potential to generate harmful content.
+• Model-Based Filtering: The dataset is further refined by employing reward models derived from the
+Qwen2.5-VL series. These models conduct a multi-dimensional evaluation of multimodal questionanswering pairs. Specifically: (a) answers are scored against a range of criteria, including correctness,
+completeness, clarity, and helpfulness; (b) for vision-grounded tasks, the evaluation places special
+emphasis on verifying the accurate interpretation and utilization of visual information; and (c) this
+model-based approach enables the detection of subtle issues that typically elude rule-based methods,
+such as inappropriate language mixing or abrupt stylistic shifts.
+This multi-dimensional filtering framework ensures that only data meeting stringent criteria for quality,
+reliability, and ethical integrity is advanced to the SFT phase.
+4.2.2 Long-CoT Cold Start Data
+The foundation of our thinking models is a meticulously curated Long Chain-of-Thought (CoT) cold
+start dataset, engineered to elicit and refine complex reasoning capabilities. This dataset is built upon a
+10
+[Page 11 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-b4dea6130d918916.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 11 Extracted Text]
+diverse collection of queries spanning both pure-text and multimodal data, maintaining an approximate
+1:1 ratio between vision-language and text-only samples to ensure balanced skill development.
+The multimodal component, while covering established domains such as visual question answering
+(VQA), optical character recognition (OCR), 2D/3D grounding, and video analysis, places a special
+emphasis on enriching tasks related to STEM and agentic workflows. This strategic focus is designed to
+push the model’s performance on problems requiring sophisticated, multi-step inference. The pure-text
+portion closely mirrors the data used for Qwen3, featuring challenging problems in mathematics, code
+generation, logical reasoning, and general STEM.
+To guarantee high quality and an appropriate level of difficulty, we implement a rigorous multi-stage
+filtering protocol.
+• Difficulty Curation: We selectively retain instances where baseline models exhibited low pass rates or
+generated longer, more detailed responses. This enriches the dataset with problems that are genuinely
+challenging for current models.
+• Multimodal Necessity Filtering: For vision-language mathematics problems, we introduce a critical
+filtering step: we discard any samples that our Qwen3-30B-nothink model could solve correctly without
+access to the visual input. This ensures that the remaining instances genuinely necessitate multimodal
+understanding and are not solvable via textual cues alone.
+• Response Quality Control: Aligning with the methodology of Qwen3, we sanitize the generated
+responses. For queries with multiple candidate answers, we first remove those containing incorrect
+final results. Subsequently, we filter out responses exhibiting undesirable patterns, such as excessive
+repetition, improper language mixing, or answers that showed clear signs of guessing without sufficient
+reasoning steps.
+This stringent curation process yields a high-quality, challenging dataset tailored for bootstrapping
+advanced multimodal reasoning.
+4.3 Strong-to-Weak Distillation
+We adopt the Strong-to-Weak Distillation pipeline as described in Qwen3 to further improve the performance of lightweight models. This distillation process consists of two main phases:
+• Off-policy Distillation: In the first phase, outputs generated by teacher models are combined to
+provide response distillation. This helps lightweight student models acquire fundamental reasoning
+abilities, establishing a strong foundation for subsequent on-policy training.
+• On-policy Distillation: In the second phase, the student model generates the responses based on the
+provided prompts. These on-policy sequences are then used for fine-tuning the student model. We
+align the logits predicted by the student and teacher by minimizing the KL divergence.
+4.4 Reinforcement Learning
+4.4.1 Reasoning Reinforcement Learning
+We train models across a diverse set of text and multimodal tasks, including mathematics, coding, logical
+reasoning, visual grounding, and visual puzzles. Each task is designed so that solutions can be verified
+deterministically via rules or code executors.
+Data Preparation We curate training data from both open-source and proprietary sources and apply
+rigorous preprocessing and manual annotation to ensure high-quality RL queries. For multimodal
+queries, we use a preliminary checkpoint of our most advanced vision–language model (Qwen3-VL-235BA22B) to sample 16 responses per query; any query for which all responses are incorrect is discarded.
+We then run preliminary RL experiments per task to identify and remove data sources with limited
+potential for improvement. This process yields approximately 30K RL queries covering a variety of text
+and multimodal tasks. For training each model, we sample 16 responses for all queries and filter out
+easy queries whose pass rate exceeds 90%. We shuffle and combine task-specific datasets to construct
+mixed-task batches, ensuring a consistent, predefined ratio of samples per task. The ratio is determined
+through extensive preliminary experiments.
+Reward System We implement a unified reward framework that delivers precise feedback across all
+tasks. The system provides shared infrastructure—data preprocessing, utility functions, and a reward
+11
+[Page 12 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-da6fa4a037976d79.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 12 Extracted Text]
+manager to integrate multiple reward types—while the core reward logic is implemented per task. We
+use task-specific format prompts to guide model outputs to the required formats and therefore do not rely
+on explicit format rewards. To mitigate code-switching, we apply a penalty when the response language
+differs from the prompt language.
+RL Algorithm We employ SAPO (?), a smooth and adaptive policy-gradient method, for RL training.
+SAPO delivers consistent improvements across diverse text and multimodal tasks and across different
+model sizes and architectures.
+4.4.2 General Reinforcement Learning
+The General Reinforcement Learning (RL) stage is designed to enhance the model’s generalization
+capabilities and operational robustness. To this end, we employ a multi-task RL paradigm where the
+reward function is formulated based on a comprehensive set of tasks from the SFT phase, including VQA,
+image captioning, OCR, document parsing, grounding, and clock recognition. The reward mechanism is
+structured to optimize two principal dimensions of model performance:
+• Instruction Following: This dimension evaluates the model’s adherence to explicit user directives. It
+assesses the ability to handle complex constraints on content, format, length, and structured outputs
+(e.g., JSON), ensuring the generated response precisely matches user requirements.
+• Preference Alignment: For open-ended or subjective queries, this dimension aligns the model’s outputs
+with human preferences by optimizing for helpfulness, factual accuracy, and stylistic appropriateness.
+This fosters a more natural and engaging user interaction.
+Furthermore, this stage acts as a corrective mechanism to unlearn strong but flawed knowledge priors
+ingrained during SFT. We address this by introducing specialized, verifiable tasks designed to trigger
+these specific errors, such as counter-intuitive object counting and complex clock time recognition. This
+targeted intervention is designed to supplant erroneous priors with factual knowledge.
+Another critical objective is to mitigate inferior behaviors like inappropriate language mixing, excessive
+repetition, and formatting errors. However, the low prevalence of these issues makes general RL a
+sample-inefficient correction strategy. To overcome this, we curate a dedicated dataset at this stage. This
+dataset isolates prompts known to elicit such undesirable behaviors. This focused training enables the
+application of targeted, high-frequency penalties, effectively suppressing these residual errors.
+Feedback for the RL process is delivered via a hybrid reward system that combines two complementary
+approaches:
+• Rule-Based Rewards: This approach provides unambiguous, high-precision feedback for tasks with
+verifiable ground truths, such as format adherence and instruction following. By using well-defined
+heuristics, this method offers a robust mechanism for assessing correctness and effectively mitigates
+reward hacking, where a model might exploit ambiguities in a learned reward function.
+• Model-Based Rewards: This method employs Qwen2.5-VL-72B-Instruct or Qwen3 as sophisticated
+judgers. The judge models evaluate each generated response against a ground-truth reference, scoring
+its quality across multiple axes. This approach offers superior flexibility for assessing nuanced or openended tasks where strict, rule-based matching is inadequate. It is particularly effective at minimizing
+false negatives that would otherwise penalize valid responses with unconventional formatting or
+phrasing.
+4.5 Thinking with Images
+Inspired by the great prior works on &quot;thinking with images&quot; (????), we endow Qwen3-VL with similar
+agentic capabilities through a two-stage training paradigm.
+In the first stage, we synthesize a cold-start agentic dataset comprising approximately 10k grounding
+examples—primarily simple two-turn visual question answering tasks such as attribute detection. We
+then perform supervised fine-tuning (SFT) on Qwen2.5-VL-32B to emulate the behavior of a visual agent:
+think → act → analyze feedback → answer. To further enhance its reasoning abilities, we apply multi-turn,
+tool-integrated reinforcement learning (RL).
+In the second stage, we distill the trained Qwen2.5-VL-32B visual agents from the first stage to generate a
+larger, more diverse dataset of approximately 120k multi-turn agentic interactions spanning a broader
+range of visual tasks. We then apply a similar cold-start SFT and tool-integrated RL pipeline (now using
+both distilled and synthesized data) for the post-training of Qwen3-VL.
+12
+[PDF End]</pre></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Figure 2 hasn&#x27;t appeared through page 12. Let me continue scanning.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">visualize</span><span class="ts">qwen3vl.pdf</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/qwen3vl.pdf&quot;,
+  &quot;pages&quot;: &quot;13-18&quot;,
+  &quot;budget&quot;: &quot;large&quot;
+}</pre><pre class="out">[PDF Start]
+Total pages: 35 | Showing pages: 13-18
+[Page 13 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-6c6c41fa7553afa6.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 13 Extracted Text]
+The multi-turn, tool-integrated RL procedure is nearly identical across both stages, differing only in
+the underlying data. During RL, we employ three complementary reward signals to encourage robust,
+tool-mediated reasoning:
+• Answer Accuracy Reward leverages Qwen3-32B to measure whether the final answer is correct.
+• Multi-Turn Reasoning Reward leverages Qwen2.5-VL-72B to evaluate whether the assistant correctly
+interprets tool or environment feedback and arrives at the answer through coherent, step-by-step
+reasoning.
+• Tool-Calling Reward encourages appropriate tool usage by comparing the actual number of tool calls
+to an expert-estimated target. This target is determined offline by Qwen2.5-VL-72B based on task
+complexity.
+Early experiments reveal a tendency for models to degenerate into making only a single tool call to
+hack the first two rewards, regardless of task demands. To mitigate this, we explicitly incorporate the
+tool-calling reward to promote adaptive tool exploration aligned with task complexity.
+4.6 Infrastructure
+We train the Qwen3-VL series models on Alibaba Cloud’s PAI-Lingjun AI Computing Service, which
+provides the high-performance computing power required for compute-intensive scenarios such as AI
+and high-performance computing.
+During the pretraining phase, the system employs a hybrid parallelism strategy built upon the MegatronLM framework, integrating Tensor Parallelism (TP), Pipeline Parallelism (PP), Context Parallelism (CP),
+Expert Parallelism (EP), and ZeRO-1 Data Parallelism (DP). This configuration achieves a fine-grained
+balance among model scale, computational load, and communication overhead, enabling high hardware
+utilization and sustaining both high throughput and low communication latency—even at scales of up to
+10,000 GPUs.
+For local deployment and performance evaluation, we adopt deployment strategies based on either vLLM
+or SGLang. vLLM utilizes PagedAttention to enable memory-efficient management and high-throughput
+inference, while SGLang excels at structured generation and handling complex prompts. Together, these
+backends provide efficient inference and evaluation with stable, efficient, and flexible model inference
+capabilities.
+5 Evaluation
+5.1 General Visual Question Answering
+To comprehensively assess the general visual question answering (VQA) capabilities of the Qwen3-VL
+series, we conduct extensive evaluations on a diverse set of benchmarks, including MMBench-V1.1 (?),
+RealWorldQA (?), MMStar (?), and SimpleVQA (?). As detailed in Table 2, Table 3 and Table 4, the
+Qwen3-VL family demonstrates robust and highly competitive performance across a wide spectrum of
+model sizes, from 2B to 235B parameters.
+In the comparison of thinking mode, Qwen3-VL-235B-A22B-Thinking achieves the highest score of 78.7 on
+MMStar. Gemini-2.5-Pro’s (?) Thinking mode delivers the best overall performance, but Qwen3-VL-235BA22B-Thinking is not far behind. In the non-reasoning mode comparison, Qwen3-VL-235B-A22B-Instruct
+obtains the highest scores on MMBench and RealWorldQA, with 89.3/88.9 and 79.2, respectively.
+In the experiments with medium-sized models, Qwen3-VL-32B-Thinking achieves the highest scores on
+MMBench and RealWorldQA, with 89.5/89.5 and 79.4, respectively. Notably, Qwen3-VL-32B-Instruct
+even outperforms the Thinking variant on RealWorldQA, scoring 79.0.
+The scalability of the Qwen3-VL series is evident in the strong performance of our smaller models.
+Specifically, the largest model, Qwen3-VL-8B, achieves the highest performance across all five benchmarks.
+For example, on MMBench-EN, the score in &quot;thinking&quot; mode increases from 79.9 for the 2B model to 85.3
+for the 8B model. A similar upward trend is observed on other benchmarks, such as MMStar, where the
+score rises from 68.1 (2B, thinking) to 75.3 (8B, thinking).
+13
+[Page 14 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-d7e7b499bb60d0ba.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 14 Extracted Text]
+5.2 Multimodal Reasoning
+We evaluate the Qwen3-VL series on a wide range of multimodal reasoning benchmarks, primarily
+focusing on STEM-related tasks and visual puzzles, including MMMU (?), MMMU-Pro (?), MathVision (?),
+MathVision-Wildphoto (hereafter MathVisionWP) , MathVista (?), We-Math (?), MathVerse (?), DynaMath (?),
+Math-VR (?), LogicVista (?), VisualPuzzles (?), VLM are Blind (?), ZeroBench (Main/Subtasks) (?), and
+VisuLogic (?). As shown in Table 2, the flagship Qwen3-VL model demonstrates outstanding performance
+across both “non-thinking” and “thinking” models. Notably, Qwen3-VL-235B-A22B-Instruct achieves
+the best reported results among non-thinking or low-thinking-budget models on multiple benchmarks,
+including MathVistamini, MathVision, MathVersemini, DynaMath, ZeroBench, VLMsAreBlind, VisuLogic,
+and VisualPuzzlesDirect. While, Qwen3-VL-235B-A22B-Thinking achieves state-of-the-art results on
+MathVistamini, MathVision, MathVersemini, ZeroBench, LogicVista, and VisuLogic.
+Among medium-sized models, as shown in Table 3, Qwen3-VL-32B demonstrates significant advantages,
+consistently outperforming Gemini-2.5-Flash and GPT-5-mini. Compared to the previous-generation
+Qwen2.5-VL-72B model, the medium-sized Qwen3-VL model has already surpassed it on reasoning tasks.
+This highlights significant progress in VLMs. Additionally, our newly introduced Qwen3-VL-30B-A3B
+MoE model also delivers competitive results.
+Among small-sized models, we compare Qwen3-VL-2B/4B/8B against GPT-5-Nano, with results presented in Table 4. The 8B variant maintains a clear advantage overall, while the 4B model achieves
+the highest scores on DynaMath and VisuLogic. Notably, even the smallest 2B model exhibits strong
+reasoning capabilities.
+5.3 Alignment and Subjective Tasks
+The ability to follow complex user instructions and reduce potential image-level hallucinations is indispensable for current large vision language models (VLMs). We assess our models on three representative
+benchmarks: MM-MT-Bench (?), HallusionBench (?) and MIA-Bench (?). MM-MT-Bench is a multi-turn
+LLM-as-a-judge evaluation benchmark for testing multimodal instruction-tuned models. HallusionBench
+aims at diagnosing image-context reasoning and poses great challenges for current VLMs. MIA-Bench
+is a more comprehensive benchmark to evaluate models’ reactions to users’ complex instructions (e.g.,
+creative writing with character limit and compositional instructions).
+As shown in Table 2, our flagship Qwen3-VL-235B-A22B model consistently outperforms other closedsource models. On HallusionBench, our thinking version surpasses Gemini-2.5-pro (?), GPT-5 (?) and
+Claude opus 4.1 (?) by 3.0, 1.0, and 6.3 points, respectively. On MIA-Bench, Qwen3-VL-235B-A22BThinking achieves the overall best score across all the other models, showing our superior multimodal
+instruction following ability. We also investigate detailed subtask results of MIA-Bench: our model
+overtakes GPT-5-high-thinking version by 10.0 and 5.0 points in math and textual subtasks of MIA-Bench,
+respectively. The same trend can be observed on our smaller-sized models like Qwen3-VL-30B-A3B, and
+Qwen3-VL-32B, where they overtake other models with comparable sizes. Our 2B/4B/8B series also
+performs well and shows a negligible drop, especially on MIA-Bench.
+5.4 Text Recognition and Document Understanding
+We compare the Qwen3-VL series with other models of comparable size on document-related benchmarks,
+including OCR, document parsing, document question answering (QA), and document reasoning.
+We evaluate our flagship model, Qwen3-VL-235B-A22B, against state-of-the-art VLMs on the benchmarks
+listed in Table 2. On OCR-focused parsing benchmarks — including CC-OCR (?) and OmniDocBench (?)
+— as well as comprehensive OCR benchmarks such as OCRBench (?) and OCRBench_v2 (?), the Qwen3-
+VL-235B-A22B-Instruct model establishes a new state of the art, marginally outperforming its “thinking”
+counterpart, Qwen3-VL-235B-A22B-Thinking. On OCR-related visual question answering (VQA) benchmarks that require both OCR capability and keyword search — such as DocVQA (?), InfoVQA (?),
+AI2D (?), ChartQA (?), and the CharXiv (?) description subset — both the Instruct and Thinking variants
+achieve comparable performance, demonstrating consistently strong results across these tasks. Notably,
+on the reasoning subset of CharXiv — which demands deep chart comprehension and multi-step reasoning — the Thinking variant surpasses the Instruct version and ranks second only to GPT5-thinking and
+Gemini-2.5-Pro-Thinking.
+Furthermore, among the smaller-sized variants in the Qwen3-VL series, both Qwen3-VL-30BA3B models
+and Qwen3-VL-32B models consistently outperform Gemini-2.5-Flash and GPT-5-mini across most
+evaluation metrics, as shown in Table 3. Even the compact dense models — Qwen3-VL-8B, Qwen3-VL-4B,
+and Qwen3-VL-2B — demonstrate remarkably competitive performance on OCR parsing, visual question
+14
+[Page 15 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-94c7ef746491cb0c.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 15 Extracted Text]
+Table 2: Performance of Qwen3-VL-235B-A22B and top-tier models on visual benchmarks. The highest
+scores of the reasoning and non-reasoning models are shown in bold and underlined, respectively.
+Results marked with an ∗ are sourced from the technical report. + denotes results with tool use.
+Benchmark
+thinking instruct thinking budget-128 high minimal thinking non-thinking
+STEM
+Puzzle
+MMMU 80.6 78.7 81.7∗ 80.9 84.2
+∗ 74.4∗ 78.4 77.2
+MMMU-Pro 69.3 68.1 68.8∗ 71.2 78.4
+∗ 62.7∗ 64.8 60.7
+MathVistamini 85.8 84.9 82.7∗ 77.7 81.3 50.9 75.5 74.5
+MathVision 74.6 66.5 73.3∗ 66.0 70.9 45.8 64.3 57.7
+MathVisionWP 63.8 57.0 63.2 56.9 62.8 40.1 54.0 46.4
+We-Math 74.8 67.5 80.6 74.5 73.8 51.8 65.2 60.2
+MathVersemini 85.0 72.5 82.9 65.9 84.1 43.0 70.6 68.1
+DynaMath 82.8 79.4 80.0 78.5 85.4 74.0 75.1 72.0
+Math-VR 66.8 65.0 64.7* 54.3 58.1 21.7 54.3 38.0
+ZeroBench 4 2 3 1 2 2 3 1
+VlmsAreBlind 79.5 80.4 86.1 78.5 80.5 53.4 77.8 72.2
+LogicVista 72.2 65.8 72.0 68.7 71.8 46.3 67.3 63.5
+VisuLogic 34.4 29.9 31.6 26.9 28.5 27.2 27.9 27.2
+VisualPuzzles 57.2 54.7 60.9 56.9 57.3 47.9 48.8 47.6
+General VQA
+MMBench-EN 88.8 89.3 90.1
+∗ 88.4 83.8 81.3 79.4 83.0
+MMBench-CN 88.6 88.9 89.7
+∗ 86.4 83.5 79.9 84.9 74.3
+RealWorldQA 81.3 79.2 78.0∗ 76.0 82.8 77.3 69.9 68.5
+MMStar 78.7 78.4 77.5∗ 78.5 76.4 65.2 72.1 71.0
+SimpleVQA 61.3 63.0 65.4 66.9 61.8 56.7 56.7 55.7
+Alignment
+HallusionBench 66.7 63.2 63.7∗ 60.9 65.7 53.7 60.4 55.1
+MM-MT-Bench 8.5 8.5 8.4∗ 7.6 7.6 7.5 7.8 7.9
+MIA-Bench 92.7 91.3 92.3 91.3 92.4 92.6 91.2 90.0
+Document
+Understanding
+DocVQAtest 96.5 97.1 92.6 94.0 91.5 89.6 92.5 89.2
+InfoVQAtest 89.5 89.2 84.2 82.9 79.0 69.9 69.4 60.9
+AI2Dw. M. 89.2 89.7 90.9 90.0 89.7 84.1 86.4 84.4
+ChartQAtest 90.3 90.3 83.3 62.6 59.7 59.1 86.2 83.9
+OCRBench 875 920 866 872 810 787 764 750
+OCRBench_v2en 66.8 67.1 54.3 55.2 53.0 48.2 48.4 47.2
+OCRBench_v2zh 63.5 61.8 48.5 53.1 43.2 37.7 43.7 38.0
+CC-OCR 81.5 82.2 77.2 76.8 68.3 66.1 69.1 66.0
+OmniDocBenchen 0.155 0.143 0.347 0.206 0.356 0.174 0.194 -
+OmniDocBenchzh 0.207 0.207 0.238 0.249 0.472 0.389 0.293 -
+CharXiv(DQ) 90.5 89.4 94.4 87.8 89.2 79.5 88.5 87.8
+CharXiv(RQ) 66.1 62.1 67.9 62.9 81.1
+∗ 57.8 63.6 60.2
+MMLongBenchDoc 56.2 57.0 55.6 51.2 51.5 42.4 54.5 48.1
+2D/3D
+Grounding
+RefCOCO-avg 92.1 91.9 74.6∗- 66.8 - - -
+CountBench 93.7 93.0 91.0∗ 91.0 91.7 87.8 93.1 91.9
+ODinW-13 43.2 48.6 33.7∗ 34.5 - - - -
+ARKitScenes 53.7 56.9 - - - - - -
+Hypersim 11.0 13.0 - - - - - -
+SUNRGBD 34.9 39.4 29.7 - - - - -
+Embodied/Spatial
+Understanding
+ERQA 52.5 51.3 55.3 50.3 65.7∗ 42.0∗ 34.8 28.0
+VSI-Bench 60.0 62.7 - - - - - -
+EmbSpatialBench 84.3 83.1 79.1 73.3 82.9 75.1 69.2 66.0
+RefSpatialBench 69.9 65.5 36.5 35.6 23.8 23.1 - -
+RoboSpatialHome 73.9 69.4 47.5 49.2 53.5 43.6 - -
+Multi-Image BLINK 67.1 70.7 70.6∗ 70.0 71.0 62.8 64.1 62.9
+MUIRBENCH 80.1 73.0 77.2 74.0 77.5 66.5 - -
+Video
+Understanding
+MVBench 75.2 76.5 69.9 65.8 75.3 64.6 61.4 59.0
+Video-MMEw/o sub. 79.0 79.2 85.1 80.6 84.7 77.3 75.6 73.3
+MLVUM-Avg 83.8 84.3 85.6 81.2 86.2 78.3 73.5 71.2
+LVBench 63.6 67.7 73.0 69.0 - - - -
+Charades-STAmIoU 63.5 64.8 - - - - - -
+VideoMMMU 80.0 74.7 83.6∗ 79.4 84.6∗ 61.6∗ 76.2 70.1
+MMVU 71.1 68.1 74.9 72.2 73.0 68.1 66.4 61.4
+Perception
+with Tool
+V
+∗ 85.9 93.7+ 83.8 72.7 72.8 56.7 - -
+HRBench4K 84.3 85.4+ 87.3 84.8 - - - -
+HRBench8K 76.6 82.4+ 85.4 80.1 - - - -
+Multi-Modal
+Coding
+Design2Code 93.4 92.0 89.2 90.3 92.5 88.9 88.5 85.3
+ChartMimic 78.4 80.5 83.9 79.9 62.1 41.4 85.2 82.9
+UniSVG 65.8 69.8 70.0 67.9 71.7 74.5 73.0 72.5
+Multi-Modal
+Agent
+ScreenSpot Pro 61.8 62.0 - - - - - -
+OSWorldG 68.3 66.7 45.2 - - - - -
+AndroidWorld 62.0 63.7 - - - - - -
+OSWorld 38.1 31.6 - - - - - 44.4
+WindowsAA 32.1 28.9 - - - - - -
+Qwen3-VL
+235B-A22B
+Gemini
+2.5 Pro
+OpenAI
+GPT-5
+Claude
+Opus 4.1
+15
+[Page 16 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-9d1b011c4e447fe9.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 16 Extracted Text]
+Table 3: Performance of medium-sized Qwen3-VL models and previous models on visual benchmarks.
+The highest scores are shown in bold. Results marked with an ∗ are sourced from the technical report. +
+denotes results with tool use.
+Benchmark
+thinking instruct thinking instruct thinking non-thinking high minimal
+STEM
+Puzzle
+MMMU 76.0 74.2 78.1 76.0 77.7 76.3 79.0 67.9
+MMMU-Pro 63.0 60.4 68.1 65.3 67.2 65.9 67.3 53.7
+MathVistamini 81.9 80.1 85.9 83.8 79.4 75.3 79.1 59.6
+MathVision 65.7 60.2 70.2 63.4 64.3 60.7 71.9 46.6
+MathVisionWP 58.9 52.3 58.6 54.6 53.6 49.0 56.6 42.8
+We-Math 70.0 56.9 71.6 63.3 53.9 60.3 70.2 51.4
+MathVersemini 79.6 70.2 82.6 76.8 77.7 75.9 78.8 36.5
+DynaMath 80.1 73.4 82.0 76.7 75.9 69.7 81.4 71.3
+Math-VR 61.7 61.3 62.3 59.8 58.8 54.7 58.2 26.4
+ZeroBench 0 0 2 1 1 3 3 2
+VlmsAreBlind 72.5 67.5 85.1 87.0 77.5 75.9 75.8 62.0
+LogicVista 65.8 53.5 70.9 62.2 67.3 60.0 71.4 50.8
+VisuLogic 26.6 23.0 32.4 29.7 31.0 23.3 27.2 27.6
+VisualPuzzles 52.0 46.2 54.7 53.2 41.4 45.0 59.3 48.2
+General VQA
+MMBench-EN 87.0 86.1 89.5 87.6 87.1 86.6 86.6 78.5
+MMBench-CN 85.9 85.3 89.4 87.7 87.3 86.0 84.0 76.3
+RealWorldQA 77.4 73.7 78.4 79.0 76.0 75.7 79.0 73.3
+MMStar 75.5 72.1 79.4 77.7 76.5 75.8 74.1 61.3
+SimpleVQA 54.3 52.7 55.4 56.9 63.2 59.2 56.8 50.3
+Alignment
+HallusionBench 66.0 61.5 67.4 63.8 63.5 59.1 63.2 55.9
+MM-MT-Bench 7.9 8.0 8.3 8.4 8.1 8.0 7.7 7.4
+MIA-Bench 91.6 91.2 92.3 91.8 91.1 90.6 92.0 92.3
+Document
+Understanding
+DocVQAtest 95.5 95.0 96.1 96.9 92.8 93.0 90.5 90.6
+InfoVQAtest 85.6 81.8 89.2 87.0 82.5 81.7 77.6 72.8
+AI2Dw. M. 86.9 85.0 88.9 89.5 88.7 87.7 88.2 82.9
+ChartQAtest 89.4 86.8 89.0 88.5 60.6 69.0 57.5 57.8
+OCRBench 839 903 855 895 853 864 821 807
+OCRBench_v2en 62.6 63.2 68.4 67.4 52.2 50.6 52.6 45.7
+OCRBench_v2zh 60.4 57.8 62.1 59.2 43.8 43.9 45.1 41.0
+CC-OCR 77.8 80.7 79.6 80.3 75.4 74.8 70.8 61.6
+OmniDocBenchen 0.165 0.183 0.148 0.151 0.265 0.228 0.181 0.260
+OmniDocBenchzh 0.233 0.253 0.236 0.239 0.245 0.305 0.316 0.425
+CharXiv(DQ) 86.9 85.5 90.2 90.5 90.1 85.5 89.4 78.6
+CharXiv(RQ) 56.6 48.9 65.2 62.8 61.7 60.1 68.6 48.9
+MMLongBenchDoc 47.4 47.1 54.6 55.4 49.0 44.6 50.3 39.6
+2D/3D
+Grounding
+RefCOCO-avg 89.3 89.7 91.1 91.9 - - - -
+CountBench 90.0 89.8 94.1 94.9 86.0 83.7 91.0 84.1
+ODinW-13 42.3 47.5 41.8 46.6 - - - -
+ARKitScenes 55.6 56.1 46.1 55.6 - - - -
+Hypersim 11.4 12.5 12.5 14.0 - - - -
+SUNRGBD 34.6 38.1 33.9 37.0 - - - -
+Embodied/Spatial
+Understanding
+ERQA 45.3 43.0 52.3 48.8 - - 54.0 45.8
+VSI-Bench 56.1 63.2 61.2 61.5 - - 31.5 30.5
+EmbSpatialBench 80.6 76.4 82.7 81.5 - - 80.7 72.1
+RefSpatialBench 54.2 53.1 67.2 61.4 - - 9.0 4.0
+RoboSpatialHome 65.5 62.9 74.2 64.6 - - 54.3 44.6
+Multi-Image BLINK 65.4 67.7 68.5 67.3 68.1 66.8 - 56.7
+MUIRBENCH 77.6 62.9 80.3 72.8 72.7 67.5 - 57.5
+Video
+Understanding
+MVBench 72.0 72.3 73.2 72.8 - - - -
+Video-MMEw/o sub. 73.3 74.5 77.3 76.6 79.6 75.6 78.9 71.0
+MLVUM-Avg 78.9 81.3 82.3 82.1 82.1 77.8 83.3 71.7
+LVBench 59.2 62.5 62.6 63.8 64.5 62.2 - -
+Charades-STAmIoU 62.7 63.5 62.8 61.2 - - - -
+VideoMMMU 75.0 68.7 79.0 71.9 73.9 65.2 82.5* 56.7
+MMVU 66.1 59.8 67.9 66.8 69.8 68.2 69.8 64.8
+Perception
+with Tool
+V
+∗ 81.2 89.5+ 84.8 91.1+ - - 78.6 63.9
+HRBench4K 77.8 82.5+ 82.1 84.6+ - - 78.6 66.3
+HRBench8K 71.3 79.3+ 74.8 81.6+ - - 74.4 60.9
+Multi-Modal
+Agent
+ScreenSpot Pro 57.3 60.5 57.1 57.9 - - - -
+OSWorldG 59.6 61.0 64.0 65.1 - - - -
+AndroidWorld 55.0 54.3 63.7 57.3 - - - -
+OSWorld 30.6 30.3 41.0 32.6 - - - -
+WindowsAA 24.2 24.9 42.9 30.9 - - - -
+Qwen3-VL
+30B-A3B
+Qwen3-VL
+32B
+Gemini
+2.5 Flash
+GPT-5
+mini
+16
+[Page 17 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-f3fa5e36794a7857.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 17 Extracted Text]
+Figure 2: Multilingual OCR performance of our model on a self-built test set. The model achieves
+over 70% accuracy on 32 out of 39 supported languages, demonstrating strong and usable multilingual
+capabilities.
+answering (VQA), and comprehensive benchmark suites, as detailed in Table 4. This highlights the
+exceptional efficiency and strong scalability of the Qwen3-VL architecture across model sizes.
+In this version of the Qwen3-VL, we have placed particular emphasis on enhancing its ability to understand long documents. As reported in Table 2, in the comparison within the flagship models on the
+MMLongBench-Doc benchmark (?), our Qwen3-VL-235B-A22B achieves overall accuracy of 57.0%/56.2%
+under the instruct/thinking settings, showcasing the SOTA performance on the long document understanding task.
+Beyond its strong performance on established benchmarks, we have also made substantial strides in
+multilingual support. This represents a major expansion from the 10 non-English/Chinese languages
+supported by Qwen2.5-VL to 39 languages in Qwen3-VL. We assess this expanded capability on a newly
+constructed, in-house dataset. As illustrated in Figure 2, the model’s accuracy surpasses 70%—a threshold
+we consider practical for real-world usability—on 32 out of the 39 languages tested. This demonstrates
+that the strong OCR capabilities of Qwen3-VL are not confined to a handful of languages but extend
+across a broad and diverse linguistic spectrum.
+5.5 2D and 3D Grounding
+In this section, we conduct a comprehensive evaluation of the Qwen3-VL series on both 2D and 3D
+grounding-related benchmarks and compare the models with state-of-the-art models that possess similar
+capabilities.
+We evaluate Qwen3-VL’s 2D grounding capabilities on the referring expression comprehension benchmarks RefCOCO/+/g (??), the open-vocabulary object detection benchmark ODinW-13 (?), and the
+counting benchmark CountBench (?). For ODinW-13, we adopt mean Average Precision (mAP) as the
+evaluation metric by setting confidence scores to 1.0. To ensure comparability with conventional open-set
+object detection specialist models, we provide all dataset categories simultaneously within the prompt
+during evaluation. As shown in Table 2, our flagship model, Qwen3-VL-235B-A22B, demonstrates
+outstanding performance and achieves state-of-the-art (SOTA) results across 2D grounding and counting
+benchmarks. Notably, it achieves 48.6 mAP on ODinW-13, demonstrating strong performance in multitarget open-vocabulary object grounding. Detailed results for our smaller-scale variants, which also
+exhibit competitive performance in 2D visual grounding, are presented in Tables 3 and 4, respectively.
+Moreover, in this version of Qwen3-VL, we enhance its spatial perception capabilities for 3D object
+localization. We evaluate the Qwen3-VL series against other models of comparable scale on Omni3D (?),
+a comprehensive benchmark comprising datasets such as ARKitScenes (?), Hypersim (?), and SUN
+RGB-D (?). We employ mean Average Precision (mAP) as our evaluation metric. Each input is an imagetext pair consisting of the image and a textual prompt specifying the object category. To ensure a fair
+17
+[Page 18 View] 1728x1216 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-b07764ae0cad35bd.jpg" alt="" onclick="lb(this.src)"></figure></div><pre class="out">[Page 18 Extracted Text]
+Table 4: Performance of small-sized Qwen3-VL models and GPT-5-nano on visual benchmarks.
+Benchmark
+thinking instruct thinking instruct thinking instruct high minimal
+STEM
+Puzzle
+MMMU 61.4 53.4 70.8 67.4 74.1 69.6 75.8 57.6
+MMMU-Pro 42.5 36.5 57.0 53.2 60.4 55.9 57.2 36.5
+MathVistamini 73.6 61.3 79.5 73.7 81.4 77.2 71.5 40.9
+MathVision 45.9 31.6 60.0 51.6 62.7 53.9 62.2 33.2
+MathVisionWP 35.5 30.9 48.7 44.4 53.3 45.4 49.3 28.3
+MathVersemini 66.9 52.1 75.2 46.8 77.7 62.1 74.2 27.0
+DynaMath 66.7 54.2 74.4 65.3 73.2 67.7 78.0 62.0
+Math-VR 37.7 20.7 58.1 52.3 59.0 53.4 49.7 25.0
+ZeroBench 0 0 0 0 2 1 1 1
+VlmsAreBlind 50.0 56.0 68.6 71.9 69.1 74.0 66.7 40.2
+LogicVista 50.0 35.8 61.1 53.2 65.1 55.3 59.7 40.5
+VisuLogic 25.4 11.5 30.2 19.0 27.5 22.5 24.5 24.0
+VisualPuzzles 37.4 34.3 48.9 43.7 51.7 47.9 43.5 31.3
+General VQA
+MMBench-EN 79.9 78.4 84.6 83.9 85.3 84.5 78.4 50.8
+MMBench-CN 78.8 75.9 83.8 83.5 85.5 84.7 77.6 48.5
+RealWorldQA 69.5 63.9 73.2 70.9 73.5 71.5 71.8 60.7
+MMStar 68.1 58.3 73.2 69.8 75.3 70.9 68.6 41.3
+SimpleVQA 43.6 40.7 48.8 48.0 49.6 50.2 46.0 39.0
+Alignment
+HallusionBench 54.9 51.4 64.1 57.6 65.4 61.1 58.4 39.3
+MM-MT-Bench 6.9 5.9 7.7 7.5 8.0 7.7 6.6 6.2
+MIA-Bench 85.6 83.6 91.0 89.7 91.5 91.1 89.9 89.6
+Document
+Understanding
+DocVQAtest 92.9 93.3 94.2 95.3 95.3 96.1 88.2 78.3
+InfoVQAtest 77.1 72.4 83.0 80.3 86.0 83.1 68.6 49.2
+AI2Dw. M. 80.4 76.9 84.9 84.1 84.9 85.7 81.9 65.7
+ChartQAtest 86.6 79.1 88.8 84.6 88.6 89.6 52.1 48.6
+OCRBench 792 858 808 881 819 896 753 701
+OCRBench_v2en 56.4 56.3 61.8 63.7 63.9 65.4 48.1 37.9
+OCRBench_v2zh 51.9 53.0 55.8 57.6 59.2 61.2 33.6 27.3
+CC-OCR 68.3 72.8 73.8 76.2 76.3 79.9 58.9 52.9
+OmniDocBenchen 0.370 0.292 0.234 0.244 0.209 0.170 0.401 0.454
+OmniDocBenchzh 0.447 0.348 0.297 0.285 0.253 0.264 0.518 0.568
+CharXiv(DQ) 70.1 62.3 83.9 76.2 85.9 83.0 82.0 64.4
+CharXiv(RQ) 37.1 26.8 50.3 39.7 53.0 46.4 50.1 31.7
+MMLongBenchDoc 33.8 31.6 44.4 43.5 48.0 47.9 31.8 22.1
+2D/3D
+Grounding
+RefCOCO-avg 84.8 85.6 88.2 89.0 88.2 89.1 - -
+CountBench 84.1 88.4 89.4 84.9 91.5 80.5 80.0 62.9
+ODinW-13 36.0 43.4 39.4 48.2 39.8 44.7 - -
+ARKitScenes 47.7 56.2 46.3 56.6 46.6 56.8 - -
+Hypersim 11.2 12.0 11.9 12.2 12.0 12.7 - -
+SUNRGBD 28.6 33.8 28.0 34.7 30.4 36.2 - -
+Embodied/Spatial
+Understanding
+ERQA 41.8 28.3 47.3 41.3 46.8 45.8 45.8 37.8
+VSI-Bench 48.0 53.9 55.2 59.3 56.6 59.4 15.4 27.0
+EmbSpatialBench 75.9 69.2 80.7 79.6 81.1 78.5 74.2 50.7
+RefSpatialBench 28.9 30.3 45.3 46.6 44.6 54.2 12.6 2.5
+RoboSpatialHome 45.3 49.1 63.2 61.7 62.0 66.9 46.1 44.8
+Multi-Image BLINK 57.2 53.8 63.4 65.8 64.7 69.1 58.3 42.2
+MUIRBENCH 68.1 47.4 75.0 63.8 76.8 64.4 65.7 45.7
+Video
+Understanding
+MVBench 64.5 61.7 69.3 68.9 69.0 68.7 - -
+Video-MMEw/o sub. 62.1 61.9 68.9 69.3 71.8 71.4 66.2 49.4
+MLVUM-Avg 69.2 68.3 75.7 75.3 75.1 78.1 69.2 52.6
+LVBench 47.6 47.4 53.5 56.2 55.8 58.0 - -
+Charades-STAmIoU 56.9 54.5 59.0 55.5 59.9 56.0 - -
+VideoMMMU 54.1 41.9 69.4 56.2 72.8 65.3 63.0 40.2
+MMVU 48.9 41.7 58.6 50.5 62.0 58.7 63.1 51.0
+Perception
+with Tool
+V
+∗ 69.1 75.9+ 74.9 88.0+ 77.5 90.1+ - -
+HRBench4K 69.4 72.6+ 73.5 81.3+ 72.4 82.3+ - -
+HRBench8K 62.6 68.9+ 67.1 74.4+ 68.1 78.0+ - -
+Multi-Modal
+Agent
+ScreenSpot Pro 32.2 48.5 49.2 59.5 46.6 54.6 - -
+OSWorldG 41.8 46.1 53.9 58.2 56.7 58.2 - -
+AndroidWorld 46.1 36.4 52.0 45.3 50.0 47.6 - -
+OSWorld 19.0 17.0 31.4 26.2 33.9 33.9 - -
+WindowsAA - - 35.5 23.4 24.1 28.8 - -
+Qwen3-VL
+2B
+Qwen3-VL
+4B
+Qwen3-VL
+8B
+OpenAI
+GPT-5 nano
+18
+[PDF End]</pre></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Found it — <strong>Figure 2 is on page 17.</strong> Let me get a closer look at the bar chart to read the axis details accurately.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">save_view</span><span class="ts">qwen3vl.pdf</span></div><pre class="args">{
+  &quot;file_path&quot;: &quot;/path/to/qwen3vl.pdf&quot;,
+  &quot;pages&quot;: &quot;17&quot;,
+  &quot;dpi&quot;: 300,
+  &quot;output_dir&quot;: &quot;/tmp&quot;
+}</pre><pre class="out">Rendered 1/35 page(s) of /path/to/qwen3vl.pdf @ 300 DPI:
+  [page 17] 3508x2481 -&gt; /path/to/qwen3vl_page_17.png
+[page 17] 1216x864 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-192c9e9d19a6479f.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Let me crop the chart region for a sharper read of the axis labels.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">crop</span><span class="ts">qwen3vl_page_17.png</span></div><pre class="args">{
+  &quot;image_path&quot;: &quot;/path/to/qwen3vl_page_17.png&quot;,
+  &quot;box&quot;: [
+    150,
+    85,
+    910,
+    360
+  ],
+  &quot;output_path&quot;: &quot;/path/to/fig2_crop.png&quot;
+}</pre><pre class="out">Cropped: /path/to/qwen3vl_page_17.png
+Box: [150,85,910,360] → pixel [372,298,2258,1263]
+Saved to: /path/to/fig2_crop.png | 965x1886 (HxW)
+[Preview] 736x1440 (HxW)</pre><div class="strip"><figure><img loading="lazy" src="assert/image-55cab804087c2c5c.jpg" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Qwen3.8 Max</div><div class="bubble"><p>Here&#x27;s what <strong>Figure 2</strong> (page 17) shows.</p>
+<h3>Figure 2 — &quot;Multilingual OCR Support&quot;</h3>
+<p><strong>Type:</strong> Vertical bar chart, one bar per language, sorted left→right from lowest to highest accuracy. Bars are shaded in a light-to-dark purple gradient tracking the value.</p>
+<ul><li><strong>Y-axis:</strong> Accuracy (%), 0–100</li><li><strong>X-axis:</strong> Language (32 languages plotted)</li></ul>
+<p><strong>Caption:</strong> <em>&quot;Multilingual OCR performance of our model on a self-built test set. The model achieves over 70% accuracy on 32 out of 39 supported languages, demonstrating strong and usable multilingual capabilities.&quot;</em></p>
+<p><strong>Approximate values, lowest → highest</strong> (no numeric labels are printed on the bars, so these are read off the axis):</p>
+<table><thead><tr><th>Language</th><th>~Acc %</th><th></th><th>Language</th><th>~Acc %</th></tr></thead><tbody><tr><td>Romanian</td><td>71</td><td></td><td>Turkish</td><td>86</td></tr><tr><td>Swahili</td><td>71</td><td></td><td>Kazakh</td><td>86</td></tr><tr><td>Russian</td><td>71.5</td><td></td><td>Korean</td><td>87</td></tr><tr><td>Hindi</td><td>72</td><td></td><td>Arabic</td><td>87</td></tr><tr><td>Hebrew</td><td>72</td><td></td><td>Persian</td><td>88</td></tr><tr><td>Polish</td><td>74</td><td></td><td>Urdu</td><td>89</td></tr><tr><td>Cebuano</td><td>74</td><td></td><td>Finnish</td><td>91</td></tr><tr><td>Italian</td><td>78</td><td></td><td>Dutch</td><td>92</td></tr><tr><td>German</td><td>78.5</td><td></td><td>Norwegian</td><td>92</td></tr><tr><td>Vietnamese</td><td>79</td><td></td><td>Czech</td><td>92</td></tr><tr><td>Ukrainian</td><td>82</td><td></td><td>Greek</td><td>92</td></tr><tr><td>Uzbek</td><td>83</td><td></td><td>Thai</td><td>93</td></tr><tr><td>Spanish</td><td>83.5</td><td></td><td>Indonesian</td><td>95</td></tr><tr><td>French</td><td>83.5</td><td></td><td>Danish</td><td>97</td></tr><tr><td>Portuguese</td><td>83.5</td><td></td><td>Serbian</td><td>97</td></tr><tr><td>Japanese</td><td>84</td><td></td><td>Swedish</td><td>98</td></tr></tbody></table>
+<p><strong>Takeaway:</strong> The chart plots the 32 languages that clear the 70% &quot;practical usability&quot; threshold — every displayed bar sits between ~71% (Romanian) and ~98% (Swedish). The 7 remaining languages (of the 39 total Qwen3-VL supports) fall below 70% and aren&#x27;t shown. Context from the surrounding text (§5.4): this is a jump from the 10 non-English/Chinese languages supported by Qwen2.5-VL to 39 languages in Qwen3-VL, evaluated on a newly built in-house OCR test set.</p>
+<p>Note the bar values are estimates read from the axis gridlines since the figure carries no data labels. Want me to OCR/measure any specific bar more precisely, or pull the exact numbers if they appear elsewhere in the report?</p></div></div>
+</main>
+<div id="lb" onclick="this.classList.remove('on')"><img alt=""></div>
+<script>
+function lb(src){var d=document.getElementById('lb');d.querySelector('img').src=src;d.classList.add('on');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').classList.remove('on');});
+</script>
+</body></html>

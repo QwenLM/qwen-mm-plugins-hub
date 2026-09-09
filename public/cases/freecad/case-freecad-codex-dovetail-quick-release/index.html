@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parametric dovetail camera quick-release plate, spreadsheet-driven</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fbfbfa; color: #1a1a1a;
+         font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 18px; font-weight: 600; margin: 0 0 32px; letter-spacing: -0.01em; }
+  h1 .tag { display: inline-block; vertical-align: middle; margin-left: 10px;
+            font-size: 11px; font-weight: 600; letter-spacing: 0.03em; color: #5b4bdb;
+            background: #efeafe; border: 1px solid #ddd4fb; border-radius: 999px;
+            padding: 2px 10px; }
+  .who { font-size: 11px; font-weight: 600; text-transform: uppercase;
+         letter-spacing: 0.06em; color: #8a8a85; margin-bottom: 6px; }
+  .u, .a { margin: 24px 0; }
+  .bubble { word-wrap: break-word; overflow-wrap: break-word; }
+  .u .bubble { color: #111; }
+  .a .bubble { color: #333; }
+  .bubble p { margin: 0 0 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .bubble h2 { font-size: 17px; margin: 18px 0 8px; }
+  .bubble h3 { font-size: 15px; margin: 16px 0 6px; }
+  .bubble h4 { font-size: 14px; margin: 14px 0 6px; color: #444; }
+  .bubble ul, .bubble ol { margin: 6px 0 10px; padding-left: 22px; }
+  .bubble li { margin: 2px 0; }
+  .bubble code { background: #f0f0ec; padding: 1px 5px; border-radius: 4px;
+                 font: 12.5px ui-monospace, "SF Mono", Menlo, monospace; }
+  .bubble pre.md { background: #f4f4f1; padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+  .bubble pre.md code { background: none; padding: 0; }
+  .bubble blockquote { margin: 8px 0; padding: 2px 12px; border-left: 3px solid #d9d9d4;
+                       color: #555; }
+  .bubble a { color: #5b4bdb; }
+  .bubble table { border-collapse: collapse; margin: 10px 0; font-size: 13px; display: block;
+                  overflow-x: auto; max-width: 100%; }
+  .bubble th, .bubble td { border: 1px solid #e0e0db; padding: 6px 10px; text-align: left;
+                           vertical-align: top; }
+  .bubble th { background: #f4f4f1; font-weight: 600; }
+  .t { margin: 12px 0; padding-left: 14px; border-left: 2px solid #e5e5e0; }
+  .tline { display: flex; gap: 8px; align-items: baseline; }
+  .tn { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+        font-weight: 600; color: #5b4bdb; }
+  .ts { color: #8a8a85; font-size: 13px; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap; }
+  pre.out { margin: 8px 0 0; padding: 10px 12px; background: #f4f4f1;
+            border-radius: 6px; font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+            white-space: pre-wrap; word-break: break-word; max-height: 320px;
+            overflow: auto; color: #444; }
+  pre.out.err { background: #fdf0ef; color: #b3261e; }
+  pre.args { margin: 8px 0 0; padding: 10px 12px; background: #f3f2fb;
+             border: 1px solid #e7e4fb; border-radius: 6px;
+             font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+             white-space: pre-wrap; word-break: break-word; max-height: 300px;
+             overflow: auto; color: #444; }
+  details.think { margin: 16px 0; }
+  details.think > summary { cursor: pointer; color: #8a8a85; font-size: 13px;
+                            list-style: none; }
+  details.think .bubble { margin-top: 8px; padding-left: 14px; border-left: 2px solid #e5e5e0;
+                          color: #666; }
+  .frames-note { margin: 8px 0 4px; color: #8a8a85; font-size: 12px; }
+  .strip { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px;
+           scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .strip figure { flex: 0 0 auto; margin: 0; scroll-snap-align: start; text-align: center; }
+  .strip img { height: 150px; width: auto; max-width: none; border: 1px solid #e5e5e0;
+               border-radius: 6px; cursor: zoom-in; display: block; background: #fff; }
+  .strip figcaption { margin-top: 4px; color: #8a8a85; font-size: 11px;
+                      font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .strip::-webkit-scrollbar { height: 8px; }
+  .strip::-webkit-scrollbar-thumb { background: #d0d0cc; border-radius: 4px; }
+  #lb { display: none; position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
+        background: rgba(0,0,0,.85); align-items: center; justify-content: center; }
+  #lb.on { display: flex; }
+  #lb img { max-width: 94vw; max-height: 94vh; border-radius: 6px; }
+</style></head><body><main>
+<h1>Parametric dovetail camera quick-release plate, spreadsheet-driven <span class="tag">Codex</span></h1>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>I’m going to use the <code>qwen-mm-plugins-freecad</code> skill and keep the actual modeling/export/verification inside its MCP tool path, as requested.</p></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>I have the FreeCAD MCP tools available now. I’m going to build this as a real FreeCAD parametric feature whose driving properties are expression-linked to <code>Spreadsheet::Sheet</code> aliases, then use spreadsheet edits plus recompute for the requested variation.</p></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The model will use a trapezoidal dovetail prism along the 100 mm length, boolean cuts for the two through-slots and the screw/counterbore, then fused raised slot lips and a rear stop. I’ll keep the editable dimensions in <code>Sheet</code> aliases and drive the feature properties with FreeCAD expressions such as <code>Sheet.DovetailTopWidth</code>, so a spreadsheet edit is what changes the geometry.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">list_documents</span><span class="ts">{}</span></div><pre class="args">{}</pre><pre class="out">Wall time: 16.3914 seconds
+Output:
+[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;[\n  \&quot;Codex_Dovetail_QuickRelease\&quot;\n]&quot;}]</pre></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>I’m about to create the FreeCAD document, spreadsheet aliases, expression-driven feature, and export pipeline in one FreeCAD-side script. After the first export, the same script will edit only the spreadsheet cells, recompute, validate the resulting solid, collect mass properties, and overwrite the exports with the changed model.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;: &quot;import os, math, traceback\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\n</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, math, traceback\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\n\ntry:\n    import Import\nexcept Exception:\n    Import = None\ntry:\n    import Mesh\nexcept Exception:\n    Mesh = None\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nASSET_DIR = \&quot;/path/to/assets\&quot;\nBASE = \&quot;freecad-codex-dovetail-quick-release\&quot;\nfcstd_path = os.path.join(ASSET_DIR, BASE + \&quot;.FCStd\&quot;)\nstep_path = os.path.join(ASSET_DIR, BASE + \&quot;.step\&quot;)\nstl_path = os.path.join(ASSET_DIR, BASE + \&quot;.stl\&quot;)\npng_path = os.path.join(ASSET_DIR, BASE + \&quot;.png\&quot;)\n\nos.makedirs(ASSET_DIR, exist_ok=True)\n\n# Reset this named document only.\nif App.getDocument(DOC_NAME):\n    App.closeDocument(DOC_NAME)\ndoc = App.newDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\n\nclass DovetailQuickReleaseProxy:\n    def __init__(self, obj):\n        obj.Proxy = self\n\n    def __getstate__(self):\n        return {}\n\n    def __setstate__(self, state):\n        return None\n\n    @staticmethod\n    def _mm(value):\n        try:\n            return float(value.Value)\n        except Exception:\n            return float(value)\n\n    def _trapezoid_prism(self, L, Wb, Wt, H):\n        x0, x1 = -L / 2.0, L / 2.0\n        yb, yt = Wb / 2.0, Wt / 2.0\n        pts = [\n            App.Vector(x0, -yb, 0), App.Vector(x1, -yb, 0), App.Vector(x1, yb, 0), App.Vector(x0, yb, 0),\n            App.Vector(x0, -yt, H), App.Vector(x1, -yt, H), App.Vector(x1, yt, H), App.Vector(x0, yt, H),\n        ]\n        faces_idx = [\n            (0, 1, 2, 3),  # bottom\n            (4, 7, 6, 5),  # top\n            (0, 4, 5, 1),  # left rail face\n            (1, 5, 6, 2),  # front end\n            (2, 6, 7, 3),  # right rail face\n            (3, 7, 4, 0),  # rear end\n        ]\n        faces = []\n        for idx in faces_idx:\n            wire = Part.makePolygon([pts[i] for i in idx] + [pts[idx[0]]])\n            faces.append(Part.Face(wire))\n        shell = Part.makeShell(faces)\n        solid = Part.makeSolid(shell)\n        solid = solid.removeSplitter()\n        if not solid.isValid():\n            solid = solid.fix(0.01, 0.01, 0.01)\n        return solid\n\n    def _capsule_solid(self, cx, cy, z, length, width, height):\n        r = width / 2.0\n        straight = max(length - width, 0.1)\n        box = Part.makeBox(straight, width, height, App.Vector(cx - straight / 2.0, cy - r, z))\n        cyl1 = Part.makeCylinder(r, height, App.Vector(cx - straight / 2.0, cy, z), App.Vector(0, 0, 1))\n        cyl2 = Part.makeCylinder(r, height, App.Vector(cx + straight / 2.0, cy, z), App.Vector(0, 0, 1))\n        return box.fuse(cyl1).fuse(cyl2).removeSplitter()\n\n    def execute(self, obj):\n        L = self._mm(obj.PlateLength)\n        Wb = self._mm(obj.BottomWidth)\n        Wt = self._mm(obj.DovetailTopWidth)\n        H = self._mm(obj.PlateThickness)\n        slot_l = self._mm(obj.SlotLength)\n        slot_w = self._mm(obj.SlotWidth)\n        slot_spacing = self._mm(obj.SlotSpacing)\n        lip_margin = self._mm(obj.LipMargin)\n        lip_height = self._mm(obj.LipHeight)\n        clearance_d = self._mm(obj.ClearanceDiameter)\n        cb_d = self._mm(obj.CounterboreDiameter)\n        cb_depth = self._mm(obj.CounterboreDepth)\n        stop_l = self._mm(obj.StopLength)\n        stop_h = self._mm(obj.StopHeight)\n\n        # Conservative clamps keep spreadsheet edits from producing inverted rail geometry.\n        Wt = min(max(Wt, 8.0), Wb - 2.0)\n        slot_w = min(max(slot_w, 2.0), max(2.0, Wt - 8.0))\n        stop_l = min(max(stop_l, 2.0), L / 3.0)\n\n        plate = self._trapezoid_prism(L, Wb, Wt, H)\n\n        # Through elongated mounting slots, centered on the top rail and separated along X.\n        for cx in (-slot_spacing / 2.0, slot_spacing / 2.0):\n            slot_cut = self._capsule_solid(cx, 0.0, -1.0, slot_l, slot_w, H + lip_height + stop_h + 3.0)\n            plate = plate.cut(slot_cut).removeSplitter()\n\n        # Centered 1/4-20 clearance hole plus top counterbore.\n        through = Part.makeCylinder(clearance_d / 2.0, H + lip_height + stop_h + 3.0, App.Vector(0, 0, -1.0), App.Vector(0, 0, 1))\n        c_bore = Part.makeCylinder(cb_d / 2.0, cb_depth + 1.0, App.Vector(0, 0, H - cb_depth), App.Vector(0, 0, 1))\n        plate = plate.cut(through).cut(c_bore).removeSplitter()\n\n        # Raised lips around the two slots, modeled as capsule rings on the top face.\n        lips = []\n        for cx in (-slot_spacing / 2.0, slot_spacing / 2.0):\n            outer = self._capsule_solid(cx, 0.0, H, slot_l + 2.0 * lip_margin, slot_w + 2.0 * lip_margin, lip_height)\n            inner = self._capsule_solid(cx, 0.0, H - 0.2, slot_l, slot_w, lip_height + 0.4)\n            lip = outer.cut(inner).removeSplitter()\n            lips.append(lip)\n        if lips:\n            plate = plate.fuse(lips[0]).fuse(lips[1]).removeSplitter()\n\n        # Rear stop block across the top rail at the positive-X end.\n        stop = Part.makeBox(stop_l, Wt, stop_h, App.Vector(L / 2.0 - stop_l, -Wt / 2.0, H))\n        plate = plate.fuse(stop).removeSplitter()\n        plate = plate.removeSplitter()\n        if not plate.isValid():\n            fixed = plate.fix(0.01, 0.01, 0.01)\n            if fixed and fixed.isValid():\n                plate = fixed\n        obj.Shape = plate\n\n# Spreadsheet with user-editable driving dimensions.\nsheet = doc.addObject(\&quot;Spreadsheet::Sheet\&quot;, \&quot;Sheet\&quot;)\nrows = [\n    (\&quot;PlateLength\&quot;, \&quot;100 mm\&quot;, \&quot;overall length\&quot;),\n    (\&quot;BottomWidth\&quot;, \&quot;42 mm\&quot;, \&quot;dovetail lower width\&quot;),\n    (\&quot;DovetailTopWidth\&quot;, \&quot;34 mm\&quot;, \&quot;dovetail top width\&quot;),\n    (\&quot;PlateThickness\&quot;, \&quot;10 mm\&quot;, \&quot;plate thickness\&quot;),\n    (\&quot;SlotLength\&quot;, \&quot;24 mm\&quot;, \&quot;elongated slot length\&quot;),\n    (\&quot;SlotWidth\&quot;, \&quot;7 mm\&quot;, \&quot;elongated slot width\&quot;),\n    (\&quot;SlotSpacing\&quot;, \&quot;54 mm\&quot;, \&quot;slot center spacing\&quot;),\n    (\&quot;LipMargin\&quot;, \&quot;3 mm\&quot;, \&quot;raised lip margin around slots\&quot;),\n    (\&quot;LipHeight\&quot;, \&quot;1.5 mm\&quot;, \&quot;raised lip height\&quot;),\n    (\&quot;ClearanceDiameter\&quot;, \&quot;6.8 mm\&quot;, \&quot;1/4-20 clearance diameter\&quot;),\n    (\&quot;CounterboreDiameter\&quot;, \&quot;13 mm\&quot;, \&quot;counterbore diameter\&quot;),\n    (\&quot;CounterboreDepth\&quot;, \&quot;3.2 mm\&quot;, \&quot;counterbore depth\&quot;),\n    (\&quot;StopLength\&quot;, \&quot;10 mm\&quot;, \&quot;rear stop length\&quot;),\n    (\&quot;StopHeight\&quot;, \&quot;8 mm\&quot;, \&quot;rear stop height\&quot;),\n]\nsheet.set(\&quot;A1\&quot;, \&quot;Parameter\&quot;)\nsheet.set(\&quot;B1\&quot;, \&quot;Value\&quot;)\nsheet.set(\&quot;C1\&quot;, \&quot;Note\&quot;)\nfor idx, (name, value, note) in enumerate(rows, start=2):\n    sheet.set(f\&quot;A{idx}\&quot;, name)\n    sheet.set(f\&quot;B{idx}\&quot;, value)\n    sheet.set(f\&quot;C{idx}\&quot;, note)\n    sheet.setAlias(f\&quot;B{idx}\&quot;, name)\n\nobj = doc.addObject(\&quot;Part::FeaturePython\&quot;, \&quot;DovetailQuickRelease\&quot;)\nobj.Label = \&quot;Expression-driven dovetail quick-release plate\&quot;\nDovetailQuickReleaseProxy(obj)\nfor prop in [\n    \&quot;PlateLength\&quot;, \&quot;BottomWidth\&quot;, \&quot;DovetailTopWidth\&quot;, \&quot;PlateThickness\&quot;, \&quot;SlotLength\&quot;, \&quot;SlotWidth\&quot;,\n    \&quot;SlotSpacing\&quot;, \&quot;LipMargin\&quot;, \&quot;LipHeight\&quot;, \&quot;ClearanceDiameter\&quot;, \&quot;CounterboreDiameter\&quot;,\n    \&quot;CounterboreDepth\&quot;, \&quot;StopLength\&quot;, \&quot;StopHeight\&quot;,\n]:\n    obj.addProperty(\&quot;App::PropertyLength\&quot;, prop, \&quot;Driving Dimensions\&quot;, f\&quot;Expression-bound to Sheet.{prop}\&quot;)\n    obj.setExpression(prop, f\&quot;Sheet.{prop}\&quot;)\n\n# Cosmetic display state.\nobj.ViewObject.ShapeColor = (0.72, 0.74, 0.70, 0.0)\nobj.ViewObject.LineColor = (0.12, 0.12, 0.12, 0.0)\nobj.ViewObject.DisplayMode = \&quot;Shaded\&quot;\ndoc.recompute()\n\n# Initial export before parameter edits.\nif Import:\n    Import.export([obj], step_path)\nif Mesh:\n    Mesh.export([obj], stl_path)\ndoc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric()\nGui.ActiveDocument.ActiveView.fitAll()\nGui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\ninitial = {\n    \&quot;bbox\&quot;: tuple(round(v, 4) for v in (obj.Shape.BoundBox.XLength, obj.Shape.BoundBox.YLength, obj.Shape.BoundBox.ZLength)),\n    \&quot;volume\&quot;: round(obj.Shape.Volume, 4),\n    \&quot;valid\&quot;: obj.Shape.isValid(),\n    \&quot;shape_type\&quot;: obj.Shape.ShapeType,\n    \&quot;solid_count\&quot;: len(obj.Shape.Solids),\n}\n\n# Requested parametric edit: modify only spreadsheet cells, then recompute.\nsheet.set(\&quot;B4\&quot;, \&quot;31 mm\&quot;)      # DovetailTopWidth\nsheet.set(\&quot;B7\&quot;, \&quot;8.2 mm\&quot;)     # SlotWidth\nsheet.set(\&quot;B15\&quot;, \&quot;12 mm\&quot;)     # StopHeight\ndoc.recompute()\n\n# Final validity and export after edit.\nshape = obj.Shape\nbbox = shape.BoundBox\nfinal = {\n    \&quot;bbox_min\&quot;: (round(bbox.XMin, 4), round(bbox.YMin, 4), round(bbox.ZMin, 4)),\n    \&quot;bbox_max\&quot;: (round(bbox.XMax, 4), round(bbox.YMax, 4), round(bbox.ZMax, 4)),\n    \&quot;bbox_size\&quot;: (round(bbox.XLength, 4), round(bbox.YLength, 4), round(bbox.ZLength, 4)),\n    \&quot;volume_mm3\&quot;: round(shape.Volume, 4),\n    \&quot;valid\&quot;: bool(shape.isValid()),\n    \&quot;shape_type\&quot;: shape.ShapeType,\n    \&quot;solid_count\&quot;: len(shape.Solids),\n    \&quot;edited_cells\&quot;: {\n        \&quot;Sheet.DovetailTopWidth\&quot;: sheet.get(\&quot;B4\&quot;),\n        \&quot;Sheet.SlotWidth\&quot;: sheet.get(\&quot;B7\&quot;),\n        \&quot;Sheet.StopHeight\&quot;: sheet.get(\&quot;B15\&quot;),\n    },\n}\nif shape.ShapeType != \&quot;Solid\&quot; or len(shape.Solids) != 1 or not shape.isValid():\n    raise RuntimeError(\&quot;Final model is not a single valid solid: %r\&quot; % final)\n\nif Import:\n    Import.export([obj], step_path)\nelse:\n    raise RuntimeError(\&quot;FreeCAD Import module unavailable; STEP export skipped\&quot;)\nif Mesh:\n    Mesh.export([obj], stl_path)\nelse:\n    raise RuntimeError(\&quot;FreeCAD Mesh module unavailable; STL export skipped\&quot;)\n\ndoc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric()\nGui.ActiveDocument.ActiveView.fitAll()\nGui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\n\nprint(\&quot;Created expression-driven spreadsheet-parametric quick-release plate\&quot;)\nprint(\&quot;Initial export stats:\&quot;, initial)\nprint(\&quot;Final edited-cell stats:\&quot;, final)\nprint(\&quot;Exports:\&quot;)\nprint(\&quot;  FCStd:\&quot;, fcstd_path)\nprint(\&quot;  STEP:\&quot;, step_path)\nprint(\&quot;  STL:\&quot;, stl_path)\nprint(\&quot;  PNG:\&quot;, png_path)\n&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 17.9070 seconds
+Output:
+[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;Failed to execute code: ValueError: &#x27;Shaded&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;}]</pre></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>FreeCAD rejected one cosmetic view setting (<code>DisplayMode = &quot;Shaded&quot;</code>) before the model reached export. I’m rerunning the same FreeCAD-side build without that nonessential view property.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os, math, traceback\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\n\</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, math, traceback\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\n\ntry:\n    import Import\nexcept Exception:\n    Import = None\ntry:\n    import Mesh\nexcept Exception:\n    Mesh = None\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nASSET_DIR = \&quot;/path/to/assets\&quot;\nBASE = \&quot;freecad-codex-dovetail-quick-release\&quot;\nfcstd_path = os.path.join(ASSET_DIR, BASE + \&quot;.FCStd\&quot;)\nstep_path = os.path.join(ASSET_DIR, BASE + \&quot;.step\&quot;)\nstl_path = os.path.join(ASSET_DIR, BASE + \&quot;.stl\&quot;)\npng_path = os.path.join(ASSET_DIR, BASE + \&quot;.png\&quot;)\n\nos.makedirs(ASSET_DIR, exist_ok=True)\n\nif App.getDocument(DOC_NAME):\n    App.closeDocument(DOC_NAME)\ndoc = App.newDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\n\nclass DovetailQuickReleaseProxy:\n    def __init__(self, obj):\n        obj.Proxy = self\n    def __getstate__(self):\n        return {}\n    def __setstate__(self, state):\n        return None\n    @staticmethod\n    def _mm(value):\n        try:\n            return float(value.Value)\n        except Exception:\n            return float(value)\n    def _trapezoid_prism(self, L, Wb, Wt, H):\n        x0, x1 = -L / 2.0, L / 2.0\n        yb, yt = Wb / 2.0, Wt / 2.0\n        pts = [\n            App.Vector(x0, -yb, 0), App.Vector(x1, -yb, 0), App.Vector(x1, yb, 0), App.Vector(x0, yb, 0),\n            App.Vector(x0, -yt, H), App.Vector(x1, -yt, H), App.Vector(x1, yt, H), App.Vector(x0, yt, H),\n        ]\n        faces_idx = [(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)]\n        faces = []\n        for idx in faces_idx:\n            wire = Part.makePolygon([pts[i] for i in idx] + [pts[idx[0]]])\n            faces.append(Part.Face(wire))\n        solid = Part.makeSolid(Part.makeShell(faces)).removeSplitter()\n        if not solid.isValid():\n            fixed = solid.fix(0.01, 0.01, 0.01)\n            if fixed:\n                solid = fixed\n        return solid\n    def _capsule_solid(self, cx, cy, z, length, width, height):\n        r = width / 2.0\n        straight = max(length - width, 0.1)\n        box = Part.makeBox(straight, width, height, App.Vector(cx - straight / 2.0, cy - r, z))\n        cyl1 = Part.makeCylinder(r, height, App.Vector(cx - straight / 2.0, cy, z), App.Vector(0, 0, 1))\n        cyl2 = Part.makeCylinder(r, height, App.Vector(cx + straight / 2.0, cy, z), App.Vector(0, 0, 1))\n        return box.fuse(cyl1).fuse(cyl2).removeSplitter()\n    def execute(self, obj):\n        L = self._mm(obj.PlateLength)\n        Wb = self._mm(obj.BottomWidth)\n        Wt = self._mm(obj.DovetailTopWidth)\n        H = self._mm(obj.PlateThickness)\n        slot_l = self._mm(obj.SlotLength)\n        slot_w = self._mm(obj.SlotWidth)\n        slot_spacing = self._mm(obj.SlotSpacing)\n        lip_margin = self._mm(obj.LipMargin)\n        lip_height = self._mm(obj.LipHeight)\n        clearance_d = self._mm(obj.ClearanceDiameter)\n        cb_d = self._mm(obj.CounterboreDiameter)\n        cb_depth = self._mm(obj.CounterboreDepth)\n        stop_l = self._mm(obj.StopLength)\n        stop_h = self._mm(obj.StopHeight)\n        Wt = min(max(Wt, 8.0), Wb - 2.0)\n        slot_w = min(max(slot_w, 2.0), max(2.0, Wt - 8.0))\n        stop_l = min(max(stop_l, 2.0), L / 3.0)\n        plate = self._trapezoid_prism(L, Wb, Wt, H)\n        for cx in (-slot_spacing / 2.0, slot_spacing / 2.0):\n            slot_cut = self._capsule_solid(cx, 0.0, -1.0, slot_l, slot_w, H + lip_height + stop_h + 3.0)\n            plate = plate.cut(slot_cut).removeSplitter()\n        through = Part.makeCylinder(clearance_d / 2.0, H + lip_height + stop_h + 3.0, App.Vector(0, 0, -1.0), App.Vector(0, 0, 1))\n        c_bore = Part.makeCylinder(cb_d / 2.0, cb_depth + 1.0, App.Vector(0, 0, H - cb_depth), App.Vector(0, 0, 1))\n        plate = plate.cut(through).cut(c_bore).removeSplitter()\n        for cx in (-slot_spacing / 2.0, slot_spacing / 2.0):\n            outer = self._capsule_solid(cx, 0.0, H, slot_l + 2.0 * lip_margin, slot_w + 2.0 * lip_margin, lip_height)\n            inner = self._capsule_solid(cx, 0.0, H - 0.2, slot_l, slot_w, lip_height + 0.4)\n            lip = outer.cut(inner).removeSplitter()\n            plate = plate.fuse(lip).removeSplitter()\n        stop = Part.makeBox(stop_l, Wt, stop_h, App.Vector(L / 2.0 - stop_l, -Wt / 2.0, H))\n        plate = plate.fuse(stop).removeSplitter()\n        if not plate.isValid():\n            fixed = plate.fix(0.01, 0.01, 0.01)\n            if fixed and fixed.isValid():\n                plate = fixed\n        obj.Shape = plate\n\nsheet = doc.addObject(\&quot;Spreadsheet::Sheet\&quot;, \&quot;Sheet\&quot;)\nrows = [\n    (\&quot;PlateLength\&quot;, \&quot;100 mm\&quot;, \&quot;overall length\&quot;),\n    (\&quot;BottomWidth\&quot;, \&quot;42 mm\&quot;, \&quot;dovetail lower width\&quot;),\n    (\&quot;DovetailTopWidth\&quot;, \&quot;34 mm\&quot;, \&quot;dovetail top width\&quot;),\n    (\&quot;PlateThickness\&quot;, \&quot;10 mm\&quot;, \&quot;plate thickness\&quot;),\n    (\&quot;SlotLength\&quot;, \&quot;24 mm\&quot;, \&quot;elongated slot length\&quot;),\n    (\&quot;SlotWidth\&quot;, \&quot;7 mm\&quot;, \&quot;elongated slot width\&quot;),\n    (\&quot;SlotSpacing\&quot;, \&quot;54 mm\&quot;, \&quot;slot center spacing\&quot;),\n    (\&quot;LipMargin\&quot;, \&quot;3 mm\&quot;, \&quot;raised lip margin around slots\&quot;),\n    (\&quot;LipHeight\&quot;, \&quot;1.5 mm\&quot;, \&quot;raised lip height\&quot;),\n    (\&quot;ClearanceDiameter\&quot;, \&quot;6.8 mm\&quot;, \&quot;1/4-20 clearance diameter\&quot;),\n    (\&quot;CounterboreDiameter\&quot;, \&quot;13 mm\&quot;, \&quot;counterbore diameter\&quot;),\n    (\&quot;CounterboreDepth\&quot;, \&quot;3.2 mm\&quot;, \&quot;counterbore depth\&quot;),\n    (\&quot;StopLength\&quot;, \&quot;10 mm\&quot;, \&quot;rear stop length\&quot;),\n    (\&quot;StopHeight\&quot;, \&quot;8 mm\&quot;, \&quot;rear stop height\&quot;),\n]\nsheet.set(\&quot;A1\&quot;, \&quot;Parameter\&quot;)\nsheet.set(\&quot;B1\&quot;, \&quot;Value\&quot;)\nsheet.set(\&quot;C1\&quot;, \&quot;Note\&quot;)\nfor idx, (name, value, note) in enumerate(rows, start=2):\n    sheet.set(f\&quot;A{idx}\&quot;, name)\n    sheet.set(f\&quot;B{idx}\&quot;, value)\n    sheet.set(f\&quot;C{idx}\&quot;, note)\n    sheet.setAlias(f\&quot;B{idx}\&quot;, name)\n\nobj = doc.addObject(\&quot;Part::FeaturePython\&quot;, \&quot;DovetailQuickRelease\&quot;)\nobj.Label = \&quot;Expression-driven dovetail quick-release plate\&quot;\nDovetailQuickReleaseProxy(obj)\nfor prop in [\&quot;PlateLength\&quot;, \&quot;BottomWidth\&quot;, \&quot;DovetailTopWidth\&quot;, \&quot;PlateThickness\&quot;, \&quot;SlotLength\&quot;, \&quot;SlotWidth\&quot;, \&quot;SlotSpacing\&quot;, \&quot;LipMargin\&quot;, \&quot;LipHeight\&quot;, \&quot;ClearanceDiameter\&quot;, \&quot;CounterboreDiameter\&quot;, \&quot;CounterboreDepth\&quot;, \&quot;StopLength\&quot;, \&quot;StopHeight\&quot;]:\n    obj.addProperty(\&quot;App::PropertyLength\&quot;, prop, \&quot;Driving Dimensions\&quot;, f\&quot;Expression-bound to Sheet.{prop}\&quot;)\n    obj.setExpression(prop, f\&quot;Sheet.{prop}\&quot;)\nobj.ViewObject.ShapeColor = (0.72, 0.74, 0.70, 0.0)\nobj.ViewObject.LineColor = (0.12, 0.12, 0.12, 0.0)\n\ndoc.recompute()\nif Import:\n    Import.export([obj], step_path)\nelse:\n    raise RuntimeError(\&quot;FreeCAD Import module unavailable; STEP export skipped\&quot;)\nif Mesh:\n    Mesh.export([obj], stl_path)\nelse:\n    raise RuntimeError(\&quot;FreeCAD Mesh module unavailable; STL export skipped\&quot;)\ndoc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric()\nGui.ActiveDocument.ActiveView.fitAll()\nGui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\ninitial = {\&quot;bbox_size\&quot;: tuple(round(v, 4) for v in (obj.Shape.BoundBox.XLength, obj.Shape.BoundBox.YLength, obj.Shape.BoundBox.ZLength)), \&quot;volume_mm3\&quot;: round(obj.Shape.Volume, 4), \&quot;valid\&quot;: obj.Shape.isValid(), \&quot;shape_type\&quot;: obj.Shape.ShapeType, \&quot;solid_count\&quot;: len(obj.Shape.Solids)}\n\nsheet.set(\&quot;B4\&quot;, \&quot;31 mm\&quot;)\nsheet.set(\&quot;B7\&quot;, \&quot;8.2 mm\&quot;)\nsheet.set(\&quot;B15\&quot;, \&quot;12 mm\&quot;)\ndoc.recompute()\nshape = obj.Shape\nbbox = shape.BoundBox\nfinal = {\&quot;bbox_min\&quot;: (round(bbox.XMin, 4), round(bbox.YMin, 4), round(bbox.ZMin, 4)), \&quot;bbox_max\&quot;: (round(bbox.XMax, 4), round(bbox.YMax, 4), round(bbox.ZMax, 4)), \&quot;bbox_size\&quot;: (round(bbox.XLength, 4), round(bbox.YLength, 4), round(bbox.ZLength, 4)), \&quot;volume_mm3\&quot;: round(shape.Volume, 4), \&quot;valid\&quot;: bool(shape.isValid()), \&quot;shape_type\&quot;: shape.ShapeType, \&quot;solid_count\&quot;: len(shape.Solids), \&quot;edited_cells\&quot;: {\&quot;Sheet.DovetailTopWidth\&quot;: sheet.get(\&quot;B4\&quot;), \&quot;Sheet.SlotWidth\&quot;: sheet.get(\&quot;B7\&quot;), \&quot;Sheet.StopHeight\&quot;: sheet.get(\&quot;B15\&quot;)}}\nif shape.ShapeType != \&quot;Solid\&quot; or len(shape.Solids) != 1 or not shape.isValid():\n    raise RuntimeError(\&quot;Final model is not a single valid solid: %r\&quot; % final)\nImport.export([obj], step_path)\nMesh.export([obj], stl_path)\ndoc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric()\nGui.ActiveDocument.ActiveView.fitAll()\nGui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\n\nprint(\&quot;Created expression-driven spreadsheet-parametric quick-release plate\&quot;)\nprint(\&quot;Initial export stats:\&quot;, initial)\nprint(\&quot;Final edited-cell stats:\&quot;, final)\nprint(\&quot;Exports:\&quot;)\nprint(\&quot;  FCStd:\&quot;, fcstd_path)\nprint(\&quot;  STEP:\&quot;, step_path)\nprint(\&quot;  STL:\&quot;, stl_path)\nprint(\&quot;  PNG:\&quot;, png_path)\n&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 13.3249 seconds
+Output:
+[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;Failed to execute code: RuntimeError: Final model is not a single valid solid: {&#x27;bbox_min&#x27;: (-50.0, -21.0, 0.0), &#x27;bbox_max&#x27;: (50.0, 21.0, 22.0), &#x27;bbox_size&#x27;: (100.0, 42.0, 22.0), &#x27;volume_mm3&#x27;: 36481.5795, &#x27;valid&#x27;: True, &#x27;shape_type&#x27;: &#x27;Compound&#x27;, &#x27;solid_count&#x27;: 1, &#x27;edited_cells&#x27;: {&#x27;Sheet.DovetailTopWidth&#x27;: 31.0 mm, &#x27;Sheet.SlotWidth&#x27;: 8.2 mm, &#x27;Sheet.StopHeight&#x27;: 12.0 mm}}&quot;}]</pre></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The recomputed result is geometrically valid and contains one solid, but FreeCAD wrapped it as a <code>Compound</code> after the booleans. I’m tightening the feature so it normalizes any one-solid compound back to a <code>Solid</code> before validation/export.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\nimport Import\nimp</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os\nimport FreeCAD as App\nimport FreeCADGui as Gui\nimport Part\nimport Import\nimport Mesh\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nASSET_DIR = \&quot;/path/to/assets\&quot;\nBASE = \&quot;freecad-codex-dovetail-quick-release\&quot;\nfcstd_path = os.path.join(ASSET_DIR, BASE + \&quot;.FCStd\&quot;)\nstep_path = os.path.join(ASSET_DIR, BASE + \&quot;.step\&quot;)\nstl_path = os.path.join(ASSET_DIR, BASE + \&quot;.stl\&quot;)\npng_path = os.path.join(ASSET_DIR, BASE + \&quot;.png\&quot;)\nos.makedirs(ASSET_DIR, exist_ok=True)\nif App.getDocument(DOC_NAME):\n    App.closeDocument(DOC_NAME)\ndoc = App.newDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\n\nclass DovetailQuickReleaseProxy:\n    def __init__(self, obj):\n        obj.Proxy = self\n    def __getstate__(self):\n        return {}\n    def __setstate__(self, state):\n        return None\n    @staticmethod\n    def _mm(value):\n        try:\n            return float(value.Value)\n        except Exception:\n            return float(value)\n    @staticmethod\n    def _one_solid(shape):\n        shape = shape.removeSplitter()\n        if shape.ShapeType == \&quot;Solid\&quot;:\n            return shape\n        solids = shape.Solids\n        if len(solids) == 1:\n            return solids[0].removeSplitter()\n        return shape\n    def _trapezoid_prism(self, L, Wb, Wt, H):\n        x0, x1 = -L/2.0, L/2.0\n        yb, yt = Wb/2.0, Wt/2.0\n        pts = [App.Vector(x0,-yb,0), App.Vector(x1,-yb,0), App.Vector(x1,yb,0), App.Vector(x0,yb,0), App.Vector(x0,-yt,H), App.Vector(x1,-yt,H), App.Vector(x1,yt,H), App.Vector(x0,yt,H)]\n        faces = []\n        for idx in [(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)]:\n            faces.append(Part.Face(Part.makePolygon([pts[i] for i in idx] + [pts[idx[0]]])))\n        return self._one_solid(Part.makeSolid(Part.makeShell(faces)))\n    def _capsule_solid(self, cx, cy, z, length, width, height):\n        r = width/2.0\n        straight = max(length - width, 0.1)\n        box = Part.makeBox(straight, width, height, App.Vector(cx - straight/2.0, cy - r, z))\n        cyl1 = Part.makeCylinder(r, height, App.Vector(cx - straight/2.0, cy, z), App.Vector(0,0,1))\n        cyl2 = Part.makeCylinder(r, height, App.Vector(cx + straight/2.0, cy, z), App.Vector(0,0,1))\n        return self._one_solid(box.fuse(cyl1).fuse(cyl2))\n    def execute(self, obj):\n        L = self._mm(obj.PlateLength); Wb = self._mm(obj.BottomWidth); Wt = self._mm(obj.DovetailTopWidth); H = self._mm(obj.PlateThickness)\n        slot_l = self._mm(obj.SlotLength); slot_w = self._mm(obj.SlotWidth); slot_spacing = self._mm(obj.SlotSpacing)\n        lip_margin = self._mm(obj.LipMargin); lip_height = self._mm(obj.LipHeight)\n        clearance_d = self._mm(obj.ClearanceDiameter); cb_d = self._mm(obj.CounterboreDiameter); cb_depth = self._mm(obj.CounterboreDepth)\n        stop_l = self._mm(obj.StopLength); stop_h = self._mm(obj.StopHeight)\n        Wt = min(max(Wt, 8.0), Wb - 2.0)\n        slot_w = min(max(slot_w, 2.0), max(2.0, Wt - 8.0))\n        stop_l = min(max(stop_l, 2.0), L/3.0)\n        plate = self._trapezoid_prism(L, Wb, Wt, H)\n        for cx in (-slot_spacing/2.0, slot_spacing/2.0):\n            slot_cut = self._capsule_solid(cx, 0, -1, slot_l, slot_w, H + lip_height + stop_h + 3)\n            plate = self._one_solid(plate.cut(slot_cut))\n        through = Part.makeCylinder(clearance_d/2.0, H + lip_height + stop_h + 3, App.Vector(0,0,-1), App.Vector(0,0,1))\n        c_bore = Part.makeCylinder(cb_d/2.0, cb_depth + 1, App.Vector(0,0,H - cb_depth), App.Vector(0,0,1))\n        plate = self._one_solid(self._one_solid(plate.cut(through)).cut(c_bore))\n        for cx in (-slot_spacing/2.0, slot_spacing/2.0):\n            outer = self._capsule_solid(cx, 0, H, slot_l + 2*lip_margin, slot_w + 2*lip_margin, lip_height)\n            inner = self._capsule_solid(cx, 0, H - 0.2, slot_l, slot_w, lip_height + 0.4)\n            lip = self._one_solid(outer.cut(inner))\n            plate = self._one_solid(plate.fuse(lip))\n        stop = Part.makeBox(stop_l, Wt, stop_h, App.Vector(L/2.0 - stop_l, -Wt/2.0, H))\n        plate = self._one_solid(plate.fuse(stop))\n        if not plate.isValid():\n            fixed = plate.fix(0.01, 0.01, 0.01)\n            if fixed and fixed.isValid():\n                plate = self._one_solid(fixed)\n        obj.Shape = self._one_solid(plate)\n\nsheet = doc.addObject(\&quot;Spreadsheet::Sheet\&quot;, \&quot;Sheet\&quot;)\nrows = [(\&quot;PlateLength\&quot;,\&quot;100 mm\&quot;,\&quot;overall length\&quot;),(\&quot;BottomWidth\&quot;,\&quot;42 mm\&quot;,\&quot;dovetail lower width\&quot;),(\&quot;DovetailTopWidth\&quot;,\&quot;34 mm\&quot;,\&quot;dovetail top width\&quot;),(\&quot;PlateThickness\&quot;,\&quot;10 mm\&quot;,\&quot;plate thickness\&quot;),(\&quot;SlotLength\&quot;,\&quot;24 mm\&quot;,\&quot;elongated slot length\&quot;),(\&quot;SlotWidth\&quot;,\&quot;7 mm\&quot;,\&quot;elongated slot width\&quot;),(\&quot;SlotSpacing\&quot;,\&quot;54 mm\&quot;,\&quot;slot center spacing\&quot;),(\&quot;LipMargin\&quot;,\&quot;3 mm\&quot;,\&quot;raised lip margin around slots\&quot;),(\&quot;LipHeight\&quot;,\&quot;1.5 mm\&quot;,\&quot;raised lip height\&quot;),(\&quot;ClearanceDiameter\&quot;,\&quot;6.8 mm\&quot;,\&quot;1/4-20 clearance diameter\&quot;),(\&quot;CounterboreDiameter\&quot;,\&quot;13 mm\&quot;,\&quot;counterbore diameter\&quot;),(\&quot;CounterboreDepth\&quot;,\&quot;3.2 mm\&quot;,\&quot;counterbore depth\&quot;),(\&quot;StopLength\&quot;,\&quot;10 mm\&quot;,\&quot;rear stop length\&quot;),(\&quot;StopHeight\&quot;,\&quot;8 mm\&quot;,\&quot;rear stop height\&quot;)]\nsheet.set(\&quot;A1\&quot;, \&quot;Parameter\&quot;); sheet.set(\&quot;B1\&quot;, \&quot;Value\&quot;); sheet.set(\&quot;C1\&quot;, \&quot;Note\&quot;)\nfor idx, (name, value, note) in enumerate(rows, start=2):\n    sheet.set(f\&quot;A{idx}\&quot;, name); sheet.set(f\&quot;B{idx}\&quot;, value); sheet.set(f\&quot;C{idx}\&quot;, note); sheet.setAlias(f\&quot;B{idx}\&quot;, name)\nobj = doc.addObject(\&quot;Part::FeaturePython\&quot;, \&quot;DovetailQuickRelease\&quot;)\nobj.Label = \&quot;Expression-driven dovetail quick-release plate\&quot;\nDovetailQuickReleaseProxy(obj)\nprops = [\&quot;PlateLength\&quot;,\&quot;BottomWidth\&quot;,\&quot;DovetailTopWidth\&quot;,\&quot;PlateThickness\&quot;,\&quot;SlotLength\&quot;,\&quot;SlotWidth\&quot;,\&quot;SlotSpacing\&quot;,\&quot;LipMargin\&quot;,\&quot;LipHeight\&quot;,\&quot;ClearanceDiameter\&quot;,\&quot;CounterboreDiameter\&quot;,\&quot;CounterboreDepth\&quot;,\&quot;StopLength\&quot;,\&quot;StopHeight\&quot;]\nfor prop in props:\n    obj.addProperty(\&quot;App::PropertyLength\&quot;, prop, \&quot;Driving Dimensions\&quot;, f\&quot;Expression-bound to Sheet.{prop}\&quot;)\n    obj.setExpression(prop, f\&quot;Sheet.{prop}\&quot;)\nobj.ViewObject.ShapeColor = (0.72,0.74,0.70,0.0)\nobj.ViewObject.LineColor = (0.12,0.12,0.12,0.0)\ndoc.recompute()\nImport.export([obj], step_path); Mesh.export([obj], stl_path); doc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric(); Gui.ActiveDocument.ActiveView.fitAll(); Gui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\ninitial = {\&quot;bbox_size\&quot;: tuple(round(v,4) for v in (obj.Shape.BoundBox.XLength,obj.Shape.BoundBox.YLength,obj.Shape.BoundBox.ZLength)), \&quot;volume_mm3\&quot;: round(obj.Shape.Volume,4), \&quot;valid\&quot;: obj.Shape.isValid(), \&quot;shape_type\&quot;: obj.Shape.ShapeType, \&quot;solid_count\&quot;: len(obj.Shape.Solids)}\nsheet.set(\&quot;B4\&quot;, \&quot;31 mm\&quot;); sheet.set(\&quot;B7\&quot;, \&quot;8.2 mm\&quot;); sheet.set(\&quot;B15\&quot;, \&quot;12 mm\&quot;)\ndoc.recompute()\nshape = obj.Shape\nbbox = shape.BoundBox\nfinal = {\&quot;bbox_min\&quot;: (round(bbox.XMin,4),round(bbox.YMin,4),round(bbox.ZMin,4)), \&quot;bbox_max\&quot;: (round(bbox.XMax,4),round(bbox.YMax,4),round(bbox.ZMax,4)), \&quot;bbox_size\&quot;: (round(bbox.XLength,4),round(bbox.YLength,4),round(bbox.ZLength,4)), \&quot;volume_mm3\&quot;: round(shape.Volume,4), \&quot;valid\&quot;: bool(shape.isValid()), \&quot;shape_type\&quot;: shape.ShapeType, \&quot;solid_count\&quot;: len(shape.Solids), \&quot;edited_cells\&quot;: {\&quot;Sheet.DovetailTopWidth\&quot;: sheet.get(\&quot;B4\&quot;), \&quot;Sheet.SlotWidth\&quot;: sheet.get(\&quot;B7\&quot;), \&quot;Sheet.StopHeight\&quot;: sheet.get(\&quot;B15\&quot;)}}\nif shape.ShapeType != \&quot;Solid\&quot; or len(shape.Solids) != 1 or not shape.isValid():\n    raise RuntimeError(\&quot;Final model is not a single valid solid: %r\&quot; % final)\nImport.export([obj], step_path); Mesh.export([obj], stl_path); doc.saveAs(fcstd_path)\nGui.ActiveDocument.ActiveView.viewIsometric(); Gui.ActiveDocument.ActiveView.fitAll(); Gui.ActiveDocument.ActiveView.saveImage(png_path, 1400, 1000, \&quot;White\&quot;)\nprint(\&quot;Created expression-driven spreadsheet-parametric quick-release plate\&quot;)\nprint(\&quot;Initial export stats:\&quot;, initial)\nprint(\&quot;Final edited-cell stats:\&quot;, final)\nprint(\&quot;Exports:\&quot;)\nprint(\&quot;  FCStd:\&quot;, fcstd_path)\nprint(\&quot;  STEP:\&quot;, step_path)\nprint(\&quot;  STL:\&quot;, stl_path)\nprint(\&quot;  PNG:\&quot;, png_path)\n&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 8.1539 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: Created expression-driven spreadsheet-parametric quick-release plate
+Initial export stats: {&#x27;bbox_size&#x27;: (100.0, 42.0, 18.0), &#x27;volume_mm3&#x27;: 37467.9283, &#x27;valid&#x27;: True, &#x27;shape_type&#x27;: &#x27;Solid&#x27;, &#x27;solid_count&#x27;: 1}
+Final edited-cell stats: {&#x27;bbox_min&#x27;: (-50.0, -21.0, 0.0), &#x27;bbox_max&#x27;: (50.0, 21.0, 22.0), &#x27;bbox_size&#x27;: (100.0, 42.0, 22.0), &#x27;volume_mm3&#x27;: 36481.5795, &#x27;valid&#x27;: True, &#x27;shape_type&#x27;: &#x27;Solid&#x27;, &#x27;solid_count&#x27;: 1, &#x27;edited_cells&#x27;: {&#x27;Sheet.DovetailTopWidth&#x27;: 31.0 mm, &#x27;Sheet.SlotWidth&#x27;: 8.2 mm, &#x27;Sheet.StopHeight&#x27;: 12.0 mm}}
+Exports:
+  FCStd: /path/to/freecad-codex-dovetail-quick-release.FCStd
+  STEP: /path/to/freecad-codex-dovetail-quick-release.step
+  STL: /path/to/freecad-codex-dovetail-quick-release.stl
+  PNG: /path/to/freecad-codex-dovetail-quick-release.png</pre><div class="strip"><figure><img loading="lazy" src="assert/image-003accbc999f8655.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The final recompute/export passed validation. I’m doing one FreeCAD view check now because the tool’s automatic screenshot came back as an empty viewport even though the saved files and shape stats were produced.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">get_view</span><span class="ts">{&quot;view_name&quot;:&quot;Isometric&quot;,&quot;focus_object&quot;:&quot;DovetailQuickRelease&quot;,&quot;width&quot;:1200,&quot;height&quot;:800}</span></div><pre class="args">{
+  &quot;view_name&quot;: &quot;Isometric&quot;,
+  &quot;focus_object&quot;: &quot;DovetailQuickRelease&quot;,
+  &quot;width&quot;: 1200,
+  &quot;height&quot;: 800
+}</pre><pre class="out">Wall time: 8.1610 seconds
+Output:</pre><div class="strip"><figure><img loading="lazy" src="assert/image-3269528671f13230.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The object is present and exported, but FreeCAD’s viewport capture is still blank. I’m checking the document object state and then I’ll regenerate the PNG using FreeCAD’s offscreen/image path inside the same MCP environment if the live viewport is not rendering the scene.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">get_object</span><span class="ts">{&quot;doc_name&quot;:&quot;Codex_Dovetail_QuickRelease&quot;,&quot;obj_name&quot;:&quot;DovetailQuickRelease&quot;}</span></div><pre class="args">{
+  &quot;doc_name&quot;: &quot;Codex_Dovetail_QuickRelease&quot;,
+  &quot;obj_name&quot;: &quot;DovetailQuickRelease&quot;
+}</pre><pre class="out">Wall time: 6.6493 seconds
+Output:
+{
+  &quot;Name&quot;: &quot;DovetailQuickRelease&quot;,
+  &quot;Label&quot;: &quot;Expression-driven dovetail quick-release plate&quot;,
+  &quot;TypeId&quot;: &quot;Part::FeaturePython&quot;,
+  &quot;Properties&quot;: {
+    &quot;BottomWidth&quot;: &quot;42.0 mm&quot;,
+    &quot;ClearanceDiameter&quot;: &quot;6.8 mm&quot;,
+    &quot;CounterboreDepth&quot;: &quot;3.2 mm&quot;,
+    &quot;CounterboreDiameter&quot;: &quot;13.0 mm&quot;,
+    &quot;DovetailTopWidth&quot;: &quot;31.0 mm&quot;,
+    &quot;ExpressionEngine&quot;: [
+      [
+        &quot;BottomWidth&quot;,
+        &quot;Sheet.BottomWidth&quot;
+      ],
+      [
+        &quot;ClearanceDiameter&quot;,
+        &quot;Sheet.ClearanceDiameter&quot;
+      ],
+      [
+        &quot;CounterboreDepth&quot;,
+        &quot;Sheet.CounterboreDepth&quot;
+      ],
+      [
+        &quot;CounterboreDiameter&quot;,
+        &quot;Sheet.CounterboreDiameter&quot;
+      ],
+      [
+        &quot;DovetailTopWidth&quot;,
+        &quot;Sheet.DovetailTopWidth&quot;
+      ],
+      [
+        &quot;LipHeight&quot;,
+        &quot;Sheet.LipHeight&quot;
+      ],
+      [
+        &quot;LipMargin&quot;,
+        &quot;Sheet.LipMargin&quot;
+      ],
+      [
+        &quot;PlateLength&quot;,
+        &quot;Sheet.PlateLength&quot;
+      ],
+      [
+        &quot;PlateThickness&quot;,
+        &quot;Sheet.PlateThickness&quot;
+      ],
+      [
+        &quot;SlotLength&quot;,
+        &quot;Sheet.SlotLength&quot;
+      ],
+      [
+        &quot;SlotSpacing&quot;,
+        &quot;Sheet.SlotSpacing&quot;
+      ],
+      [
+        &quot;SlotWidth&quot;,
+        &quot;Sheet.SlotWidth&quot;
+      ],
+      [
+        &quot;StopHeight&quot;,
+        &quot;Sheet.StopHeight&quot;
+      ],
+      [
+        &quot;StopLength&quot;,
+        &quot;Sheet.StopLength&quot;
+      ]
+    ],
+    &quot;Label&quot;: &quot;Expression-driven dovetail quick-release plate&quot;,
+    &quot;Label2&quot;: &quot;&quot;,
+    &quot;LipHeight&quot;: &quot;1.5 mm&quot;,
+    &quot;LipMargin&quot;: &quot;3.0 mm&quot;,
+    &quot;Placement&quot;: {
+      &quot;Base&quot;: {
+        &quot;x&quot;: 0.0,
+        &quot;y&quot;: 0.0,
+        &quot;z&quot;: 0.0
+      },
+      &quot;Rotation&quot;: {
+        &quot;Axis&quot;: {
+          &quot;x&quot;: 0.0,
+          &quot;y&quot;: 0.0,
+          &quot;z&quot;: 1.0
+        },
+        &quot;Angle&quot;: 0.0
+      }
+    },
+    &quot;PlateLength&quot;: &quot;100.0 mm&quot;,
+    &quot;PlateThickness&quot;: &quot;10.0 mm&quot;,
+    &quot;Proxy&quot;: &quot;&lt;rpc_server.rpc_server.DovetailQuickReleaseProxy object at 0x122c6dbd0&gt;&quot;,
+    &quot;Shape&quot;: &quot;&lt;Solid object at 0xbc69a2800&gt;&quot;,
+    &quot;ShapeMaterial&quot;: &quot;&lt;Material at 0xbcb41d500&gt;&quot;,
+    &quot;SlotLength&quot;: &quot;24.0 mm&quot;,
+    &quot;SlotSpacing&quot;: &quot;54.0 mm&quot;,
+    &quot;SlotWidth&quot;: &quot;8.2 mm&quot;,
+    &quot;StopHeight&quot;: &quot;12.0 mm&quot;,
+    &quot;StopLength&quot;: &quot;10.0 mm&quot;,
+    &quot;Visibility&quot;: true,
+    &quot;_ElementMapVersion&quot;: &quot;15.70200.5&quot;
+  },
+  &quot;Placement&quot;: {
+    &quot;Base&quot;: {
+      &quot;x&quot;: 0.0,
+      &quot;y&quot;: 0.0,
+      &quot;z&quot;: 0.0
+    },
+    &quot;Rotation&quot;: {
+      &quot;Axis&quot;: {
+        &quot;x&quot;: 0.0,
+        &quot;y&quot;: 0.0,
+        &quot;z&quot;: 1.0
+      },
+      &quot;Angle&quot;: 0.0
+    }
+  },
+  &quot;Shape&quot;: {
+    &quot;Volume&quot;: 36481.57948296661,
+    &quot;Area&quot;: 12287.114161100935,
+    &quot;VertexCount&quot;: 56,
+    &quot;EdgeCount&quot;: 84,
+    &quot;FaceCount&quot;: 32
+  },
+  &quot;ViewObject&quot;: {
+    &quot;ShapeColor&quot;: [
+      0.7200000286102295,
+      0.7400000095367432,
+      0.699999988079071,
+      0.0
+    ],
+    &quot;Transparency&quot;: 0,
+    &quot;Visibility&quot;: true
+  }
+}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-003accbc999f8655.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The GUI viewport renderer is not drawing into screenshots in this session, but the solid is available. I’m replacing the blank PNG with an isometric raster generated from the FreeCAD shape tessellation inside <code>execute_code</code>, including a pixel check so the saved PNG is not empty.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os, math\nimport FreeCAD as App\nfrom PIL import Image, ImageDraw\n\nDOC_NAME = \&quot;Co</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, math\nimport FreeCAD as App\nfrom PIL import Image, ImageDraw\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nASSET_DIR = \&quot;/path/to/assets\&quot;\npng_path = os.path.join(ASSET_DIR, \&quot;freecad-codex-dovetail-quick-release.png\&quot;)\ndoc = App.getDocument(DOC_NAME)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nshape = obj.Shape\nverts, tris = shape.tessellate(0.45)\n\n# Isometric-style orthographic projection from final FreeCAD geometry.\nyaw = math.radians(-45.0)\npitch = math.radians(35.2643897)\ncy, sy = math.cos(yaw), math.sin(yaw)\ncp, sp = math.cos(pitch), math.sin(pitch)\n\ndef transform(v):\n    x, y, z = v.x, v.y, v.z\n    x1 = cy*x - sy*y\n    y1 = sy*x + cy*y\n    z1 = z\n    x2 = x1\n    y2 = cp*y1 - sp*z1\n    z2 = sp*y1 + cp*z1\n    return (x2, y2, z2)\n\nproj = [transform(v) for v in verts]\nxs = [p[0] for p in proj]; ys = [p[1] for p in proj]\nW, H = 1400, 1000\nmargin = 90\nscale = min((W - 2*margin)/(max(xs)-min(xs)), (H - 2*margin)/(max(ys)-min(ys)))\ncx = W/2.0 - scale*(min(xs)+max(xs))/2.0\ncy2 = H/2.0 + scale*(min(ys)+max(ys))/2.0\n\ndef screen(p):\n    return (cx + scale*p[0], cy2 - scale*p[1])\n\nlight = (0.35, -0.45, 0.82)\nllen = math.sqrt(sum(a*a for a in light)); light = tuple(a/llen for a in light)\ntri_records = []\nfor tri in tris:\n    p0, p1, p2 = [proj[i] for i in tri]\n    depth = (p0[2] + p1[2] + p2[2]) / 3.0\n    v0, v1, v2 = [verts[i] for i in tri]\n    ax, ay, az = v1.x-v0.x, v1.y-v0.y, v1.z-v0.z\n    bx, by, bz = v2.x-v0.x, v2.y-v0.y, v2.z-v0.z\n    nx, ny, nz = ay*bz-az*by, az*bx-ax*bz, ax*by-ay*bx\n    nlen = math.sqrt(nx*nx + ny*ny + nz*nz) or 1.0\n    nx, ny, nz = nx/nlen, ny/nlen, nz/nlen\n    shade = max(0.18, min(1.0, 0.55 + 0.45*(nx*light[0] + ny*light[1] + nz*light[2])))\n    base = (168, 174, 166)\n    color = tuple(max(0, min(255, int(c*shade))) for c in base)\n    tri_records.append((depth, [screen(p0), screen(p1), screen(p2)], color))\n\nimg = Image.new(\&quot;RGB\&quot;, (W, H), \&quot;white\&quot;)\ndraw = ImageDraw.Draw(img)\nfor depth, poly, color in sorted(tri_records, key=lambda r: r[0]):\n    draw.polygon(poly, fill=color)\nfor tri in tris:\n    pts = [screen(proj[i]) for i in tri]\n    draw.line([pts[0], pts[1], pts[2], pts[0]], fill=(70, 72, 70), width=1)\n\nimg.save(png_path)\nnonwhite = 0\npix = img.load()\nfor y in range(0, H, 5):\n    for x in range(0, W, 5):\n        if pix[x, y] != (255, 255, 255):\n            nonwhite += 1\n\nprint({\&quot;png\&quot;: png_path, \&quot;triangles\&quot;: len(tris), \&quot;sampled_nonwhite_pixels\&quot;: nonwhite, \&quot;bbox_size\&quot;: (round(shape.BoundBox.XLength, 4), round(shape.BoundBox.YLength, 4), round(shape.BoundBox.ZLength, 4)), \&quot;volume_mm3\&quot;: round(shape.Volume, 4), \&quot;valid\&quot;: shape.isValid(), \&quot;shape_type\&quot;: shape.ShapeType, \&quot;solid_count\&quot;: len(shape.Solids)})&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 14.2670 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: {&#x27;png&#x27;: &#x27;/path/to/freecad-codex-dovetail-quick-release.png&#x27;, &#x27;triangles&#x27;: 680, &#x27;sampled_nonwhite_pixels&#x27;: 11979, &#x27;bbox_size&#x27;: (100.0, 42.0, 22.0), &#x27;volume_mm3&#x27;: 36481.5795, &#x27;valid&#x27;: True, &#x27;shape_type&#x27;: &#x27;Solid&#x27;, &#x27;solid_count&#x27;: 1}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-003accbc999f8655.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>Done. Created and re-exported:</p>
+<ul><li><a href="/path/to/freecad-codex-dovetail-quick-release.FCStd" target="_blank" rel="noopener">FCStd</a></li><li><a href="/path/to/freecad-codex-dovetail-quick-release.step" target="_blank" rel="noopener">STEP</a></li><li><a href="/path/to/freecad-codex-dovetail-quick-release.stl" target="_blank" rel="noopener">STL</a></li><li><a href="/path/to/freecad-codex-dovetail-quick-release.png" target="_blank" rel="noopener">PNG</a></li></ul>
+<p>The model has a <code>Spreadsheet::Sheet</code> with aliased driving cells, and the <code>DovetailQuickRelease</code> feature properties are expression-bound to those cells, e.g. <code>Sheet.DovetailTopWidth</code>, <code>Sheet.SlotWidth</code>, <code>Sheet.StopHeight</code>.</p>
+<p>Edited spreadsheet cells and recomputed:</p>
+<ul><li><code>Sheet.DovetailTopWidth</code>: <code>34 mm</code> -&gt; <code>31 mm</code></li><li><code>Sheet.SlotWidth</code>: <code>7 mm</code> -&gt; <code>8.2 mm</code></li><li><code>Sheet.StopHeight</code>: <code>8 mm</code> -&gt; <code>12 mm</code></li></ul>
+<p>Final verification after recompute:</p>
+<ul><li>Shape type: <code>Solid</code></li><li>Solid count: <code>1</code></li><li>Valid: <code>True</code></li><li>Bounding box min: <code>(-50.0, -21.0, 0.0) mm</code></li><li>Bounding box max: <code>(50.0, 21.0, 22.0) mm</code></li><li>Bounding box size: <code>(100.0, 42.0, 22.0) mm</code></li><li>Volume: <code>36481.5795 mm^3</code></li></ul>
+<p>FreeCAD’s live viewport capture was blank in this session, so I generated the PNG from the final FreeCAD shape tessellation through the FreeCAD MCP execution path and verified it is non-empty.</p></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>I’ll fix the PNG from the existing FreeCAD document through the FreeCAD MCP tools: first I’ll inspect the actual <code>DisplayMode</code> enum, then hide/delete mesh artifacts if present, set an allowed solid display mode, and overwrite the PNG from the isometric view.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">exec_command</span><span class="ts">{&quot;cmd&quot;:&quot;sed -n &#x27;1,240p&#x27; /path/to/qwen-mm-plugins-fr</span></div><pre class="args">{
+  &quot;cmd&quot;: &quot;sed -n &#x27;1,240p&#x27; /path/to/SKILL.md&quot;,
+  &quot;yield_time_ms&quot;: 10000,
+  &quot;max_output_tokens&quot;: 20000
+}</pre><pre class="out">Chunk ID: f787e9
+Wall time: 0.0913 seconds
+Process exited with code 0
+Original token count: 1259
+Output:
+---
+name: qwen-mm-plugins-freecad
+description: Use whenever a task involves parametric CAD in FreeCAD — modeling parts and assemblies, editing object properties, technical drawings, importing/exporting STEP/STL/OBJ/DXF, PDF/Excel reports from a model, or finite-element (FEM/CalculiX) analysis. Requires a running FreeCAD instance with the FreeCADMCP addon (see Prerequisite).
+---
+
+You build parametric CAD content in FreeCAD by creating/editing document objects and, when needed, writing Python — against a **running** FreeCAD instance.
+
+## Prerequisite: a live FreeCAD + addon (started for you on first use)
+
+These tools are a **thin client**: they talk XML-RPC to a **running** FreeCAD carrying the FreeCADMCP
+addon (bundled in this plugin), and do **not** launch FreeCAD while serving. Normally you start
+nothing — just call a tool.
+
+- **Default (plugin install):** `QWEN_MM_AUTOLAUNCH=1` is preset, so the **first tool call** brings
+  FreeCAD up itself: it auto-installs the pinned FreeCAD 1.1.x if missing (Linux-x86_64, rootless,
+  FUSE-free AppImage, ~1 GB one-time), copies the bundled addon into your FreeCAD Mod dir, and starts
+  it on `$FREECAD_RPC_HOST:$FREECAD_RPC_PORT` (default `localhost:9875`). Just call a tool such as
+  `get_objects`; the **first** call may take a couple of minutes while it downloads (expected), later
+  calls are instant.
+- **Don&#x27;t shell out to `qwen-mm-plugins-freecad --launch-app` under a plugin install** — that console
+  entry lives inside the uvx environment, not your shell PATH (`command not found`). Use it only from
+  a source checkout, or for a manual / GUI start:
+  ```bash
+  python3 src/capabilities/freecad/qwen_mm_plugins_freecad --launch-app        # headless (xvfb)
+  python3 src/capabilities/freecad/qwen_mm_plugins_freecad --launch-app --gui  # real display
+  ```
+
+Auto-launch can&#x27;t cover a few things: (1) auto-download is **Linux-x86_64 only** — elsewhere install
+FreeCAD yourself (`apt install freecad`, or extract an AppImage and set `FREECAD_BINARY=&lt;AppRun&gt;`);
+(2) a headless box needs a virtual display (`apt install xvfb`, needs root); (3) FEM needs the
+CalculiX solver (`ccx`) on PATH. If a tool reports it can&#x27;t connect, it&#x27;s almost always one of the
+first two — the error message spells out which; from a checkout, `... --check-system` lists every
+missing system tool. Set `FREECAD_ONLY_TEXT_FEEDBACK=1` to drop the screenshot most tools attach.
+
+## Asset creation strategy
+
+When creating content in FreeCAD, follow these steps:
+
+0. Before starting any task, always use `get_objects` to confirm the current state of the document (and `list_documents` / `create_document` as needed).
+1. **Utilize the parts library**: check available parts with `get_parts_list`; if the required part exists, use `insert_part_from_library` to insert it.
+2. **If the part isn&#x27;t in the library**: create basic shapes (`Part::Box`, `Part::Cylinder`, `Part::Sphere`, `Draft::*`, `PartDesign::*`, …) with `create_object`, then refine detailed properties with `edit_object`.
+3. Always assign clear, descriptive names to objects.
+4. Explicitly set position, scale, and rotation (Placement) via `create_object`/`edit_object` to ensure correct spatial relationships.
+5. After editing an object, **verify** the properties actually applied using `get_object`.
+6. For detailed customization or specialized operations, use `execute_code` to run custom Python.
+
+Only fall back to basic creation methods when: the asset isn&#x27;t in the parts library, a basic shape is explicitly requested, or a complex shape requires custom scripting.
+
+## execute_code vs execute_code_async
+
+- **`execute_code`** runs on FreeCAD&#x27;s GUI thread — the safe default for anything that touches documents, document objects, `FreeCADGui`, the active view, selection, `recompute()`, or save.
+- **`execute_code_async`** runs in a background thread — ONLY for long, pure OCCT/CPU computations that do NOT touch the GUI or the document tree. Pattern: fetch shapes with `execute_code`, stash intermediates in a module-level Python variable, run the heavy compute async, then apply results back via `execute_code`.
+
+## Visual verification
+
+Use `get_view` (Isometric/Front/Top/…) to inspect geometry, and re-check with `get_object` after edits. Most mutating tools already return a screenshot unless `FREECAD_ONLY_TEXT_FEEDBACK` is set.
+
+## FEM (finite-element) analysis
+
+`run_fem_analysis` runs the CalculiX solver on a `Fem::AnalysisPython` container. Prerequisites in the document: a solid geometry, a `Fem::MaterialCommon`, a `Fem::FemMeshGmsh` referencing the geometry, and at least one `Fem::ConstraintFixed` + one `Fem::ConstraintForce`/`ConstraintPressure` — all added to the analysis (create them via `create_object`). CalculiX (`ccx`) must be installed. Returns max von Mises stress, max/min displacement, and node count.
+
+## Output files
+
+Save the final `.FCStd` and any generated outputs (images, PDFs, Excel, STEP/STL/OBJ/DXF exports) to the `exports/` directory unless the task specifies otherwise.</pre></div>
+<div class="t"><div class="tline"><span class="tn">get_objects</span><span class="ts">{&quot;doc_name&quot;:&quot;Codex_Dovetail_QuickRelease&quot;}</span></div><pre class="args">{
+  &quot;doc_name&quot;: &quot;Codex_Dovetail_QuickRelease&quot;
+}</pre><pre class="out">Wall time: 16.3640 seconds
+Output:
+[
+  {
+    &quot;Name&quot;: &quot;Sheet&quot;,
+    &quot;Label&quot;: &quot;Sheet&quot;,
+    &quot;TypeId&quot;: &quot;Spreadsheet::Sheet&quot;,
+    &quot;Properties&quot;: {
+      &quot;A1&quot;: &quot;Parameter&quot;,
+      &quot;A10&quot;: &quot;LipHeight&quot;,
+      &quot;A11&quot;: &quot;ClearanceDiameter&quot;,
+      &quot;A12&quot;: &quot;CounterboreDiameter&quot;,
+      &quot;A13&quot;: &quot;CounterboreDepth&quot;,
+      &quot;A14&quot;: &quot;StopLength&quot;,
+      &quot;A15&quot;: &quot;StopHeight&quot;,
+      &quot;A2&quot;: &quot;PlateLength&quot;,
+      &quot;A3&quot;: &quot;BottomWidth&quot;,
+      &quot;A4&quot;: &quot;DovetailTopWidth&quot;,
+      &quot;A5&quot;: &quot;PlateThickness&quot;,
+      &quot;A6&quot;: &quot;SlotLength&quot;,
+      &quot;A7&quot;: &quot;SlotWidth&quot;,
+      &quot;A8&quot;: &quot;SlotSpacing&quot;,
+      &quot;A9&quot;: &quot;LipMargin&quot;,
+      &quot;B1&quot;: &quot;Value&quot;,
+      &quot;B10&quot;: &quot;1.5 mm&quot;,
+      &quot;B11&quot;: &quot;6.8 mm&quot;,
+      &quot;B12&quot;: &quot;13.0 mm&quot;,
+      &quot;B13&quot;: &quot;3.2 mm&quot;,
+      &quot;B14&quot;: &quot;10.0 mm&quot;,
+      &quot;B15&quot;: &quot;12.0 mm&quot;,
+      &quot;B2&quot;: &quot;100.0 mm&quot;,
+      &quot;B3&quot;: &quot;42.0 mm&quot;,
+      &quot;B4&quot;: &quot;31.0 mm&quot;,
+      &quot;B5&quot;: &quot;10.0 mm&quot;,
+      &quot;B6&quot;: &quot;24.0 mm&quot;,
+      &quot;B7&quot;: &quot;8.2 mm&quot;,
+      &quot;B8&quot;: &quot;54.0 mm&quot;,
+      &quot;B9&quot;: &quot;3.0 mm&quot;,
+      &quot;C1&quot;: &quot;Note&quot;,
+      &quot;C10&quot;: &quot;raised lip height&quot;,
+      &quot;C11&quot;: &quot;1/4-20 clearance diameter&quot;,
+      &quot;C12&quot;: &quot;counterbore diameter&quot;,
+      &quot;C13&quot;: &quot;counterbore depth&quot;,
+      &quot;C14&quot;: &quot;rear stop length&quot;,
+      &quot;C15&quot;: &quot;rear stop height&quot;,
+      &quot;C2&quot;: &quot;overall length&quot;,
+      &quot;C3&quot;: &quot;dovetail lower width&quot;,
+      &quot;C4&quot;: &quot;dovetail top width&quot;,
+      &quot;C5&quot;: &quot;plate thickness&quot;,
+      &quot;C6&quot;: &quot;elongated slot length&quot;,
+      &quot;C7&quot;: &quot;elongated slot width&quot;,
+      &quot;C8&quot;: &quot;slot center spacing&quot;,
+      &quot;C9&quot;: &quot;raised lip margin around slots&quot;,
+      &quot;ExpressionEngine&quot;: [],
+      &quot;Label&quot;: &quot;Sheet&quot;,
+      &quot;Label2&quot;: &quot;&quot;,
+      &quot;Visibility&quot;: true,
+      &quot;cells&quot;: &quot;&lt;PropertySheet object&gt;&quot;,
+      &quot;columnWidths&quot;: &quot;&lt;PropertyColumnWidths object&gt;&quot;,
+      &quot;rowHeights&quot;: &quot;&lt;PropertyRowHeights object&gt;&quot;
+    },
+    &quot;Placement&quot;: &quot;None&quot;,
+    &quot;Shape&quot;: null,
+    &quot;ViewObject&quot;: {
+      &quot;Visibility&quot;: true
+    }
+  },
+  {
+    &quot;Name&quot;: &quot;DovetailQuickRelease&quot;,
+    &quot;Label&quot;: &quot;Expression-driven dovetail quick-release plate&quot;,
+    &quot;TypeId&quot;: &quot;Part::FeaturePython&quot;,
+    &quot;Properties&quot;: {
+      &quot;BottomWidth&quot;: &quot;42.0 mm&quot;,
+      &quot;ClearanceDiameter&quot;: &quot;6.8 mm&quot;,
+      &quot;CounterboreDepth&quot;: &quot;3.2 mm&quot;,
+      &quot;CounterboreDiameter&quot;: &quot;13.0 mm&quot;,
+      &quot;DovetailTopWidth&quot;: &quot;31.0 mm&quot;,
+      &quot;ExpressionEngine&quot;: [
+        [
+          &quot;BottomWidth&quot;,
+          &quot;Sheet.BottomWidth&quot;
+        ],
+        [
+          &quot;ClearanceDiameter&quot;,
+          &quot;Sheet.ClearanceDiameter&quot;
+        ],
+        [
+          &quot;CounterboreDepth&quot;,
+          &quot;Sheet.CounterboreDepth&quot;
+        ],
+        [
+          &quot;CounterboreDiameter&quot;,
+          &quot;Sheet.CounterboreDiameter&quot;
+        ],
+        [
+          &quot;DovetailTopWidth&quot;,
+          &quot;Sheet.DovetailTopWidth&quot;
+        ],
+        [
+          &quot;LipHeight&quot;,
+          &quot;Sheet.LipHeight&quot;
+        ],
+        [
+          &quot;LipMargin&quot;,
+          &quot;Sheet.LipMargin&quot;
+        ],
+        [
+          &quot;PlateLength&quot;,
+          &quot;Sheet.PlateLength&quot;
+        ],
+        [
+          &quot;PlateThickness&quot;,
+          &quot;Sheet.PlateThickness&quot;
+        ],
+        [
+          &quot;SlotLength&quot;,
+          &quot;Sheet.SlotLength&quot;
+        ],
+        [
+          &quot;SlotSpacing&quot;,
+          &quot;Sheet.SlotSpacing&quot;
+        ],
+        [
+          &quot;SlotWidth&quot;,
+          &quot;Sheet.SlotWidth&quot;
+        ],
+        [
+          &quot;StopHeight&quot;,
+          &quot;Sheet.StopHeight&quot;
+        ],
+        [
+          &quot;StopLength&quot;,
+          &quot;Sheet.StopLength&quot;
+        ]
+      ],
+      &quot;Label&quot;: &quot;Expression-driven dovetail quick-release plate&quot;,
+      &quot;Label2&quot;: &quot;&quot;,
+      &quot;LipHeight&quot;: &quot;1.5 mm&quot;,
+      &quot;LipMargin&quot;: &quot;3.0 mm&quot;,
+      &quot;Placement&quot;: {
+        &quot;Base&quot;: {
+          &quot;x&quot;: 0.0,
+          &quot;y&quot;: 0.0,
+          &quot;z&quot;: 0.0
+        },
+        &quot;Rotation&quot;: {
+          &quot;Axis&quot;: {
+            &quot;x&quot;: 0.0,
+            &quot;y&quot;: 0.0,
+            &quot;z&quot;: 1.0
+          },
+          &quot;Angle&quot;: 0.0
+        }
+      },
+      &quot;PlateLength&quot;: &quot;100.0 mm&quot;,
+      &quot;PlateThickness&quot;: &quot;10.0 mm&quot;,
+      &quot;Proxy&quot;: &quot;&lt;rpc_server.rpc_server.DovetailQuickReleaseProxy object at 0x122c6dbd0&gt;&quot;,
+      &quot;Shape&quot;: &quot;&lt;Solid object at 0xbc6bedf40&gt;&quot;,
+      &quot;ShapeMaterial&quot;: &quot;&lt;Material at 0xbcb41f900&gt;&quot;,
+      &quot;SlotLength&quot;: &quot;24.0 mm&quot;,
+      &quot;SlotSpacing&quot;: &quot;54.0 mm&quot;,
+      &quot;SlotWidth&quot;: &quot;8.2 mm&quot;,
+      &quot;StopHeight&quot;: &quot;12.0 mm&quot;,
+      &quot;StopLength&quot;: &quot;10.0 mm&quot;,
+      &quot;Visibility&quot;: true,
+      &quot;_ElementMapVersion&quot;: &quot;15.70200.5&quot;
+    },
+    &quot;Placement&quot;: {
+      &quot;Base&quot;: {
+        &quot;x&quot;: 0.0,
+        &quot;y&quot;: 0.0,
+        &quot;z&quot;: 0.0
+      },
+      &quot;Rotation&quot;: {
+        &quot;Axis&quot;: {
+          &quot;x&quot;: 0.0,
+          &quot;y&quot;: 0.0,
+          &quot;z&quot;: 1.0
+        },
+        &quot;Angle&quot;: 0.0
+      }
+    },
+    &quot;Shape&quot;: {
+      &quot;Volume&quot;: 36481.57948296661,
+      &quot;Area&quot;: 12287.114161100935,
+      &quot;VertexCount&quot;: 56,
+      &quot;EdgeCount&quot;: 84,
+      &quot;FaceCount&quot;: 32
+    },
+    &quot;ViewObject&quot;: {
+      &quot;ShapeColor&quot;: [
+        0.7200000286102295,
+        0.7400000095367432,
+        0.699999988079071,
+        0.0
+      ],
+      &quot;Transparency&quot;: 0,
+      &quot;Visibility&quot;: true
+    }
+  }
+]</pre><div class="strip"><figure><img loading="lazy" src="assert/image-003accbc999f8655.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The document currently contains only the spreadsheet and the solid; there are no separate <code>Mesh::</code> temporary objects to delete. The solid is visible and expression-bound, so I’m checking its display-mode enumeration and using one of those exact values for the reshoot.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\nDOC_NAME = \&quot;Codex_Dovetail_Q</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nPNG_PATH = \&quot;/path/to/freecad-codex-dovetail-quick-release.png\&quot;\ndoc = App.getDocument(DOC_NAME)\nif doc is None:\n    raise RuntimeError(f\&quot;Document {DOC_NAME} is not open\&quot;)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nif obj is None:\n    raise RuntimeError(\&quot;DovetailQuickRelease object is missing\&quot;)\n\nmesh_objects = []\nfor candidate in list(doc.Objects):\n    type_id = getattr(candidate, \&quot;TypeId\&quot;, \&quot;\&quot;)\n    if type_id.startswith(\&quot;Mesh::\&quot;) or \&quot;Mesh\&quot; in type_id:\n        mesh_objects.append((candidate.Name, type_id))\n        try:\n            candidate.ViewObject.Visibility = False\n        except Exception:\n            pass\n\nenum = list(obj.ViewObject.getEnumerationsOfProperty(\&quot;DisplayMode\&quot;))\nprint(\&quot;DisplayMode enumeration:\&quot;, enum)\n\npreferred = None\nfor mode in (\&quot;Shaded\&quot;, \&quot;Flat Lines\&quot;, \&quot;Wireframe\&quot;, \&quot;Points\&quot;):\n    if mode in enum:\n        preferred = mode\n        break\nif preferred is None and enum:\n    preferred = enum[0]\nif preferred is None:\n    raise RuntimeError(\&quot;DisplayMode enumeration is empty\&quot;)\nobj.ViewObject.DisplayMode = preferred\nobj.ViewObject.Visibility = True\nobj.ViewObject.ShapeColor = (0.72, 0.74, 0.70, 0.0)\nobj.ViewObject.LineColor = (0.12, 0.12, 0.12, 0.0)\ndoc.recompute()\n\nview = Gui.ActiveDocument.ActiveView\n# Try to ensure the document root object is shown in the 3D view before saving.\ntry:\n    Gui.Selection.clearSelection()\n    Gui.Selection.addSelection(doc.Name, obj.Name)\nexcept Exception:\n    pass\nview.viewIsometric()\nview.fitAll()\ntry:\n    view.setAxisCross(False)\nexcept Exception:\n    pass\nview.saveImage(PNG_PATH, 1400, 1000, \&quot;White\&quot;)\n\nprint(\&quot;Hidden mesh objects:\&quot;, mesh_objects)\nprint(\&quot;Applied DisplayMode:\&quot;, obj.ViewObject.DisplayMode)\nprint(\&quot;PNG overwritten:\&quot;, PNG_PATH)\nprint(\&quot;Solid validity:\&quot;, obj.Shape.ShapeType, obj.Shape.isValid(), len(obj.Shape.Solids))&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 29.8695 seconds
+Output:
+[{&quot;type&quot;:&quot;text&quot;,&quot;text&quot;:&quot;Failed to execute code: RuntimeError: DisplayMode enumeration is empty&quot;}]</pre></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The direct enum call returned an empty list on the custom <code>Part::FeaturePython</code> view provider, which explains the earlier <code>Shaded</code> assignment failure. I’m going to probe the view object’s actual properties and test the available display-mode strings without changing the geometry, then use a plain Part display copy only if the custom view provider cannot render.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import FreeCAD as App\nimport FreeCADGui as Gui\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import FreeCAD as App\nimport FreeCADGui as Gui\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\ndoc = App.getDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nvo = obj.ViewObject\nprint(\&quot;ViewObject type:\&quot;, type(vo).__name__)\nprint(\&quot;DisplayMode in PropertiesList:\&quot;, \&quot;DisplayMode\&quot; in list(vo.PropertiesList))\nprint(\&quot;Properties containing Display/Mode:\&quot;, [p for p in vo.PropertiesList if \&quot;Display\&quot; in p or \&quot;Mode\&quot; in p])\ntry:\n    print(\&quot;getEnumerationsOfProperty DisplayMode:\&quot;, list(vo.getEnumerationsOfProperty(\&quot;DisplayMode\&quot;)))\nexcept Exception as e:\n    print(\&quot;getEnumerationsOfProperty error:\&quot;, repr(e))\ntry:\n    print(\&quot;DisplayModes attribute:\&quot;, vo.DisplayModes)\nexcept Exception as e:\n    print(\&quot;DisplayModes attribute error:\&quot;, repr(e))\nfor mode in [\&quot;Flat Lines\&quot;, \&quot;Shaded\&quot;, \&quot;Wireframe\&quot;, \&quot;Points\&quot;, \&quot;Hidden Line\&quot;, \&quot;No Shading\&quot;]:\n    try:\n        vo.DisplayMode = mode\n        print(\&quot;accepted DisplayMode:\&quot;, mode, \&quot;-&gt;\&quot;, vo.DisplayMode)\n    except Exception as e:\n        print(\&quot;rejected DisplayMode:\&quot;, mode, \&quot;-&gt;\&quot;, repr(e))\nprint(\&quot;current DisplayMode value:\&quot;, getattr(vo, \&quot;DisplayMode\&quot;, None))&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 281.7695 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: ViewObject type: ViewProviderPartExt
+DisplayMode in PropertiesList: True
+Properties containing Display/Mode: [&#x27;DisplayMode&#x27;]
+getEnumerationsOfProperty DisplayMode: []
+DisplayModes attribute error: AttributeError(&quot;&#x27;PartGui.ViewProviderPartExt&#x27; object has no attribute &#x27;DisplayModes&#x27;&quot;)
+rejected DisplayMode: Flat Lines -&gt; ValueError(&quot;&#x27;Flat Lines&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+rejected DisplayMode: Shaded -&gt; ValueError(&quot;&#x27;Shaded&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+rejected DisplayMode: Wireframe -&gt; ValueError(&quot;&#x27;Wireframe&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+rejected DisplayMode: Points -&gt; ValueError(&quot;&#x27;Points&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+rejected DisplayMode: Hidden Line -&gt; ValueError(&quot;&#x27;Hidden Line&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+rejected DisplayMode: No Shading -&gt; ValueError(&quot;&#x27;No Shading&#x27; is not part of the enumeration in Codex_Dovetail_QuickRelease#DovetailQuickRelease.ViewObject.DisplayMode&quot;)
+current DisplayMode value: None</pre><div class="strip"><figure><img loading="lazy" src="assert/image-003accbc999f8655.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The custom feature’s <code>ViewProviderPartExt</code> exposes a <code>DisplayMode</code> property but its enumeration is empty, so there is no legal string to assign on that view provider. I’m adding a minimal view-provider proxy that supplies real display modes for the existing solid, then I’ll set <code>Shaded</code>, reshoot, and check the PNG pixels.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\nDOC_NAME = \&quot;Codex_Dove</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nPNG_PATH = \&quot;/path/to/freecad-codex-dovetail-quick-release.png\&quot;\ndoc = App.getDocument(DOC_NAME)\nif doc is None:\n    raise RuntimeError(f\&quot;Document {DOC_NAME} is not open\&quot;)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nif obj is None:\n    raise RuntimeError(\&quot;DovetailQuickRelease object is missing\&quot;)\n\nclass DovetailQuickReleaseViewProvider:\n    def __init__(self, view_object):\n        view_object.Proxy = self\n    def attach(self, view_object):\n        self.ViewObject = view_object\n    def getDisplayModes(self, view_object):\n        return [\&quot;Shaded\&quot;, \&quot;Wireframe\&quot;]\n    def getDefaultDisplayMode(self):\n        return \&quot;Shaded\&quot;\n    def setDisplayMode(self, mode):\n        return mode\n    def onChanged(self, view_object, prop):\n        return None\n    def updateData(self, obj, prop):\n        return None\n    def __getstate__(self):\n        return {}\n    def __setstate__(self, state):\n        return None\n\n# Hide/delete only mesh-type temporary objects. None are expected, but keep the cleanup explicit.\nmesh_objects = []\nfor candidate in list(doc.Objects):\n    type_id = getattr(candidate, \&quot;TypeId\&quot;, \&quot;\&quot;)\n    if type_id.startswith(\&quot;Mesh::\&quot;) or \&quot;Mesh\&quot; in type_id:\n        mesh_objects.append((candidate.Name, type_id))\n        try:\n            candidate.ViewObject.Visibility = False\n        except Exception:\n            pass\n\nDovetailQuickReleaseViewProvider(obj.ViewObject)\ndoc.recompute()\nGui.updateGui()\n\nenum = list(obj.ViewObject.getEnumerationsOfProperty(\&quot;DisplayMode\&quot;))\nprint(\&quot;DisplayMode enumeration after view-provider proxy:\&quot;, enum)\nif \&quot;Shaded\&quot; not in enum:\n    raise RuntimeError(f\&quot;Shaded is still not assignable; enum={enum!r}\&quot;)\nobj.ViewObject.DisplayMode = \&quot;Shaded\&quot;\nobj.ViewObject.Visibility = True\nobj.ViewObject.ShapeColor = (0.72, 0.74, 0.70, 0.0)\nobj.ViewObject.LineColor = (0.12, 0.12, 0.12, 0.0)\n\n# Hide spreadsheet from the 3D scene and make sure only the solid is visible for the shot.\nsheet = doc.getObject(\&quot;Sheet\&quot;)\nif sheet and hasattr(sheet, \&quot;ViewObject\&quot;):\n    sheet.ViewObject.Visibility = False\n\ndoc.recompute()\nGui.updateGui()\nview = Gui.ActiveDocument.ActiveView\ntry:\n    Gui.SendMsgToActiveView(\&quot;ViewFit\&quot;)\nexcept Exception:\n    pass\nview.viewIsometric()\nview.fitAll()\nGui.updateGui()\ntime.sleep(0.5)\nview.saveImage(PNG_PATH, 1400, 1000, \&quot;White\&quot;)\n\n# Pixel check for the saved PNG without using shell commands.\nfrom PIL import Image\nimg = Image.open(PNG_PATH).convert(\&quot;RGB\&quot;)\nnonwhite = 0\nunique = set()\nfor y in range(0, img.height, 5):\n    for x in range(0, img.width, 5):\n        px = img.getpixel((x, y))\n        unique.add(px)\n        if px != (255, 255, 255):\n            nonwhite += 1\n\nprint(\&quot;Hidden mesh objects:\&quot;, mesh_objects)\nprint(\&quot;Applied DisplayMode:\&quot;, obj.ViewObject.DisplayMode)\nprint(\&quot;PNG overwritten:\&quot;, PNG_PATH)\nprint(\&quot;Sampled non-white pixels:\&quot;, nonwhite)\nprint(\&quot;Sampled unique colors:\&quot;, len(unique))\nprint(\&quot;Solid validity:\&quot;, obj.Shape.ShapeType, obj.Shape.isValid(), len(obj.Shape.Solids))&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 3.6679 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: DisplayMode enumeration after view-provider proxy: [&#x27;Flat Lines&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;, &#x27;Points&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;]
+Hidden mesh objects: []
+Applied DisplayMode: Shaded
+PNG overwritten: /path/to/freecad-codex-dovetail-quick-release.png
+Sampled non-white pixels: 0
+Sampled unique colors: 1
+Solid validity: Solid True 1</pre><div class="strip"><figure><img loading="lazy" src="assert/image-9a8440d2bf6bfaab.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The enum is now populated and <code>Shaded</code> was accepted. The MCP screenshot display shows the corrected shaded view, but the immediate file pixel check ran before the image write had fully landed, so I’m doing a separate read-back check of the PNG now.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;from PIL import Image\nPNG_PATH = \&quot;/path/to/freeca</span></div><pre class="args">{
+  &quot;code&quot;: &quot;from PIL import Image\nPNG_PATH = \&quot;/path/to/freecad-codex-dovetail-quick-release.png\&quot;\nimg = Image.open(PNG_PATH).convert(\&quot;RGB\&quot;)\nnonwhite = 0\nunique = set()\nfor y in range(0, img.height, 5):\n    for x in range(0, img.width, 5):\n        px = img.getpixel((x, y))\n        unique.add(px)\n        if px != (255, 255, 255):\n            nonwhite += 1\nprint({\&quot;path\&quot;: PNG_PATH, \&quot;size\&quot;: img.size, \&quot;sampled_nonwhite_pixels\&quot;: nonwhite, \&quot;sampled_unique_colors\&quot;: len(unique)})&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 118.5496 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: {&#x27;path&#x27;: &#x27;/path/to/freecad-codex-dovetail-quick-release.png&#x27;, &#x27;size&#x27;: (1400, 1000), &#x27;sampled_nonwhite_pixels&#x27;: 0, &#x27;sampled_unique_colors&#x27;: 1}</pre><div class="strip"><figure><img loading="lazy" src="assert/image-8fc577c299cb421f.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p><code>saveImage()</code> is leaving the file white even though the active view itself is correctly shaded. I’m switching the overwrite to a Qt viewport grab from the same FreeCAD active view, which captures what the MCP view is showing instead of relying on <code>saveImage()</code>.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\ntry:\n    from PySide6 </span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\n\ntry:\n    from PySide6 import QtWidgets, QtGui, QtCore\n    pyside = \&quot;PySide6\&quot;\nexcept Exception:\n    from PySide2 import QtWidgets, QtGui, QtCore\n    pyside = \&quot;PySide2\&quot;\nfrom PIL import Image\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nPNG_PATH = \&quot;/path/to/freecad-codex-dovetail-quick-release.png\&quot;\ndoc = App.getDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nobj.ViewObject.Visibility = True\nobj.ViewObject.DisplayMode = \&quot;Shaded\&quot;\nobj.ViewObject.ShapeColor = (0.72, 0.74, 0.70, 0.0)\nif doc.getObject(\&quot;Sheet\&quot;):\n    doc.getObject(\&quot;Sheet\&quot;).ViewObject.Visibility = False\nfor candidate in doc.Objects:\n    type_id = getattr(candidate, \&quot;TypeId\&quot;, \&quot;\&quot;)\n    if type_id.startswith(\&quot;Mesh::\&quot;) or \&quot;Mesh\&quot; in type_id:\n        candidate.ViewObject.Visibility = False\n\ndoc.recompute()\nGui.updateGui()\nview = Gui.ActiveDocument.ActiveView\nview.viewIsometric()\nview.fitAll()\nGui.updateGui()\ntime.sleep(0.5)\n\nviewer = view.getViewer()\nmethods = [m for m in dir(viewer) if \&quot;grab\&quot; in m.lower() or \&quot;snap\&quot; in m.lower() or \&quot;image\&quot; in m.lower()]\nprint(\&quot;Qt binding:\&quot;, pyside)\nprint(\&quot;Viewer class:\&quot;, type(viewer).__name__)\nprint(\&quot;Viewer image/grab methods:\&quot;, methods)\n\nsaved = False\n# QWidget.grab() captures the rendered viewport contents.\ntry:\n    pixmap = viewer.grab()\n    if not pixmap.isNull():\n        pixmap = pixmap.scaled(1400, 1000, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)\n        canvas = QtGui.QPixmap(1400, 1000)\n        canvas.fill(QtGui.QColor(\&quot;white\&quot;))\n        painter = QtGui.QPainter(canvas)\n        painter.drawPixmap((1400 - pixmap.width()) // 2, (1000 - pixmap.height()) // 2, pixmap)\n        painter.end()\n        saved = canvas.save(PNG_PATH, \&quot;PNG\&quot;)\n        print(\&quot;viewer.grab save result:\&quot;, saved, \&quot;grab size:\&quot;, pixmap.width(), pixmap.height())\nexcept Exception as e:\n    print(\&quot;viewer.grab failed:\&quot;, repr(e))\n\nif not saved:\n    try:\n        screen = QtWidgets.QApplication.primaryScreen()\n        pixmap = screen.grabWindow(int(viewer.winId()))\n        if not pixmap.isNull():\n            pixmap = pixmap.scaled(1400, 1000, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)\n            canvas = QtGui.QPixmap(1400, 1000)\n            canvas.fill(QtGui.QColor(\&quot;white\&quot;))\n            painter = QtGui.QPainter(canvas)\n            painter.drawPixmap((1400 - pixmap.width()) // 2, (1000 - pixmap.height()) // 2, pixmap)\n            painter.end()\n            saved = canvas.save(PNG_PATH, \&quot;PNG\&quot;)\n            print(\&quot;screen.grabWindow save result:\&quot;, saved, \&quot;grab size:\&quot;, pixmap.width(), pixmap.height())\n    except Exception as e:\n        print(\&quot;screen.grabWindow failed:\&quot;, repr(e))\n\nimg = Image.open(PNG_PATH).convert(\&quot;RGB\&quot;)\nnonwhite = 0\nunique = set()\nfor y in range(0, img.height, 5):\n    for x in range(0, img.width, 5):\n        px = img.getpixel((x, y))\n        unique.add(px)\n        if px != (255, 255, 255):\n            nonwhite += 1\nprint(\&quot;DisplayMode enumeration:\&quot;, list(obj.ViewObject.getEnumerationsOfProperty(\&quot;DisplayMode\&quot;)))\nprint(\&quot;Applied DisplayMode:\&quot;, obj.ViewObject.DisplayMode)\nprint(\&quot;PNG overwritten:\&quot;, PNG_PATH)\nprint(\&quot;Saved:\&quot;, saved)\nprint(\&quot;Sampled non-white pixels:\&quot;, nonwhite)\nprint(\&quot;Sampled unique colors:\&quot;, len(unique))&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 338.0586 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: Qt binding: PySide6
+Viewer class: View3DInventorViewerPy
+Viewer image/grab methods: [&#x27;grabFramebuffer&#x27;]
+viewer.grab failed: AttributeError(&#x27;grab&#x27;)
+screen.grabWindow failed: AttributeError(&#x27;winId&#x27;)
+DisplayMode enumeration: [&#x27;Flat Lines&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;, &#x27;Points&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;]
+Applied DisplayMode: Shaded
+PNG overwritten: /path/to/freecad-codex-dovetail-quick-release.png
+Saved: False
+Sampled non-white pixels: 0
+Sampled unique colors: 1</pre><div class="strip"><figure><img loading="lazy" src="assert/image-ba0d7f43f74134d1.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>The viewport object exposes <code>grabFramebuffer()</code>, not QWidget <code>grab()</code>. I’m using that exact viewer method now and writing the framebuffer to the PNG path, then reading the file back for a non-white pixel count.</p></div></div>
+<div class="t"><div class="tline"><span class="tn">execute_code</span><span class="ts">{&quot;code&quot;:&quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\nfrom PIL import Image\n\n</span></div><pre class="args">{
+  &quot;code&quot;: &quot;import os, time\nimport FreeCAD as App\nimport FreeCADGui as Gui\nfrom PIL import Image\n\ntry:\n    from PySide6 import QtGui, QtCore\nexcept Exception:\n    from PySide2 import QtGui, QtCore\n\nDOC_NAME = \&quot;Codex_Dovetail_QuickRelease\&quot;\nPNG_PATH = \&quot;/path/to/freecad-codex-dovetail-quick-release.png\&quot;\ndoc = App.getDocument(DOC_NAME)\nGui.ActiveDocument = Gui.getDocument(doc.Name)\nobj = doc.getObject(\&quot;DovetailQuickRelease\&quot;)\nobj.ViewObject.DisplayMode = \&quot;Shaded\&quot;\nobj.ViewObject.Visibility = True\nif doc.getObject(\&quot;Sheet\&quot;):\n    doc.getObject(\&quot;Sheet\&quot;).ViewObject.Visibility = False\nfor candidate in doc.Objects:\n    type_id = getattr(candidate, \&quot;TypeId\&quot;, \&quot;\&quot;)\n    if type_id.startswith(\&quot;Mesh::\&quot;) or \&quot;Mesh\&quot; in type_id:\n        candidate.ViewObject.Visibility = False\n\ndoc.recompute()\nview = Gui.ActiveDocument.ActiveView\nview.viewIsometric()\nview.fitAll()\nGui.updateGui()\ntime.sleep(0.5)\nviewer = view.getViewer()\nfb = viewer.grabFramebuffer()\nprint(\&quot;Framebuffer type:\&quot;, type(fb).__name__)\nprint(\&quot;Framebuffer isNull:\&quot;, fb.isNull() if hasattr(fb, \&quot;isNull\&quot;) else None)\nprint(\&quot;Framebuffer size:\&quot;, fb.width() if hasattr(fb, \&quot;width\&quot;) else None, fb.height() if hasattr(fb, \&quot;height\&quot;) else None)\n\nsaved = False\nif isinstance(fb, QtGui.QImage):\n    scaled = fb.scaled(1400, 1000, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)\n    canvas = QtGui.QImage(1400, 1000, QtGui.QImage.Format_RGB32)\n    canvas.fill(QtGui.QColor(\&quot;white\&quot;))\n    painter = QtGui.QPainter(canvas)\n    painter.drawImage((1400 - scaled.width()) // 2, (1000 - scaled.height()) // 2, scaled)\n    painter.end()\n    saved = canvas.save(PNG_PATH, \&quot;PNG\&quot;)\nelif isinstance(fb, QtGui.QPixmap):\n    scaled = fb.scaled(1400, 1000, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)\n    canvas = QtGui.QPixmap(1400, 1000)\n    canvas.fill(QtGui.QColor(\&quot;white\&quot;))\n    painter = QtGui.QPainter(canvas)\n    painter.drawPixmap((1400 - scaled.width()) // 2, (1000 - scaled.height()) // 2, scaled)\n    painter.end()\n    saved = canvas.save(PNG_PATH, \&quot;PNG\&quot;)\nelse:\n    # Some FreeCAD builds return bytes-like data; fail loudly if so.\n    raise RuntimeError(f\&quot;Unsupported framebuffer result: {type(fb)!r}\&quot;)\n\nimg = Image.open(PNG_PATH).convert(\&quot;RGB\&quot;)\nnonwhite = 0\nunique = set()\nfor y in range(0, img.height, 5):\n    for x in range(0, img.width, 5):\n        px = img.getpixel((x, y))\n        unique.add(px)\n        if px != (255, 255, 255):\n            nonwhite += 1\nprint(\&quot;DisplayMode enumeration:\&quot;, list(obj.ViewObject.getEnumerationsOfProperty(\&quot;DisplayMode\&quot;)))\nprint(\&quot;Applied DisplayMode:\&quot;, obj.ViewObject.DisplayMode)\nprint(\&quot;PNG overwritten:\&quot;, PNG_PATH)\nprint(\&quot;Saved:\&quot;, saved)\nprint(\&quot;Sampled non-white pixels:\&quot;, nonwhite)\nprint(\&quot;Sampled unique colors:\&quot;, len(unique))&quot;,
+  &quot;timeout_ms&quot;: 120000
+}</pre><pre class="out">Wall time: 13.2285 seconds
+Output:
+Code executed successfully: Python code executed successfully.
+Output: Framebuffer type: QImage
+Framebuffer isNull: False
+Framebuffer size: 2408 1168
+DisplayMode enumeration: [&#x27;Flat Lines&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;, &#x27;Points&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;]
+Applied DisplayMode: Shaded
+PNG overwritten: /path/to/freecad-codex-dovetail-quick-release.png
+Saved: True
+Sampled non-white pixels: 38080
+Sampled unique colors: 269</pre><div class="strip"><figure><img loading="lazy" src="assert/image-ba0d7f43f74134d1.webp" alt="" onclick="lb(this.src)"></figure></div></div>
+<div class="a"><div class="who">Codex</div><div class="bubble"><p>Fixed the PNG at:</p>
+<p><a href="/path/to/freecad-codex-dovetail-quick-release.png" target="_blank" rel="noopener">freecad-codex-dovetail-quick-release.png</a></p>
+<p>What I did through the FreeCAD MCP path:</p>
+<ul><li>Checked document contents: only <code>Sheet</code> and <code>DovetailQuickRelease</code>; no <code>Mesh::</code> temporary objects existed.</li><li>Printed/probed the <code>DisplayMode</code> enumeration. The original custom view provider had an empty enum, so I attached a minimal view-provider proxy for the existing solid.</li><li>Reprinted enum after that: <code>[&#x27;Flat Lines&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;, &#x27;Points&#x27;, &#x27;Shaded&#x27;, &#x27;Wireframe&#x27;]</code>.</li><li>Set <code>DovetailQuickRelease.ViewObject.DisplayMode = &#x27;Shaded&#x27;</code>.</li><li>Re-shot the isometric view using the FreeCAD viewport framebuffer and overwrote the same PNG path.</li><li>Read the PNG back and verified it is non-empty: <code>38080</code> sampled non-white pixels, <code>269</code> sampled unique colors.</li></ul>
+<p>The new PNG is shaded and does not include the tessellation validation mesh lines.</p></div></div>
+</main>
+<div id="lb" onclick="this.classList.remove('on')"><img alt=""></div>
+<script>
+function lb(src){var d=document.getElementById('lb');d.querySelector('img').src=src;d.classList.add('on');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').classList.remove('on');});
+</script>
+</body></html>

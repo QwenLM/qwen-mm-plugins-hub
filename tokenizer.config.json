@@ -1,0 +1,7 @@
+{
+  "label": "Qwen3.5",
+  "modelId": "Qwen/Qwen3.5-9B",
+  "revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+  "sha256": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+  "engineVersion": "0.23.2"
+}

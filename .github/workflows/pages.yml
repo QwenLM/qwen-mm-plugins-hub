@@ -1,0 +1,69 @@
+name: Build and deploy plugin directory
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read content source
+        id: content-source
+        run: |
+          content_ref=$(node -p 'require("./source.config.json").ref')
+          echo "ref=$content_ref" >> "$GITHUB_OUTPUT"
+      - name: Read the configured upstream branch
+        uses: actions/checkout@v4
+        with:
+          repository: QwenLM/Qwen-MM-Plugins
+          ref: ${{ steps.content-source.outputs.ref }}
+          path: .sources/upstream
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install catalog export dependencies
+        run: pip install -e '.sources/upstream[omni-memory]' -r scripts/requirements-export.txt
+      - name: Build plugin catalog, cookbooks, docs, and token estimates
+        run: python -m scripts.build_content --source .sources/upstream
+      - name: Verify content build and token estimates offline
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - run: npm ci
+      - run: npm test
+      - uses: actions/configure-pages@v5
+      - name: Export the static website
+        run: npm run build
+        env:
+          SITE_BASE_PATH: /qwen-mm-plugins-hub
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/client
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
