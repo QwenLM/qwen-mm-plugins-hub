@@ -20,10 +20,17 @@ from urllib.parse import quote
 import yaml
 
 from .token_estimates import annotate_catalog
+from .source_state import (
+    build_identity,
+    git,
+    local_tag_refs,
+    read_config,
+    validate_source,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_REF = json.loads((ROOT / "source.config.json").read_text())["ref"]
-REPOSITORY = "https://github.com/QwenLM/Qwen-MM-Plugins"
+SOURCE_REF = read_config()["ref"]
+REPOSITORY = "https://github.com/" + read_config()["repository"]
 HUB_REPOSITORY = "https://github.com/QwenLM/qwen-mm-plugins-hub"
 DEFAULT_CONTRIBUTORS = ["QwenLM"]
 
@@ -86,8 +93,25 @@ def check_cases(root: Path) -> None:
                 )
 
 
-def git(source: Path, *args: str) -> str:
-    return subprocess.check_output(["git", "-C", str(source), *args], text=True).strip()
+def published_release(source: Path, tag: str, source_ref: str) -> bool:
+    if source_ref != "main" or "refs/tags/" + tag not in local_tag_refs(source):
+        return False
+    return (
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(source),
+                "merge-base",
+                "--is-ancestor",
+                "refs/tags/" + tag,
+                "HEAD",
+            ],
+            capture_output=True,
+            check=False,
+        ).returncode
+        == 0
+    )
 
 
 def worker(source: Path, cap: str) -> dict:
@@ -214,7 +238,7 @@ def build_content(
                     "tag": release_tag,
                     "url": REPOSITORY + "/tree/" + release_tag,
                 }
-                if source_ref == "main"
+                if published_release(source, release_tag, source_ref)
                 else None,
                 "title": info.get("title", cap.replace("-", " ").title()),
                 "category": info.get("category", "Other"),
@@ -303,21 +327,32 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--worker")
+    parser.add_argument("--source-ref", default=SOURCE_REF)
+    parser.add_argument("--expected-commit")
     args = parser.parse_args()
     if args.worker:
         print(json.dumps(worker(args.source.resolve(), args.worker)))
         return
-    if git(args.source, "rev-parse", "HEAD") != git(
-        args.source, "rev-parse", f"refs/heads/{SOURCE_REF}"
-    ):
-        raise ValueError(
-            f"Source checkout must match the configured branch: {SOURCE_REF}"
-        )
+    validate_source(args.source, args.source_ref, args.expected_commit)
     check_cases(ROOT / "public/cases")
-    catalog, cookbooks = build_content(args.source.resolve())
+    catalog, cookbooks = build_content(
+        args.source.resolve(), source_ref=args.source_ref
+    )
     catalog = annotate_catalog(catalog)
-    docs = build_docs(args.source.resolve())
-    for name, data in (("catalog", catalog), ("cookbooks", cookbooks), ("docs", docs)):
+    docs = build_docs(args.source.resolve(), source_ref=args.source_ref)
+    identity = build_identity(
+        git(ROOT, "rev-parse", "HEAD"),
+        docs["commit"],
+        args.source_ref,
+        local_tag_refs(args.source),
+    )
+    (ROOT / "data").mkdir(exist_ok=True)
+    for name, data in (
+        ("catalog", catalog),
+        ("cookbooks", cookbooks),
+        ("docs", docs),
+        ("build-info", identity),
+    ):
         (ROOT / "data" / f"{name}.json").write_text(
             json.dumps(data, ensure_ascii=False, indent=2) + "\n"
         )

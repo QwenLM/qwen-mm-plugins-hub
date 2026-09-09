@@ -1,7 +1,7 @@
 import Link from '@/components/static-link';
 import Image from 'next/image';
 import { ArrowUpRight, CodeXml, Search, BookOpen } from 'lucide-react';
-import source from '@/source.config.json';
+import source from '@/data/docs.json';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 export function SiteHeader({

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import {
   filterPlugins,
@@ -13,13 +14,31 @@ const catalog = JSON.parse(
   readFileSync(new URL('../data/catalog.json', import.meta.url), 'utf8'),
 );
 const source = JSON.parse(
-  readFileSync(new URL('../source.config.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../data/docs.json', import.meta.url), 'utf8'),
 );
 const plugins = catalog.plugins.map((p) => ({
   ...p,
   toolCount: p.tools.length,
   toolNames: p.tools.map((t) => t.name),
 }));
+
+test('generated content stays out of Git and records one build identity', () => {
+  const root = new URL('..', import.meta.url);
+  assert.equal(
+    execFileSync('git', ['ls-files', '--', 'data'], {
+      cwd: root,
+      encoding: 'utf8',
+    }).trim(),
+    '',
+  );
+  const identity = JSON.parse(
+    readFileSync(new URL('../data/build-info.json', import.meta.url), 'utf8'),
+  );
+  assert.equal(identity.sourceRef, source.ref);
+  assert.equal(identity.sourceCommit, source.commit);
+  assert.match(identity.hubCommit, /^[a-f0-9]{40}$/);
+  assert.match(identity.tagDigest, /^[a-f0-9]{64}$/);
+});
 
 test('Skill previews show 50 source lines without modifying the full text', () => {
   const text =
@@ -74,7 +93,8 @@ test('Skill file hierarchy preserves nested files and immutable source links', (
 
 test('development snapshots do not advertise unreleased tags, and requirements retain install hints', () => {
   for (const p of plugins) {
-    if (source.ref === 'main') {
+    if (p.release) {
+      assert.equal(source.ref, 'main');
       assert.equal(
         p.release.tag,
         `qwen-mm-plugins-${p.id}-v${p.release.version}`,

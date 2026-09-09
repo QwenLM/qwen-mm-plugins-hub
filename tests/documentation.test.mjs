@@ -110,6 +110,18 @@ test('Chinese and code references use immutable source files and directories', (
     assert.equal(resolve(external), external);
 });
 
+test('PR and slash-containing branch links preserve the selected preview', () => {
+  for (const ref of ['pull/123/head', 'feature/docs']) {
+    const preview = { ...docs, ref };
+    assert.equal(
+      documentationUrl(`${docs.repository}/blob/${ref}/docs/en/configuration.md`, '', preview),
+      '/docs/configuration/',
+    );
+    const unrelated = `${docs.repository}/blob/${ref}-other/docs/en/configuration.md`;
+    assert.equal(documentationUrl(unrelated, '', preview), unrelated);
+  }
+});
+
 test('all current cookbook documentation links map to imported pages', () => {
   let count = 0;
   for (const book of Object.values(books)) {

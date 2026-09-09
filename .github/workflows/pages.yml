@@ -3,6 +3,8 @@ name: Build and deploy plugin directory
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '17,47 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,8 +15,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      changed: ${{ steps.upstream.outputs.changed }}
+      source_sha: ${{ steps.upstream.outputs.source_sha }}
+      source_ref: ${{ steps.upstream.outputs.source_ref }}
+      source_repository: ${{ steps.upstream.outputs.source_repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compare upstream with the last successful deployment
+        id: upstream
+        env:
+          REFRESH_EVENT: ${{ github.event_name }}
+        run: |
+          force=()
+          if [ "$REFRESH_EVENT" != schedule ]; then force=(--force); fi
+          python3 -m scripts.check_upstream --published-url https://qwenlm.github.io/qwen-mm-plugins-hub/ "${force[@]}"
+  build:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pages: read
@@ -22,17 +47,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Read content source
-        id: content-source
-        run: |
-          content_ref=$(node -p 'require("./source.config.json").ref')
-          echo "ref=$content_ref" >> "$GITHUB_OUTPUT"
-      - name: Read the configured upstream branch
+      - name: Read the exact upstream snapshot selected by the check
         uses: actions/checkout@v4
         with:
-          repository: QwenLM/Qwen-MM-Plugins
-          ref: ${{ steps.content-source.outputs.ref }}
+          repository: ${{ needs.check.outputs.source_repository }}
+          ref: ${{ needs.check.outputs.source_sha }}
           path: .sources/upstream
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
@@ -43,17 +64,20 @@ jobs:
           cache: npm
       - name: Install catalog export dependencies
         run: pip install -e '.sources/upstream[omni-memory]' -r scripts/requirements-export.txt
-      - name: Build plugin catalog, cookbooks, docs, and token estimates
-        run: python -m scripts.build_content --source .sources/upstream
-      - name: Verify content build and token estimates offline
-        run: python -m unittest discover -s tests -p 'test_*.py'
       - run: npm ci
-      - run: npm test
       - uses: actions/configure-pages@v5
       - name: Export the static website
         run: npm run build
         env:
           SITE_BASE_PATH: /qwen-mm-plugins-hub
+          HUB_SOURCE_DIR: ${{ github.workspace }}/.sources/upstream
+          HUB_SOURCE_REF: ${{ needs.check.outputs.source_ref }}
+          HUB_SOURCE_COMMIT: ${{ needs.check.outputs.source_sha }}
+          HUB_PYTHON: python
+      - name: Verify content build and token estimates offline
+        run: |
+          npm test
+          python -m unittest discover -s tests -p 'test_*.py'
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist/client
