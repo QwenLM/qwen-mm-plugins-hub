@@ -40,7 +40,8 @@ to use your own plugin checkout or Python environment.
 For a new plugin, both its source and Hub cookbook must be available before the build runs.
 Stable publishing waits for the release tags referenced by the plugin catalog. Failed builds leave
 the public site unchanged. See [Hub automation](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/#publish-and-refresh)
-for immediate-refresh setup and source-PR build comments with downloadable preview packages.
+for immediate-refresh setup and source-PR build checks. PR results appear in GitHub Checks;
+there is no comment bot or preview hosting.
 Publishing the website does not publish plugin releases.
 
 Maintenance constraints and verification commands are in [AGENTS.md](AGENTS.md). See [third-party notices](THIRD_PARTY_NOTICES.md) for licenses and content provenance.

@@ -92,8 +92,8 @@ also compares upstream branch/tags with the last successful deployment every 30 
 Only changed inputs trigger scheduled builds. The gate waits for all catalog release tags;
 failed builds leave deployed metadata unchanged so the next check retries. An optional
 plugin-side dispatch accelerates refreshes; its setup belongs in the upstream Hub guide.
-Ensure every plugin has a cookbook. PR previews are static artifacts, not deployments. Never
-execute PR code or read artifact payloads in the privileged PR-comment job.
+Ensure every plugin has a cookbook. PR builds report through GitHub Checks only; do not add
+comment bots, downloadable previews, or preview deployments. Keep PR jobs read-only and secret-free.
 Publishing the Hub must not merge plugin branches, publish or move release tags, or point
 the stable installer at an unpublished tag. Keep `.openai/hosting.json` tied to the existing
 Site; never create another Site to refresh this one.
