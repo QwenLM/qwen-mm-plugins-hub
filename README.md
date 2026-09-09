@@ -2,19 +2,19 @@
 
 Documentation, tool references, and cookbooks for Qwen MM Plugins.
 
-[Browse the Hub](https://jjjymmm.github.io/qwen-mm-plugins-hub/) · [Install plugins](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/) · [Plugin source](https://github.com/QwenLM/Qwen-MM-Plugins)
+[Browse the Hub](https://qwenlm.github.io/qwen-mm-plugins-hub/) · [Install plugins](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/) · [Plugin source](https://github.com/QwenLM/Qwen-MM-Plugins)
 
 ## Use the plugins
 
-Open the [Hub](https://jjjymmm.github.io/qwen-mm-plugins-hub/), choose a plugin, and follow its **Install** tab. Its **Cookbook** has workflows and examples. You do not need to run this repository.
+Open the [Hub](https://qwenlm.github.io/qwen-mm-plugins-hub/), choose a plugin, and follow its **Install** tab. Its **Cookbook** has workflows and examples. You do not need to run this repository.
 
 ## Add or update a plugin
 
-1. **In [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins):** implement the plugin, write its Skill and tool docstrings, and register it using [Add a new plugin](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/how-to-add-new-capability/). Update existing plugins in the same place.
+1. **In [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins):** implement the plugin, write its Skill and tool docstrings, and register it using [Add a new plugin](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/how-to-add-new-capability/). Update existing plugins in the same place.
 2. **In this repository:** add or edit `content/cookbooks/<cap>/usage.md`. Put example files in `public/cases/<cap>/<case>/assert/` and link them from the cookbook. Replace `<cap>` with the plugin's capability ID, such as `core`.
 
 The Hub reads plugin descriptions, Skills, tools, and English guides automatically. **Do not edit `data/*.json`.**
-[Hub authoring](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/hub/) has a copyable cookbook template, media examples, and local content-refresh instructions.
+[Hub authoring](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/) has a copyable cookbook template, media examples, and local content-refresh instructions.
 
 ## Work on the website locally
 
@@ -28,19 +28,14 @@ npm run dev
 ```
 
 Open the URL printed by the server. This preview uses the committed content snapshot.
-If you changed a cookbook or plugin source, [regenerate the content first](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/hub/#validate-locally); that step also needs Python and a plugin checkout.
+If you changed a cookbook or plugin source, [regenerate the content first](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/#validate-locally); that step also needs Python and a plugin checkout.
 
 ## Publish your changes
-
-The source now lives in the official QwenLM repository. The public links above still
-point to the existing site until an administrator enables GitHub Pages in this
-repository with **Settings → Pages → Source: GitHub Actions**. After its first
-successful deployment, update the public links to the URL reported by that workflow.
 
 - **Hub changes:** merge your PR or push to this repository's `main`; GitHub Actions builds and publishes the website automatically.
 - **Plugin-source changes only:** first push to the branch selected in [source.config.json](source.config.json), currently `support_hub`. Then open [Build and deploy plugin directory](https://github.com/QwenLM/qwen-mm-plugins-hub/actions/workflows/pages.yml) → **Run workflow** on Hub `main`.
 
 For a new plugin, both its source and Hub cookbook must be available before the build runs.
-Wait for the workflow to pass, then check [the public Hub](https://jjjymmm.github.io/qwen-mm-plugins-hub/). Publishing the website does not publish plugin releases.
+Wait for the workflow to pass, then check [the public Hub](https://qwenlm.github.io/qwen-mm-plugins-hub/). Publishing the website does not publish plugin releases.
 
 Maintenance constraints and verification commands are in [AGENTS.md](AGENTS.md). See [third-party notices](THIRD_PARTY_NOTICES.md) for licenses and content provenance.

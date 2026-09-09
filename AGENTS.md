@@ -2,7 +2,7 @@
 
 Keep this file focused on maintenance constraints. Reader orientation belongs in
 [README.md](README.md); tutorials and cookbook examples belong in the existing
-[Hub authoring guide](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/hub/).
+[Hub authoring guide](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/).
 
 ## Content ownership
 
@@ -29,7 +29,7 @@ the exporter or workflow. Use a dedicated, clean plugin checkout with committed 
 whose HEAD matches that branch. Source-file links pin that commit; uncommitted guides and
 new untracked Skill files will not be exported correctly.
 
-After the [documented Python setup](https://jjjymmm.github.io/qwen-mm-plugins-hub/docs/hub/#validate-locally),
+After the [documented Python setup](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/#validate-locally),
 run from the Hub root with the chosen checkout path:
 
 ```bash
