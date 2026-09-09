@@ -6,7 +6,11 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "content": "node scripts/content.mjs",
+    "content:sync": "node scripts/content.mjs --refresh",
+    "predev": "npm run content",
     "dev": "vinext dev",
+    "prebuild": "npm run content",
     "build": "tsc --noEmit && vinext build && node scripts/prepare-static.mjs",
     "test": "node --test tests/*.test.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",

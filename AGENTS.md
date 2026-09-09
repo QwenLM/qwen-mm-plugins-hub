@@ -19,8 +19,8 @@ Keep this file focused on maintenance constraints. Reader orientation belongs in
 - Cookbook YAML owns titles, categories, tags, order, and contributors. Contributors are
   GitHub handles, defaulting to QwenLM; profiles and avatars are derived from them. Prefer
   one or two useful tags. Do not introduce a separate contributor/logo inventory.
-- `data/catalog.json`, `data/cookbooks.json`, and `data/docs.json` are committed generated
-  snapshots, not authoring sources. Frontend-only edits can use them without Python.
+- `data/*.json` is ignored generated output, never an authoring source or a committed copy
+  of upstream content. `data/build-info.json` records the exact deployed inputs for refresh checks.
 
 ## Regenerate content
 
@@ -29,15 +29,19 @@ the exporter or workflow. Use a dedicated, clean plugin checkout with committed 
 whose HEAD matches that branch. Source-file links pin that commit; uncommitted guides and
 new untracked Skill files will not be exported correctly.
 
-After the [documented Python setup](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/hub/#validate-locally),
-run from the Hub root with the chosen checkout path:
+`npm run dev` and `npm run build` regenerate content automatically. By default, `uv` provides
+Python and exporter dependencies, and `.sources/upstream` caches the configured source branch.
+`npm run content:sync` refreshes that managed cache. An explicit `HUB_SOURCE_DIR` is read-only;
+fetch and commit that checkout yourself. For example:
 
 ```bash
-.venv/bin/python -m scripts.build_content --source /path/to/plugin-checkout
+HUB_SOURCE_DIR=/path/to/plugin-checkout HUB_SOURCE_REF=my-branch npm run content
 ```
 
-Regenerate after changing plugin source, cookbooks, or imported docs. `npm run dev` and
-`npm run build` do not run the Python exporter. Review generated diffs before committing.
+Use `HUB_PYTHON` only for an existing environment with the documented exporter dependencies.
+CI pins `HUB_SOURCE_COMMIT` to the checked-out SHA, including detached PR heads. Keep preview
+source labels and links tied to that SHA. `npm test` uses existing generated data and stays offline;
+run content generation or a build first on a fresh clone.
 The exporter imports registries in isolated processes but never runs handlers, startup
 hooks, or MCP servers. Preserve that boundary; content builds must not need credentials
 or invoke paid providers.
@@ -69,8 +73,8 @@ or invoke paid providers.
 For frontend or generated-content changes:
 
 ```bash
-npm test
 SITE_BASE_PATH=/qwen-mm-plugins-hub npm run build
+npm test
 ```
 
 For exporter or content changes, also run in the configured Python environment:
@@ -83,9 +87,13 @@ Root-domain hosting requires a separate build with `SITE_BASE_PATH` unset. Never
 prefixed artifact for a root-domain deployment. Keep the final artifact matched to its host.
 For documentation-only edits, check links, command accuracy, and `git diff --check`.
 
-Hub `main` pushes run `.github/workflows/pages.yml`; plugin-repository pushes alone do not.
-For upstream-only changes, dispatch the workflow on Hub `main`. Ensure the configured
-remote source branch contains the changes and every plugin has a cookbook before dispatch.
+Hub `main` pushes and manual dispatches run `.github/workflows/pages.yml`; its scheduled check
+also compares upstream branch/tags with the last successful deployment every 30 minutes.
+Only changed inputs trigger scheduled builds. The gate waits for all catalog release tags;
+failed builds leave deployed metadata unchanged so the next check retries. An optional
+plugin-side dispatch accelerates refreshes; its setup belongs in the upstream Hub guide.
+Ensure every plugin has a cookbook. PR builds report through GitHub Checks only; do not add
+comment bots, downloadable previews, or preview deployments. Keep PR jobs read-only and secret-free.
 Publishing the Hub must not merge plugin branches, publish or move release tags, or point
 the stable installer at an unpublished tag. Keep `.openai/hosting.json` tied to the existing
 Site; never create another Site to refresh this one.

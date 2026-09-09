@@ -132,7 +132,14 @@ class ContentBuildTests(unittest.TestCase):
         self.plugin("new-plugin")
         self.commit(["new-plugin"])
         self.write(self.books / "new-plugin/usage.md", "# Cookbook\n")
-        for ref in ("main", "support_hub"):
+        for ref in ("main", "support_hub", "pull/123/head"):
+            catalog, _ = build_content(self.source, self.books, source_ref=ref)
+            self.assertIsNone(catalog["plugins"][0]["release"])
+        subprocess.run(
+            ["git", "-C", str(self.source), "tag", "qwen-mm-plugins-new-plugin-v1.0.0"],
+            check=True,
+        )
+        for ref in ("main", "support_hub", "pull/123/head"):
             with self.subTest(ref=ref):
                 catalog, _ = build_content(self.source, self.books, source_ref=ref)
                 plugin = catalog["plugins"][0]

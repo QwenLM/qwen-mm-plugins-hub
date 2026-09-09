@@ -32,13 +32,15 @@ export function documentationUrl(
     if (resolved.origin !== source.origin) return url;
     const prefix = `${source.pathname}/`;
     if (!path.startsWith(prefix)) return url;
-    const [kind, ref, ...segments] = path.slice(prefix.length).split('/');
-    if (
-      !['blob', 'tree'].includes(kind) ||
-      !['main', docs.ref, docs.commit].includes(ref)
-    )
-      return url;
-    path = '/' + segments.join('/');
+    const [kind, ...segments] = path.slice(prefix.length).split('/');
+    if (!['blob', 'tree'].includes(kind)) return url;
+    const remainder = segments.join('/');
+    // Git refs (including pull/123/head) may contain more than one path segment.
+    const ref = [docs.ref, docs.commit, 'main']
+      .sort((a, b) => b.length - a.length)
+      .find((candidate) => remainder.startsWith(candidate + '/'));
+    if (!ref) return url;
+    path = '/' + remainder.slice(ref.length + 1);
     // Only imported documents redirect absolute repository links into the Hub.
     if (!docs.pages.some((page) => '/' + page.path === path)) return url;
   }

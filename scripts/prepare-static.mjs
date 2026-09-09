@@ -14,9 +14,15 @@ const { plugins, contributors } = JSON.parse(
 );
 const cookbooks = JSON.parse(await readFile('data/cookbooks.json', 'utf8'));
 const docs = JSON.parse(await readFile('data/docs.json', 'utf8'));
-const source = JSON.parse(await readFile('source.config.json', 'utf8'));
-if (docs.ref !== source.ref || plugins.some((p) => p.channel !== source.ref))
-  throw new Error('Generated content must match the configured source branch');
+const source = { ref: docs.ref };
+const identity = JSON.parse(await readFile('data/build-info.json', 'utf8'));
+if (
+  identity.sourceRef !== docs.ref ||
+  identity.sourceCommit !== docs.commit ||
+  plugins.some((p) => p.channel !== docs.ref || p.source.commit !== docs.commit)
+)
+  throw new Error('Generated content must describe one source snapshot');
+await copyFile('data/build-info.json', path.join(root, 'build-info.json'));
 const documentationRoute = (page) =>
   page.slug === 'installation' ? 'docs' : `docs/${page.slug}`;
 // Vinext's trailingSlash export currently redirects its internal RSC requests.
@@ -77,17 +83,15 @@ for (const file of [
     throw new Error(`Theme control or pre-paint theme script missing: ${file}`);
   if (!html.includes(`<span>${source.ref}</span>`))
     throw new Error(`Source branch badge missing: ${file}`);
-  if (source.ref !== 'main') {
-    for (const p of plugins) {
-      if (
-        html.includes(
-          `href="${p.source.repository}/tree/qwen-mm-plugins-${p.id}-v${p.version}"`,
-        )
+  for (const p of plugins.filter((plugin) => !plugin.release)) {
+    if (
+      html.includes(
+        `href="${p.source.repository}/tree/qwen-mm-plugins-${p.id}-v${p.version}"`,
       )
-        throw new Error(
-          `Branch preview links to a prepared release tag: ${file}`,
-        );
-    }
+    )
+      throw new Error(
+        `Snapshot links to an unpublished release tag: ${file}`,
+      );
   }
   if (!html.includes(`action="${prefix}/"`))
     throw new Error(`Documentation search has the wrong destination: ${file}`);
