@@ -171,4 +171,33 @@ A `--namespace` memory lives at `<video-directory>/<namespace>/` by default and 
 
 ## Cases
 
-Worked examples to follow.
+### Turn a 30-minute sitcom episode into an interactive viewing companion (Claude Code)
+
+The prompt that produced the demo:
+
+```
+Use qwen-mm-plugins-omni-memory to build an audio-visual memory for
+/data/Friends/S01E01.mp4, then create a viewing companion from that memory.
+
+Output it as HTML with a modern, clean design that matches the sitcom's tone.
+Include a plot summary, key characters and their backgrounds, relationships,
+and personality traits. Interpret the story using dialogue, vocal tone, facial
+expressions, and sound cues. Recommend 3-5 segments worth watching closely,
+with start/end timestamps, reasons for each recommendation, and details to
+look out for. Base all analysis solely on this episode.
+```
+
+Given the ~30-minute pilot episode of *Friends* (S01E01 — "The One Where Monica
+Gets a Roommate"), the agent builds omni memory for the whole episode (71 clips,
+48 semantic facts), then walks the memory through `get_memory_overview`
+→ `plan_and_search` → `get_person_dialogue` → `search_dialogue` → `get_timeline`
+→ `get_moment` to produce a self-contained **interactive viewing companion**. The
+memory tracks everyone who appears, and the agent reasons over it to single out
+the **6 core characters** the episode is built around.
+
+The entire report is generated from the memory alone —
+no external knowledge is injected. The visual design (colour palette, typography) is the agent's own
+reading of the show's identity from the memory's scene-environment and
+visual-caption records.
+
+[Interactive viewing companion](../../../public/cases/omni-memory/friends-s1e1-companion/index.html)
