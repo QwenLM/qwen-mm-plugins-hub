@@ -5,7 +5,7 @@ tags: [video, audio]
 order: 11
 ---
 
-# Cookbook — Omni ChatCut
+# Cookbook — Qwen-MM-Plugins Omni ChatCut
 
 Choose a workflow, provide readable local source media and a project directory, and tell the agent
 whether you want analysis, a reviewed plan, or a finished video.
