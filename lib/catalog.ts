@@ -79,17 +79,34 @@ export function skillExcerpt(text: string, limit = 50) {
     truncated: lines.length > limit,
   };
 }
-export type Plugin = Omit<PluginSummary, 'toolCount' | 'toolNames'> & {
-  skill: {
-    name: string;
-    description: string;
-    markdown: string;
-    raw: string;
+export type Skill = {
+  name: string;
+  description: string;
+  markdown: string;
+  raw: string;
+  path: string;
+  sourceUrl: string;
+  prerequisites: string;
+  tokenEstimate: { full: number; metadata: number };
+};
+
+export function skillAnchor(name: string): string {
+  return `skill-entry-${name}`;
+}
+
+export function skillHeadingPrefix(name: string, skillCount: number): string {
+  return skillCount === 1 ? 'skill-section-' : `${skillAnchor(name)}-section-`;
+}
+
+export type Plugin = Omit<
+  PluginSummary,
+  'toolCount' | 'toolNames' | 'skillCount' | 'skillNames'
+> & {
+  skills: Skill[];
+  skillBundle: {
     path: string;
-    sourceUrl: string;
     directoryUrl: string;
     files: SkillFile[];
-    prerequisites: string;
   };
   tools: Tool[];
   moduleDocstring: string;
@@ -118,6 +135,8 @@ export type PluginSummary = {
   channel: string;
   toolCount: number;
   toolNames: string[];
+  skillCount: number;
+  skillNames: string[];
   tokenEstimate: {
     skillFull: number;
     skillMetadata: number;
@@ -142,7 +161,14 @@ export function filterPlugins(
 ) {
   const words = query.toLocaleLowerCase().trim().split(/\s+/).filter(Boolean);
   return plugins.filter((p) => {
-    const text = [p.name, p.title, p.description, ...p.tags, ...p.toolNames]
+    const text = [
+      p.name,
+      p.title,
+      p.description,
+      ...p.tags,
+      ...p.toolNames,
+      ...p.skillNames,
+    ]
       .join(' ')
       .toLocaleLowerCase();
     return (

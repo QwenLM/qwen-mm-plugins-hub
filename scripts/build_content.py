@@ -114,16 +114,112 @@ def published_release(source: Path, tag: str, source_ref: str) -> bool:
     )
 
 
+def read_skills(source: Path, folder: Path, manifest: dict) -> tuple[list[dict], dict]:
+    """Discover committed Skill entries inside the manifest's declared directories.
+
+    A directory with SKILL.md is one Skill; otherwise it is a collection. Stop
+    below each entry so bundled example SKILL.md files do not become registrations.
+    Explicitly declared child directories remain independently discoverable.
+    """
+    declared = manifest.get("skills", "./skill")
+    roots = [declared] if isinstance(declared, str) else declared
+    if not isinstance(roots, list) or not roots:
+        raise ValueError(
+            f"Expected Skill directories in {folder}/.codex-plugin/plugin.json"
+        )
+    directories = []
+    for root in roots:
+        if (
+            not isinstance(root, str)
+            or not root
+            or Path(root).is_absolute()
+            or ".." in Path(root).parts
+        ):
+            raise ValueError(f"Invalid Skill directory {root!r}: {folder}")
+        directory = folder / root
+        if (
+            not directory.resolve().is_relative_to(folder.resolve())
+            or not directory.is_dir()
+        ):
+            raise ValueError(
+                f"Skill directory must exist inside the plugin: {directory}"
+            )
+        directories.append(directory)
+    files = sorted(
+        filter(
+            None,
+            git(
+                source,
+                "ls-tree",
+                "-rz",
+                "--name-only",
+                "HEAD",
+                "--",
+                *(
+                    directory.relative_to(source).as_posix() + "/"
+                    for directory in directories
+                ),
+            ).split("\0"),
+        )
+    )
+    candidates = [source / path for path in files if Path(path).name == "SKILL.md"]
+    paths = []
+    for directory in directories:
+        entries = []
+        for path in sorted(candidates, key=lambda p: (len(p.parts), p.as_posix())):
+            if path.is_relative_to(directory) and not any(
+                entry.parent in path.parents for entry in entries
+            ):
+                entries.append(path)
+        if not entries:
+            raise ValueError(
+                f"No committed SKILL.md in declared directory: {directory}"
+            )
+        paths.extend(path for path in entries if path not in paths)
+    skills, names = [], set()
+    for path in paths:
+        if path.is_symlink() or not path.resolve().is_relative_to(folder.resolve()):
+            raise ValueError(f"Skill entry must be a file inside the plugin: {path}")
+        raw = path.read_text()
+        if not raw.startswith("---\n"):
+            raise ValueError(f"Missing Skill front matter: {path}")
+        front, body = read_markdown(path)
+        name, description = front.get("name"), front.get("description", "")
+        if (
+            not isinstance(name, str)
+            or not name.strip()
+            or not isinstance(description, str)
+        ):
+            raise ValueError(f"Invalid Skill name or description: {path}")
+        if name in names:
+            raise ValueError(f"Duplicate Skill name {name!r}: {path}")
+        names.add(name)
+        markdown = body.strip()
+        prerequisite = re.search(
+            r"^## Prerequisites?\b[^\n]*\n.*?(?=^## |\Z)", markdown, re.M | re.S
+        )
+        skills.append(
+            {
+                "name": name,
+                "description": description,
+                "markdown": markdown,
+                "prerequisites": prerequisite.group().strip() if prerequisite else "",
+                "raw": raw,
+                "path": path.relative_to(source).as_posix(),
+            }
+        )
+    bundle_root = (
+        Path(os.path.commonpath(directories)).relative_to(source).as_posix() + "/"
+    )
+    return skills, {"path": bundle_root, "files": files}
+
+
 def worker(source: Path, cap: str) -> dict:
     """Read exactly the definitions advertised by the MCP registry."""
     folder = source / "src" / "capabilities" / cap
     sys.path[:0] = [str(source / "src"), str(folder)]
     manifest = json.loads((folder / ".codex-plugin/plugin.json").read_text())
-    skill_path = folder / "skill/SKILL.md"
-    raw = skill_path.read_text()
-    if not raw.startswith("---\n"):
-        raise ValueError(f"Missing Skill front matter: {cap}")
-    front, body = read_markdown(skill_path)
+    skills, skill_bundle = read_skills(source, folder, manifest)
     tools, requirements = [], []
     module_doc = ""
     if manifest.get("mcpServers"):
@@ -144,24 +240,14 @@ def worker(source: Path, cap: str) -> dict:
                     "sourceLine": inspect.getsourcelines(spec.handle)[1],
                 }
             )
-    markdown = body.strip()
-    prerequisite = re.search(
-        r"^## Prerequisites?\b[^\n]*\n.*?(?=^## |\Z)", markdown, re.M | re.S
-    )
     return {
         "name": manifest["name"],
         "version": manifest["version"],
         "description": manifest["description"],
         "moduleDocstring": module_doc,
         "requirements": requirements,
-        "skill": {
-            "name": front["name"],
-            "description": front.get("description", ""),
-            "markdown": markdown,
-            "prerequisites": prerequisite.group().strip() if prerequisite else "",
-            "raw": raw,
-            "path": skill_path.relative_to(source).as_posix(),
-        },
+        "skills": skills,
+        "skillBundle": skill_bundle,
         "tools": sorted(tools, key=lambda t: t["name"]),
         "kind": "Skill + MCP" if manifest.get("mcpServers") else "Skill only",
     }
@@ -210,10 +296,7 @@ def build_content(
             cwd=ROOT,
         )
         data = json.loads(result)
-        skill_folder = f"src/capabilities/{cap}/skill/"
-        skill_files = git(
-            source, "ls-tree", "-rz", "--name-only", "HEAD", "--", skill_folder
-        ).split("\0")
+        skill_folder = data["skillBundle"]["path"]
         release_tag = release_catalog["tag_format"].format(
             cap=cap, version=release_version
         )
@@ -253,18 +336,20 @@ def build_content(
                     "url": source_url,
                     "path": f"src/capabilities/{cap}",
                 },
-                "skill": {
-                    **data["skill"],
-                    "sourceUrl": source_url + data["skill"]["path"],
+                "skills": [
+                    {**skill, "sourceUrl": source_url + quote(skill["path"], safe="/")}
+                    for skill in data["skills"]
+                ],
+                "skillBundle": {
+                    "path": skill_folder,
                     "directoryUrl": source_url.replace("/blob/", "/tree/")
-                    + skill_folder,
+                    + quote(skill_folder, safe="/"),
                     "files": [
                         {
                             "path": path.removeprefix(skill_folder),
                             "sourceUrl": source_url + quote(path, safe="/"),
                         }
-                        for path in skill_files
-                        if path
+                        for path in data["skillBundle"]["files"]
                     ],
                 },
                 "tools": [

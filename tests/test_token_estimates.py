@@ -28,7 +28,7 @@ class CountingContractTests(unittest.TestCase):
         }
         raw = "---\nname: test\ndescription: 测试\n---\n\n" + "line\n" * 80
         plugin = {
-            "skill": {"raw": raw, "name": "test", "description": "测试"},
+            "skills": [{"raw": raw, "name": "test", "description": "测试"}],
             "tools": [deepcopy(tool), deepcopy(tool)],
         }
         estimate_plugin(plugin, len)
@@ -53,11 +53,55 @@ class CountingContractTests(unittest.TestCase):
 
     def test_skill_only_has_zero_tool_tokens(self):
         plugin = {
-            "skill": {"raw": "Skill", "name": "test", "description": ""},
+            "skills": [{"raw": "Skill", "name": "test", "description": ""}],
             "tools": [],
         }
         estimate_plugin(plugin, len)
         self.assertEqual(plugin["tokenEstimate"]["toolsTotal"], 0)
+
+    def test_multiple_skills_sum_individual_counts_without_repeating_tools(self):
+        skills = [
+            {"raw": "First Skill", "name": "first", "description": "测试"},
+            {"raw": "Second Skill", "name": "second", "description": "Translation"},
+        ]
+        tool = {
+            "name": "shared",
+            "description": "One server",
+            "inputSchema": {"type": "object"},
+        }
+        plugin = {
+            "skills": skills,
+            "tools": [tool],
+            "skillBundle": {"files": ["not counted"]},
+        }
+        def count(text):
+            # Count entries separately, not concatenated text.
+            return len(text) + 5
+
+        estimate_plugin(plugin, count)
+        for skill in skills:
+            self.assertEqual(skill["tokenEstimate"]["full"], count(skill["raw"]))
+            self.assertEqual(
+                skill["tokenEstimate"]["metadata"],
+                count(
+                    json.dumps(
+                        {key: skill[key] for key in ("name", "description")},
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                ),
+            )
+        self.assertEqual(
+            plugin["tokenEstimate"]["skillFull"],
+            sum(count(skill["raw"]) for skill in skills),
+        )
+        self.assertEqual(
+            plugin["tokenEstimate"]["skillMetadata"],
+            sum(skill["tokenEstimate"]["metadata"] for skill in skills),
+        )
+        self.assertEqual(
+            plugin["tokenEstimate"]["toolsTotal"], count(serialized_definition(tool))
+        )
 
     def test_checksum_rejects_modified_bytes(self):
         content = b"known tokenizer bytes"
@@ -120,6 +164,10 @@ class PinnedTokenizerTests(unittest.TestCase):
                 recomputed = deepcopy(plugin)
                 estimate_plugin(recomputed, self.count)
                 self.assertEqual(recomputed["tokenEstimate"], plugin["tokenEstimate"])
+                for actual, expected in zip(
+                    recomputed["skills"], plugin["skills"], strict=True
+                ):
+                    self.assertEqual(actual["tokenEstimate"], expected["tokenEstimate"])
                 for actual, expected in zip(
                     recomputed["tools"], plugin["tools"], strict=True
                 ):

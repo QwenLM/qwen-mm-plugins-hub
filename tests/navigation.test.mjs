@@ -13,6 +13,8 @@ test('sidebar links, tabs and tool deep links resolve to the same section', () =
   for (const [hash, section, tab] of [
     ['#skill', 'skill', 'skill'],
     ['#skill-section-requirements', 'skill', 'skill'],
+    ['#skill-entry-music-to-mv', 'skill', 'skill'],
+    ['#skill-entry-music-to-mv-section-requirements', 'skill', 'skill'],
     ['#files', 'files', 'skill'],
     ['#tools', 'tools', 'tools'],
     ['#tool_read_image', 'overview', 'skill'],

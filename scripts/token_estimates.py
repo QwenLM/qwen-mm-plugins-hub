@@ -68,14 +68,21 @@ def estimate_plugin(plugin: dict, count: Callable[[str], int]) -> None:
     for tool in plugin["tools"]:
         tool["definitionText"] = serialized_definition(tool)
         tool["tokenCount"] = count(tool["definitionText"])
-    metadata_text = json.dumps(
-        {key: plugin["skill"][key] for key in ("name", "description")},
-        ensure_ascii=False,
-        indent=2,
-    )
+    for skill in plugin["skills"]:
+        metadata_text = json.dumps(
+            {key: skill[key] for key in ("name", "description")},
+            ensure_ascii=False,
+            indent=2,
+        )
+        skill["tokenEstimate"] = {
+            "full": count(skill["raw"]),
+            "metadata": count(metadata_text),
+        }
     plugin["tokenEstimate"] = {
-        "skillFull": count(plugin["skill"]["raw"]),
-        "skillMetadata": count(metadata_text),
+        "skillFull": sum(skill["tokenEstimate"]["full"] for skill in plugin["skills"]),
+        "skillMetadata": sum(
+            skill["tokenEstimate"]["metadata"] for skill in plugin["skills"]
+        ),
         "toolsTotal": sum(tool["tokenCount"] for tool in plugin["tools"]),
     }
 

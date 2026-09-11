@@ -6,7 +6,12 @@ import catalog from '@/data/catalog.json';
 import { CodeBlock } from '@/components/code-block';
 import { markdownHeadings } from '@/lib/cookbook';
 import { PluginDetail } from '@/components/plugin-detail';
-import { skillExcerpt, type Plugin } from '@/lib/catalog';
+import {
+  skillExcerpt,
+  skillHeadingPrefix,
+  type Plugin,
+  type Skill,
+} from '@/lib/catalog';
 
 export function generateStaticParams() {
   return catalog.plugins.map((p) => ({ id: p.id }));
@@ -34,35 +39,39 @@ export default async function PluginPage({
   const plugin = catalog.plugins.find((p) => p.id === id);
   if (!plugin) notFound();
   // Resolve bundled relative references against the exact documented commit.
-  const skillDirectory = plugin.skill.sourceUrl.replace(/SKILL\.md$/, '');
-  const renderMarkdown = (markdown: string) => (
-    <article className="markdown-content">
-      <ReactMarkdown
-        remarkPlugins={[
-          remarkGfm,
-          [markdownHeadings, { prefix: 'skill-section-' }],
-        ]}
-        components={{
-          pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
-        }}
-        urlTransform={(url, key) => {
-          const safe = defaultUrlTransform(url);
-          if (!safe) return safe;
-          if (safe.startsWith('#')) return '#skill-section-' + safe.slice(1);
-          if (/^https?:\/\//.test(safe) || safe.startsWith('mailto:'))
-            return safe;
-          const resolved = new URL(safe, skillDirectory).href;
-          return key === 'src'
-            ? resolved
-                .replace('github.com/', 'raw.githubusercontent.com/')
-                .replace('/blob/', '/')
-            : resolved;
-        }}
-      >
-        {markdown}
-      </ReactMarkdown>
-    </article>
-  );
+  const renderMarkdown = (skill: Skill, markdown: string) => {
+    const skillDirectory = skill.sourceUrl.replace(/SKILL\.md$/, '');
+    const headingPrefix = skillHeadingPrefix(skill.name, plugin.skills.length);
+    return (
+      <article className="markdown-content">
+        <ReactMarkdown
+          remarkPlugins={[
+            remarkGfm,
+            [markdownHeadings, { prefix: headingPrefix }],
+          ]}
+          components={{
+            pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
+          }}
+          urlTransform={(url, key) => {
+            const safe = defaultUrlTransform(url);
+            if (!safe) return safe;
+            if (safe.startsWith('#'))
+              return '#' + headingPrefix + safe.slice(1);
+            if (/^https?:\/\//.test(safe) || safe.startsWith('mailto:'))
+              return safe;
+            const resolved = new URL(safe, skillDirectory).href;
+            return key === 'src'
+              ? resolved
+                  .replace('github.com/', 'raw.githubusercontent.com/')
+                  .replace('/blob/', '/')
+              : resolved;
+          }}
+        >
+          {markdown}
+        </ReactMarkdown>
+      </article>
+    );
+  };
   return (
     <PluginDetail
       plugin={plugin as unknown as Plugin}
@@ -73,13 +82,18 @@ export default async function PluginPage({
         title,
         category,
       }))}
-      skillPreview={renderMarkdown(skillExcerpt(plugin.skill.markdown).text)}
-      skillFullPreview={renderMarkdown(plugin.skill.markdown)}
-      prerequisitesPreview={
-        plugin.skill.prerequisites
-          ? renderMarkdown(plugin.skill.prerequisites)
-          : null
-      }
+      skillPreviews={Object.fromEntries(
+        plugin.skills.map((skill) => [
+          skill.name,
+          {
+            preview: renderMarkdown(skill, skillExcerpt(skill.markdown).text),
+            full: renderMarkdown(skill, skill.markdown),
+            prerequisites: skill.prerequisites
+              ? renderMarkdown(skill, skill.prerequisites)
+              : null,
+          },
+        ]),
+      )}
     />
   );
 }

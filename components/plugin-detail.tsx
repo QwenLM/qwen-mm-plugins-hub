@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import Link from '@/components/static-link';
 import {
   ArrowUpRight,
@@ -26,6 +26,7 @@ import { SiteHeader, SiteFooter } from '@/components/site-header';
 import { ContributorAvatar } from '@/components/contributor-avatar';
 import { CopyButton } from '@/components/copy-button';
 import { SkillFiles } from '@/components/skill-files';
+import { SkillPreview, type SkillPreviews } from '@/components/skill-preview';
 import { TokenEstimate } from '@/components/token-estimate';
 import { DocsShell, type DocNavPlugin } from '@/components/docs-shell';
 import { DocBreadcrumb } from '@/components/doc-breadcrumb';
@@ -36,14 +37,9 @@ import {
   type PluginTab,
 } from '@/lib/navigation';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   schemaType,
   formatTokens,
-  skillExcerpt,
+  skillAnchor,
   type Plugin,
   type Contributor,
   type Tool,
@@ -154,24 +150,20 @@ function ToolDefinition({
 export function PluginDetail({
   plugin: p,
   contributors,
-  skillPreview,
-  skillFullPreview,
-  prerequisitesPreview,
+  skillPreviews,
   navigation,
   tokenizer,
 }: {
   plugin: Plugin;
   contributors: Record<string, Contributor>;
-  skillPreview: ReactNode;
-  skillFullPreview: ReactNode;
-  prerequisitesPreview: ReactNode;
+  skillPreviews: Record<string, SkillPreviews>;
   navigation: DocNavPlugin[];
   tokenizer: TokenizerInfo;
 }) {
   const [tab, setTab] = useState<PluginTab>('skill');
   const [section, setSection] = useState<PluginSection>('overview');
-  const [skillView, setSkillView] = useState('preview');
-  const [skillExpanded, setSkillExpanded] = useState(false);
+  const [linkedSkillHash, setLinkedSkillHash] = useState('');
+  const [skillLinkRevision, setSkillLinkRevision] = useState(0);
   const [query, setQuery] = useState('');
   const [linkedTool, setLinkedTool] = useState('');
   const [toolLinkRevision, setToolLinkRevision] = useState(0);
@@ -184,9 +176,12 @@ export function PluginDetail({
       } catch {
         /* Preserve malformed fragments. */
       }
-      if (hash.startsWith('skill-section-')) {
-        setSkillExpanded(true);
-        setSkillView('preview');
+      if (
+        hash.startsWith('skill-section-') ||
+        hash.startsWith('skill-entry-')
+      ) {
+        setLinkedSkillHash(hash);
+        setSkillLinkRevision((revision) => revision + 1);
       }
       const next = sectionFromHash(hash);
       setSection(next);
@@ -243,9 +238,7 @@ export function PluginDetail({
   const tools = p.tools.filter((t) =>
     `${t.name} ${t.description}`.toLowerCase().includes(query.toLowerCase()),
   );
-  const excerpt = skillExcerpt(
-    skillView === 'raw' ? p.skill.raw : p.skill.markdown,
-  );
+  const hasPrerequisites = p.skills.some((skill) => skill.prerequisites);
   return (
     <>
       <a className="skip-link" href="#plugin-content">
@@ -317,7 +310,11 @@ export function PluginDetail({
                   </Link>
                 ))}
               </div>
-              <TokenEstimate estimate={p.tokenEstimate} tokenizer={tokenizer} />
+              <TokenEstimate
+                estimate={p.tokenEstimate}
+                tokenizer={tokenizer}
+                skillCount={p.skills.length}
+              />
               <section id="plugin-content" className="detail-main">
                 <Tabs
                   value={tab}
@@ -331,7 +328,10 @@ export function PluginDetail({
                   <TabsList variant="line" className="detail-tabs">
                     <TabsTrigger value="skill">
                       <BookOpen size={16} />
-                      <span>Skill</span>
+                      <span>{p.skills.length > 1 ? 'Skills' : 'Skill'}</span>
+                      {p.skills.length > 1 && (
+                        <span className="tab-count">{p.skills.length}</span>
+                      )}
                     </TabsTrigger>
                     <TabsTrigger value="tools">
                       <Braces size={16} />
@@ -346,82 +346,20 @@ export function PluginDetail({
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent value="skill" id="skill">
-                    <div className="skill-file-bar">
-                      <span>
-                        <FileText size={15} />
-                        SKILL.md
-                      </span>
-                      <div className="skill-bar-actions">
-                        <a href="#skill" className="section-permalink">
-                          Permalink
-                        </a>
-                        <Tabs
-                          value={skillView}
-                          onValueChange={(v) => setSkillView(String(v))}
-                        >
-                          <TabsList className="view-switch">
-                            <TabsTrigger value="preview">Preview</TabsTrigger>
-                            <TabsTrigger value="raw">Raw</TabsTrigger>
-                          </TabsList>
-                        </Tabs>
-                        <CopyButton text={p.skill.raw} label="Copy Skill" />
-                        <a
-                          className="skill-source-link"
-                          aria-label="View Skill on GitHub"
-                          title="View Skill on GitHub"
-                          href={p.skill.sourceUrl}
-                        >
-                          <ArrowUpRight size={17} />
-                        </a>
-                      </div>
-                    </div>
-                    <Collapsible
-                      open={skillExpanded}
-                      onOpenChange={setSkillExpanded}
-                    >
-                      {!skillExpanded && (
-                        <div id="skill-excerpt">
-                          {skillView === 'preview' ? (
-                            skillPreview
-                          ) : (
-                            <pre className="raw-skill">{excerpt.text}</pre>
-                          )}
-                        </div>
-                      )}
-                      <CollapsibleContent id="skill-full">
-                        {skillView === 'preview' ? (
-                          skillFullPreview
-                        ) : (
-                          <pre className="raw-skill">{p.skill.raw}</pre>
-                        )}
-                      </CollapsibleContent>
-                      {excerpt.truncated && (
-                        <div className="skill-preview-footer">
-                          <span>
-                            {skillExpanded
-                              ? `All ${excerpt.lineCount} lines`
-                              : `50 of ${excerpt.lineCount} lines`}
-                          </span>
-                          <CollapsibleTrigger
-                            className="skill-expand-button"
-                            onClick={() => {
-                              if (skillExpanded)
-                                document
-                                  .getElementById('plugin-content')
-                                  ?.scrollIntoView({ block: 'start' });
-                            }}
-                          >
-                            {skillExpanded
-                              ? 'Show less'
-                              : `Show all ${excerpt.lineCount} lines`}{' '}
-                            <ChevronDown size={15} />
-                          </CollapsibleTrigger>
-                        </div>
-                      )}
-                    </Collapsible>
+                    {p.skills.map((skill) => (
+                      <SkillPreview
+                        key={skill.name}
+                        skill={skill}
+                        skillCount={p.skills.length}
+                        fileName={skill.path.slice(p.skillBundle.path.length)}
+                        previews={skillPreviews[skill.name]}
+                        linkedHash={linkedSkillHash}
+                        linkRevision={skillLinkRevision}
+                      />
+                    ))}
                     <SkillFiles
-                      files={p.skill.files}
-                      directoryUrl={p.skill.directoryUrl}
+                      files={p.skillBundle.files}
+                      directoryUrl={p.skillBundle.directoryUrl}
                     />
                   </TabsContent>
                   <TabsContent value="tools" id="tools">
@@ -550,18 +488,27 @@ export function PluginDetail({
                           </ul>
                         </>
                       )}
-                      {prerequisitesPreview && (
-                        <section className="install-prerequisites">
-                          <div className="section-link-heading">
-                            <h3>Skill prerequisites</h3>
-                            <a href={p.skill.sourceUrl}>
-                              View source <ArrowUpRight size={14} />
-                            </a>
-                          </div>
-                          {prerequisitesPreview}
-                        </section>
-                      )}
-                      {p.kind === 'Skill only' && prerequisitesPreview && (
+                      {p.skills
+                        .filter((skill) => skill.prerequisites)
+                        .map((skill) => (
+                          <section
+                            className="install-prerequisites"
+                            key={skill.name}
+                          >
+                            <div className="section-link-heading">
+                              <h3>
+                                {p.skills.length > 1
+                                  ? `${skill.name} prerequisites`
+                                  : 'Skill prerequisites'}
+                              </h3>
+                              <a href={skill.sourceUrl}>
+                                View source <ArrowUpRight size={14} />
+                              </a>
+                            </div>
+                            {skillPreviews[skill.name].prerequisites}
+                          </section>
+                        ))}
+                      {p.kind === 'Skill only' && hasPrerequisites && (
                         <p>
                           Install the runtime dependencies above before using
                           this Skill.
@@ -583,8 +530,17 @@ export function PluginDetail({
                   href="#skill"
                   aria-current={section === 'skill' ? 'location' : undefined}
                 >
-                  Skill
+                  {p.skills.length > 1 ? 'Skills' : 'Skill'}
                 </a>
+                {p.skills.length > 1 && tab === 'skill' && (
+                  <div className="docs-skill-toc">
+                    {p.skills.map((skill) => (
+                      <a href={`#${skillAnchor(skill.name)}`} key={skill.name}>
+                        {skill.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 <a
                   href="#files"
                   aria-current={section === 'files' ? 'location' : undefined}
@@ -640,7 +596,8 @@ export function PluginDetail({
                     <dt>Includes</dt>
                     <dd>
                       <a href="#skill">
-                        {p.tools.length ? '1 Skill' : 'Skill only'}
+                        {p.skills.length}{' '}
+                        {p.skills.length === 1 ? 'Skill' : 'Skills'}
                       </a>
                       {p.tools.length > 0 && (
                         <>
@@ -673,14 +630,21 @@ export function PluginDetail({
                   Cookbook
                   <ArrowRight size={13} />
                 </Link>
-                <a className="resource-link" href={p.skill.sourceUrl}>
+                <a
+                  className="resource-link"
+                  href={
+                    p.skills.length === 1
+                      ? p.skills[0].sourceUrl
+                      : p.skillBundle.directoryUrl
+                  }
+                >
                   <FileText size={15} />
-                  Skill source
+                  {p.skills.length > 1 ? 'Skill sources' : 'Skill source'}
                   <ArrowUpRight size={13} />
                 </a>
                 <a className="resource-link" href="#files">
                   <FileText size={15} />
-                  Skill files <span>{p.skill.files.length}</span>
+                  Skill files <span>{p.skillBundle.files.length}</span>
                 </a>
                 <a
                   className="resource-link"
