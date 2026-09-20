@@ -90,8 +90,9 @@ What you should see:
 ```
 
 Only the *name* of the environment variable holding a token goes in this file — never the token.
-`QWEN_MM_MHS_CACHE_TTL` (default 60s) bounds how long device lists and metadata are cached; health is
-never cached.
+Every `mhs_discover` call reloads this file and queries each adapter; device lists and health are
+never cached. An empty `adapters` list is valid. `QWEN_MM_MHS_CACHE_TTL` (default 60s) applies only
+to metadata, which discovery and reset also invalidate.
 
 Requests are sent with proxies explicitly disabled: hardware is normally on the LAN, and an ambient
 `HTTP_PROXY` intercepting those calls looks exactly like broken hardware.
@@ -127,6 +128,10 @@ mhs_write link    → Error: capability 'link' on host/eth0 is read-only
 mhs_reset         → Error: host/eth0 does not implement reset (HTTP 405)
 ```
 
+Preserve existing adapter entries when registering a new one. Write the updated JSON to a temporary
+file in the same directory, then atomically replace the registry. The next `mhs_discover` call sees
+new or removed registrations, changed addresses, and disconnected adapters without a refresh flag.
+
 Note the last two. The adapter declared every capability `direction: "read"`, so the host refused the
 write **locally** — the request never reached the adapter — and reset returned an honest 405 rather than
 pretending to bounce a live interface. The Skill instructs the model to start read-only for exactly this
@@ -140,10 +145,10 @@ to and which capabilities can change physical state before using it on anything 
 
 An adapter is a plain HTTP server answering six routes. Any language; no SDK.
 
-1. Read [`adapter_protocol.md`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.0.0/src/capabilities/mhs/skill/references/adapter_protocol.md) —
+1. Read [`adapter_protocol.md`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.1.0/src/capabilities/mhs/skill/references/adapter_protocol.md) —
    the complete contract.
-2. Copy [`adapter_server.py`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.0.0/src/capabilities/mhs/skill/references/adapter_server.py) beside your device implementation. Use
-   [`mock_adapter.py`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.0.0/src/capabilities/mhs/skill/references/mock_adapter.py) as an example of `summary`, `meta`, `health`, `read`,
+2. Copy [`adapter_server.py`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.1.0/src/capabilities/mhs/skill/references/adapter_server.py) beside your device implementation. Use
+   [`mock_adapter.py`](https://github.com/QwenLM/Qwen-MM-Plugins/blob/qwen-mm-plugins-mhs-v1.1.0/src/capabilities/mhs/skill/references/mock_adapter.py) as an example of `summary`, `meta`, `health`, `read`,
    and `write` methods, plus optional `reset`, and replace simulated state with real I/O.
 3. Check it before trusting it:
 
