@@ -12,6 +12,10 @@ The hardware capability, `qwen-mm-plugins-mhs`. It implements an MHS host:
 one fixed six-tool surface the model uses to operate any device, with everything device-specific
 pushed behind an *adapter*.
 
+For background on MHS, see Anthropic's
+[Previewing the Model Hardware Standard](https://www.anthropic.com/news/model-hardware-standard-research-preview)
+(August 27, 2026).
+
 The point of the split is that **the adapter belongs to the hardware, not to this plugin**. Whoever
 owns a camera writes and runs its adapter; the plugin only needs to know where it is. So the tools the
 model sees never change as hardware is added, and this repository contains no driver for anything.
