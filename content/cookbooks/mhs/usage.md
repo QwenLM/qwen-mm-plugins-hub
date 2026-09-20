@@ -2,7 +2,7 @@
 title: MHS
 category: Hardware
 tags: [robotics, camera]
-contributors: [JJJYmmm]
+contributors: [QwenLM]
 order: 13
 ---
 
