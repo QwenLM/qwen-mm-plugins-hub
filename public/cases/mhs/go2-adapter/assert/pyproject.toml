@@ -1,0 +1,17 @@
+[project]
+name = "go2-mhs-physical-adapter"
+version = "0.3.0"
+requires-python = ">=3.12"
+dependencies = [
+  "msgpack>=1.1,<2",
+  "cyclonedds==0.10.2",
+  "numpy==2.2.6",
+  "opencv-python==4.11.0.86",
+  "unitree-sdk2py @ git+https://github.com/unitreerobotics/unitree_sdk2_python.git@65691c8a8bc53b98d3976dba4dbf9d5d20b2e7f5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff"]
+
+[tool.ruff]
+line-length = 110
