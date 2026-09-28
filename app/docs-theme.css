@@ -745,6 +745,31 @@
   gap: 10px 16px;
   padding: 10px 12px;
 }
+.skill-entry + .skill-entry {
+  border-top: 1px solid var(--border);
+  margin-top: 2rem;
+  padding-top: 2rem;
+}
+.skill-entry-heading h2 {
+  color: var(--text-strong);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.skill-entry-heading > span {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+.skill-entry-heading > p {
+  margin: 0.75rem 0 1rem;
+}
+.docs-skill-toc {
+  margin-left: 0.5rem;
+  border-left: 1px solid var(--border);
+  padding-left: 0.5rem;
+}
+.docs-skill-toc a {
+  overflow-wrap: anywhere;
+}
 .skill-file-bar > span {
   gap: var(--icon-gap);
   font-size: 0.8125rem;

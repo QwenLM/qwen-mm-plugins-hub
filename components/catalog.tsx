@@ -361,7 +361,7 @@ export function Catalog({
                       href={`/plugins/${p.id}/#skill`}
                     >
                       <BookOpen size={14} />
-                      Skill
+                      {p.skillCount > 1 ? `${p.skillCount} Skills` : 'Skill'}
                     </Link>
                     {p.toolCount > 0 && (
                       <Link

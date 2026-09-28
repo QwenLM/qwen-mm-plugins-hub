@@ -12,6 +12,7 @@ from scripts.build_content import (
     check_cases,
     contributor_metadata,
     read_markdown,
+    read_skills,
 )
 
 
@@ -97,9 +98,100 @@ class ContentBuildTests(unittest.TestCase):
         self.assertNotIn("color", plugin)
         self.assertEqual(plugin["title"], "New Plugin")
         self.assertEqual(plugin["tools"], [])
+        self.assertEqual(len(plugin["skills"]), 1)
+        self.assertEqual(plugin["skills"][0]["name"], "new-plugin")
         self.assertEqual(
             books["new-plugin"]["markdown"], "# New cookbook\n\nA case walkthrough.\n"
         )
+
+    def test_skill_collection_exports_every_entry_in_one_plugin(self):
+        self.plugin("collection")
+        folder = self.source / "src/capabilities/collection"
+        (folder / "skill/SKILL.md").unlink()
+        names = ["movie-commentary", "music-to-mv", "video-translation"]
+        for name in names:
+            self.write(
+                folder / f"skill/{name}/SKILL.md",
+                f"---\nname: {name}\ndescription: {name} workflow\n---\n\n# {name}\n",
+            )
+        self.write(folder / "skill/shared/reference.md", "Shared reference")
+        self.commit(["collection"])
+        self.write(folder / "skill/untracked/SKILL.md", "Not committed")
+        self.write(self.books / "collection/usage.md", "# Cookbook\n")
+        catalog, _ = build_content(self.source, self.books)
+        self.assertEqual(len(catalog["plugins"]), 1)
+        plugin = catalog["plugins"][0]
+        self.assertEqual([skill["name"] for skill in plugin["skills"]], names)
+        self.assertNotIn("skill", plugin)
+        self.assertEqual(len(plugin["skillBundle"]["files"]), 4)
+        for skill in plugin["skills"]:
+            self.assertEqual(
+                skill["sourceUrl"], plugin["source"]["url"] + skill["path"]
+            )
+            self.assertEqual(skill["raw"], (self.source / skill["path"]).read_text())
+
+    def test_root_skill_shadows_bundled_examples_but_explicit_children_are_kept(self):
+        self.plugin("collection")
+        folder = self.source / "src/capabilities/collection"
+        self.write(
+            folder / "skill/examples/child/SKILL.md",
+            "---\nname: child\n---\n# Example\n",
+        )
+        self.commit(["collection"])
+        skills, _ = read_skills(self.source, folder, {"skills": "./skill"})
+        self.assertEqual([skill["name"] for skill in skills], ["collection"])
+        skills, bundle = read_skills(
+            self.source,
+            folder,
+            {
+                "skills": [
+                    "./skill",
+                    "./skill/examples/child",
+                    "./skill/examples/child",
+                ],
+            },
+        )
+        self.assertEqual([skill["name"] for skill in skills], ["collection", "child"])
+        self.assertEqual(len(bundle["files"]), len(set(bundle["files"])))
+
+    def test_declared_skill_directories_are_respected_and_invalid_paths_fail(self):
+        self.plugin("collection")
+        folder = self.source / "src/capabilities/collection"
+        self.write(
+            folder / "skill/selected/SKILL.md", "---\nname: selected\n---\n# Selected\n"
+        )
+        self.write(folder / "skill/empty/readme.md", "No Skill entry")
+        self.commit(["collection"])
+        skills, bundle = read_skills(
+            self.source, folder, {"skills": ["./skill/selected"]}
+        )
+        self.assertEqual([skill["name"] for skill in skills], ["selected"])
+        self.assertEqual(bundle["path"], "src/capabilities/collection/skill/selected/")
+        for roots in (
+            [],
+            None,
+            1,
+            [1],
+            ["../outside"],
+            ["/tmp"],
+            ["missing"],
+            ["skill/empty"],
+        ):
+            with self.subTest(roots=roots), self.assertRaises(ValueError):
+                read_skills(self.source, folder, {"skills": roots})
+
+    def test_duplicate_skill_names_are_rejected(self):
+        self.plugin("collection")
+        folder = self.source / "src/capabilities/collection"
+        (folder / "skill/SKILL.md").unlink()
+        for name in ("a", "b"):
+            self.write(
+                folder / f"skill/{name}/SKILL.md",
+                "---\nname: duplicate\n---\n# Skill\n",
+            )
+        self.commit(["collection"])
+        with self.assertRaisesRegex(ValueError, "Duplicate Skill name"):
+            read_skills(self.source, folder, {"skills": "./skill"})
 
     def test_docs_are_discovered_from_the_same_committed_snapshot(self):
         markdown = "# Installation\n\n```bash\ncurl https://example.test/install.sh | bash\n```\n"

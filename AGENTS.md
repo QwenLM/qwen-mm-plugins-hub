@@ -10,7 +10,10 @@ Keep this file focused on maintenance constraints. Reader orientation belongs in
   second registration table in the Hub. Each registered capability requires
   `content/cookbooks/<cap>/usage.md`; a missing cookbook must fail the build.
 - The website's plugin introduction comes from `.codex-plugin/plugin.json:description`.
-  Skill discovery text comes from `skill/SKILL.md` front matter. They are separate fields;
+  Skill discovery follows the manifest's `skills` directories: a root `SKILL.md` is one entry;
+  otherwise discover independent child entries, stopping below each Skill so bundled examples
+  do not become registrations. Skill discovery text comes from each entry's front matter.
+  Plugin and Skill descriptions are separate fields;
   do not silently replace one with the other or rewrite Skill text for display brevity.
 - Tools come from the actual MCP registry: handler docstrings supply descriptions and
   Pydantic supplies types, defaults, and validation. Never hand-copy tool definitions.
@@ -65,7 +68,8 @@ or invoke paid providers.
 - Keep light and dark themes on shared CSS variables. Skill previews show 50 source lines;
   expansion and copy retain the full source. Keep nested Skill files and tool permalinks usable.
 - Token estimates use the pinned tokenizer in `tokenizer.config.json`. Count the original
-  SKILL.md and displayed tool-definition JSON; do not include cookbooks, bundled files, media,
+  SKILL.md files independently, sum their counts, and count displayed tool-definition JSON once
+  per plugin; do not include cookbooks, bundled files, media,
   or runtime output, and do not present the estimates as usage or cost.
 
 ## Verification and publishing

@@ -15,9 +15,11 @@ import {
 export function TokenEstimate({
   estimate,
   tokenizer,
+  skillCount,
 }: {
   estimate: PluginSummary['tokenEstimate'];
   tokenizer: TokenizerInfo;
+  skillCount: number;
 }) {
   return (
     <section
@@ -30,7 +32,10 @@ export function TokenEstimate({
           <h2>Token estimates</h2>
           <dl className="token-estimate-values">
             <div data-token-kind="skill">
-              <dt>Skill instructions</dt>
+              <dt>
+                Skill instructions
+                {skillCount > 1 ? ` (${skillCount} Skills)` : ''}
+              </dt>
               <dd>About {formatTokens(estimate.skillFull)} tokens</dd>
             </div>
             <div data-token-kind="tools">
@@ -56,7 +61,11 @@ export function TokenEstimate({
           </p>
           <ul>
             <li>
-              <strong>Skill:</strong> complete SKILL.md, including front matter.
+              <strong>Skill:</strong>{' '}
+              {skillCount > 1
+                ? 'sum of each complete SKILL.md'
+                : 'complete SKILL.md'}
+              , including front matter.
             </li>
             <li>
               <strong>Tools:</strong> summed JSON from “Copy definition” (name,
@@ -64,8 +73,11 @@ export function TokenEstimate({
             </li>
             <li>
               <strong>Discovery metadata:</strong> ≈{' '}
-              {formatTokens(estimate.skillMetadata)} tokens for the Skill’s name
-              and description; counted separately.
+              {formatTokens(estimate.skillMetadata)} tokens for{' '}
+              {skillCount > 1
+                ? 'all Skill names and descriptions'
+                : 'the Skill’s name and description'}
+              ; counted separately.
             </li>
           </ul>
           <p>

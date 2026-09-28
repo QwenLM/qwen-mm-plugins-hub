@@ -8,6 +8,8 @@ import {
   schemaType,
   skillExcerpt,
   skillFileTree,
+  skillAnchor,
+  skillHeadingPrefix,
 } from '../lib/catalog.ts';
 
 const catalog = JSON.parse(
@@ -20,6 +22,8 @@ const plugins = catalog.plugins.map((p) => ({
   ...p,
   toolCount: p.tools.length,
   toolNames: p.tools.map((t) => t.name),
+  skillCount: p.skills.length,
+  skillNames: p.skills.map((s) => s.name),
 }));
 
 test('generated content stays out of Git and records one build identity', () => {
@@ -54,12 +58,18 @@ test('Skill previews show 50 source lines without modifying the full text', () =
 
 test('Skill file hierarchy preserves nested files and immutable source links', () => {
   for (const p of plugins) {
-    assert(p.skill.files.some((f) => f.path === 'SKILL.md'));
+    for (const skill of p.skills) {
+      assert(
+        p.skillBundle.files.some(
+          (f) => p.skillBundle.path + f.path === skill.path,
+        ),
+      );
+    }
     assert.equal(
-      new Set(p.skill.files.map((f) => f.path)).size,
-      p.skill.files.length,
+      new Set(p.skillBundle.files.map((f) => f.path)).size,
+      p.skillBundle.files.length,
     );
-    assert(p.skill.directoryUrl.includes(`/tree/${p.source.commit}/`));
+    assert(p.skillBundle.directoryUrl.includes(`/tree/${p.source.commit}/`));
     const leaves = [];
     function visit(nodes) {
       for (const node of nodes) {
@@ -67,8 +77,8 @@ test('Skill file hierarchy preserves nested files and immutable source links', (
         else visit(node.children);
       }
     }
-    visit(skillFileTree(p.skill.files));
-    assert.equal(leaves.length, p.skill.files.length);
+    visit(skillFileTree(p.skillBundle.files));
+    assert.equal(leaves.length, p.skillBundle.files.length);
     for (const file of leaves) {
       assert(
         !file.path.startsWith('/') && !file.path.split('/').includes('..'),
@@ -81,7 +91,7 @@ test('Skill file hierarchy preserves nested files and immutable source links', (
     }
   }
   const edu = plugins.find((p) => p.id === 'edu-agent');
-  const tree = skillFileTree(edu.skill.files);
+  const tree = skillFileTree(edu.skillBundle.files);
   assert(tree.some((n) => n.name === 'references' && n.children.length));
   const assets = tree.find((n) => n.name === 'assets');
   assert(
@@ -106,9 +116,9 @@ test('development snapshots do not advertise unreleased tags, and requirements r
     }
   }
   const edu = plugins.find((p) => p.id === 'edu-agent');
-  assert(edu.skill.prerequisites.includes('NOT** auto-installed'));
-  assert(edu.skill.prerequisites.includes('DASHSCOPE_API_KEY'));
-  assert(!edu.skill.prerequisites.includes('## Pipeline Overview'));
+  assert(edu.skills[0].prerequisites.includes('NOT** auto-installed'));
+  assert(edu.skills[0].prerequisites.includes('DASHSCOPE_API_KEY'));
+  assert(!edu.skills[0].prerequisites.includes('## Pipeline Overview'));
 });
 
 test('all records use one public upstream snapshot and have a complete Skill', () => {
@@ -117,9 +127,16 @@ test('all records use one public upstream snapshot and have a complete Skill', (
   assert(!plugins.some((p) => p.id === 'example'));
   for (const p of plugins) {
     assert.equal(p.channel, source.ref);
-    assert(p.skill.raw.startsWith('---\n'));
-    assert(p.skill.markdown.length > 50);
-    assert(p.skill.sourceUrl.includes(p.source.commit));
+    assert(p.skills.length > 0);
+    assert.equal(
+      new Set(p.skills.map((skill) => skill.name)).size,
+      p.skills.length,
+    );
+    for (const skill of p.skills) {
+      assert(skill.raw.startsWith('---\n'));
+      assert(skill.markdown.length > 50);
+      assert(skill.sourceUrl.includes(p.source.commit));
+    }
     assert.equal(p.cookbookUrl, `/plugins/${p.id}/cookbook/`);
     assert(p.contributors.every((c) => catalog.contributors[c]));
     assert.equal(new Set(p.tools.map((t) => t.name)).size, p.tools.length);
@@ -219,4 +236,42 @@ test('parameter types preserve unions and nested arrays', () => {
     'number | string',
   );
   assert.equal(schemaType({ type: ['number', 'string'] }), 'number | string');
+});
+
+test('single-Skill anchors stay compatible and collection headings stay distinct', () => {
+  assert.equal(skillHeadingPrefix('single', 1), 'skill-section-');
+  assert.notEqual(
+    skillHeadingPrefix('first', 2),
+    skillHeadingPrefix('second', 2),
+  );
+  assert.equal(skillAnchor('first'), 'skill-entry-first');
+  assert.equal(skillHeadingPrefix('first', 2), 'skill-entry-first-section-');
+});
+
+test('plugin Skill token totals sum independently counted entries', () => {
+  for (const plugin of plugins) {
+    assert.equal(
+      plugin.tokenEstimate.skillFull,
+      plugin.skills.reduce((sum, s) => sum + s.tokenEstimate.full, 0),
+    );
+    assert.equal(
+      plugin.tokenEstimate.skillMetadata,
+      plugin.skills.reduce((sum, s) => sum + s.tokenEstimate.metadata, 0),
+    );
+  }
+});
+
+test('ChatCut stays one plugin with three searchable independent Skills', () => {
+  const chatcut = plugins.find((p) => p.id === 'omni-chatcut');
+  assert(chatcut);
+  assert.equal(chatcut.skills.length, 3);
+  assert.equal(plugins.filter((p) => p.id === 'omni-chatcut').length, 1);
+  assert.equal(plugins.find((p) => p.id === 'video-edit').skills.length, 1);
+  for (const skill of chatcut.skills) {
+    assert.deepEqual(
+      filterPlugins(plugins, skill.name, '', '', []).map((p) => p.id),
+      ['omni-chatcut'],
+    );
+    assert(skill.tokenEstimate.full > 0);
+  }
 });

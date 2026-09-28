@@ -8,10 +8,11 @@ order: 4
 
 # NIfTI volume inspection
 
-Use `qwen-mm-plugins-nifti` to inspect `.nii` and `.nii.gz` volumes, select
-slices, and control their intensity display. Its `nifti_visualize` tool returns
-images together with the effective settings so the same view can be checked
-and requested again. The source file is read without modification.
+Use `qwen-mm-plugins-nifti` to inspect `.nii` and `.nii.gz` header metadata with
+`nifti_inspect`, or view configurable slices with `nifti_render_slices`. Rendering
+returns images together with the effective settings so the same view can be
+checked and requested again. Both tools are independent, read-only calls: no
+inspection step is required before rendering, and neither modifies the source.
 
 The default native-image mode requires no model API key. If the shared
 `QWEN_MM_NATIVE_MODE=0` caption fallback is enabled, rendered slices can be
@@ -35,13 +36,38 @@ maintainer publishes the capability tag, it can be installed as
 `qwen-mm-plugins-nifti` through the repository's normal plugin installer.
 The Hub's Tools tab is generated from the real MCP schema.
 
+## Inspect metadata without rendering
+
+For questions about a file's dimensions, voxel spacing, units, or orientation:
+
+```text
+@scan.nii.gz  Use the NIfTI plugin to report this file's shape, voxel spacing, and orientation without rendering images.
+```
+
+Call `nifti_inspect` with:
+
+```json
+{"file_path": "/absolute/path/scan.nii.gz"}
+```
+
+It returns JSON in a text block containing header metadata: shape, dimensionality,
+dtype, voxel spacing, header and effective spatial units, any mm assumption,
+affine, closest orientation codes, obliquity, and the number of 3D volumes.
+For a 4D file it also reports fourth-dimension spacing and units, without assuming
+that this dimension is time. For a 3D file the volume count is one.
+
+Inspection does not scan voxel intensities, calculate percentiles, choose a
+window, or produce images. It does not establish modality or anatomy. Use it
+when metadata answers the question, or when geometry helps choose a view; it is
+not a required first step for rendering.
+
 ## Start with the default view
 
 ```text
 @scan.nii.gz  Use the NIfTI plugin to show this volume and report the settings used.
 ```
 
-The corresponding `nifti_visualize` arguments can be as simple as:
+Call `nifti_render_slices` directly with arguments as simple as:
 
 ```json
 {"file_path": "/absolute/path/scan.nii.gz"}
@@ -107,7 +133,7 @@ bounds can be adjusted with `percentile_low` and `percentile_high`. Different
 selected 3D volumes get separate ranges; use a manual window when an identical
 numeric range is required across volumes.
 
-## Inspect a 4D input
+## Render a 4D input
 
 By default, the tool views the first 3D volume. To inspect the first and third:
 
@@ -134,8 +160,9 @@ remaining indices or volumes in another call.
 
 Core's [`visualize`](../core/usage.md#nifti-volumes) retains its existing
 three orthogonal center slices and per-slice normalization. When the dedicated
-NIfTI tool is available, prefer it for configurable NIfTI viewing. This plugin
-does not require core to be installed.
+NIfTI tools are available, use `nifti_inspect` for metadata and
+`nifti_render_slices` for configurable viewing. This plugin does not require core
+to be installed. Removal of core's NIfTI support is a separate follow-up change.
 
 ## Try a synthetic volume
 
@@ -157,7 +184,8 @@ nib.save(volume, path)
 print(path)
 ```
 
-Pass the printed absolute path to `nifti_visualize`. Expect shape `(32, 40, 48)`,
-spacing `(1, 1, 2) mm`, three axis-2 slices at `(12, 24, 35)`, and one shared
-automatic range. The synthetic values have no medical calibration; use them
-to check the viewing workflow, not CT preset interpretation.
+Pass the printed absolute path to `nifti_inspect` to check shape `(32, 40, 48)`,
+spacing `(1, 1, 2) mm`, and one 3D volume. Independently pass the same path to
+`nifti_render_slices` to get three axis-2 slices at `(12, 24, 35)` with one shared
+automatic range. The synthetic values have no medical calibration; use them to
+check the viewing workflow, not CT preset interpretation.

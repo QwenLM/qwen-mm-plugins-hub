@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>观影伴侣 · Friends S01E01</title>
+<style>
+/* ============================================================
+   设计系统 —— 取自本集画面本身：
+   片头夜景公园里的橙色沙发、喷泉暖光、中央咖啡馆的暖木色调，
+   以及 F·R·I·E·N·D·S 标题字之间的彩色圆点。
+   ============================================================ */
+:root{
+  --sofa:#E2622A;          /* 片头那张橙色沙发 */
+  --sofa-deep:#C24E1C;
+  --cream:#FCF7F0;         /* 奶油底 */
+  --paper:#FFFFFF;
+  --ink:#2A211C;           /* 深棕，不用纯黑 */
+  --ink-soft:#6B5C52;
+  --ink-faint:#9C8B7F;
+  --line:#EADFD3;
+  --dot-red:#D94F4F;
+  --dot-yellow:#E9B949;
+  --dot-blue:#3B7EA1;
+  --dot-green:#4F9D7E;
+  --teal:#2F7D74;
+  --shadow:0 1px 2px rgba(42,33,28,.04), 0 8px 24px rgba(42,33,28,.06);
+  --shadow-lift:0 2px 4px rgba(42,33,28,.06), 0 16px 40px rgba(42,33,28,.10);
+  --radius:16px;
+  --radius-lg:22px;
+  --maxw:1080px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--cream);
+  color:var(--ink);
+  font-family:"Inter","Helvetica Neue",-apple-system,BlinkMacSystemFont,"Segoe UI",
+              "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:16px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* ---------- 通用排版 ---------- */
+h1,h2,h3,h4{line-height:1.3;margin:0;font-weight:700;letter-spacing:-.01em}
+p{margin:0 0 1em}
+p:last-child{margin-bottom:0}
+a{color:var(--teal)}
+strong{font-weight:650;color:var(--ink)}
+em{font-style:normal;background:linear-gradient(transparent 62%,rgba(233,185,73,.45) 0);padding:0 .1em}
+
+/* 片头彩色圆点分隔（致敬 F·R·I·E·N·D·S） */
+.dots{display:flex;gap:7px;align-items:center;justify-content:center;margin:0}
+.dots i{width:7px;height:7px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:var(--dot-red)}
+.dots i:nth-child(2){background:var(--dot-yellow)}
+.dots i:nth-child(3){background:var(--dot-blue)}
+.dots i:nth-child(4){background:var(--dot-green)}
+
+/* ---------- 头部 ---------- */
+header{
+  background:
+    radial-gradient(1200px 380px at 78% -12%, rgba(226,98,42,.16), transparent 62%),
+    radial-gradient(900px 320px at 8% 0%, rgba(59,126,161,.12), transparent 60%),
+    linear-gradient(180deg,#1F1815 0%, #2A211C 100%);
+  color:#F7EFE6;
+  padding:64px 0 56px;
+  position:relative;
+  overflow:hidden;
+}
+header::after{ /* 底部一道沙发橙的光 */
+  content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,var(--dot-red),var(--dot-yellow),var(--sofa),var(--dot-blue),var(--dot-green));
+  opacity:.9;
+}
+.eyebrow{
+  font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(247,239,230,.62);margin-bottom:18px;font-weight:600;
+}
+header h1{font-size:clamp(30px,5.2vw,50px);color:#FFF;margin-bottom:10px}
+header h1 .ep{color:var(--sofa);font-weight:800}
+.tagline{font-size:clamp(16px,2.1vw,19px);color:rgba(247,239,230,.80);max-width:64ch;margin-top:14px}
+.meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.chip{
+  border:1px solid rgba(247,239,230,.22);background:rgba(247,239,230,.07);
+  color:rgba(247,239,230,.90);border-radius:999px;padding:6px 14px;font-size:13px;
+  backdrop-filter:blur(4px);
+}
+.chip b{color:#FFF;font-weight:650}
+
+/* ---------- 目录导航 ---------- */
+nav.toc{
+  position:sticky;top:0;z-index:50;
+  background:rgba(252,247,240,.86);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding:10px 24px;scrollbar-width:none}
+nav.toc .wrap::-webkit-scrollbar{display:none}
+nav.toc a{
+  white-space:nowrap;font-size:13.5px;font-weight:600;text-decoration:none;
+  color:var(--ink-soft);padding:7px 13px;border-radius:999px;transition:.16s;
+}
+nav.toc a:hover{background:rgba(226,98,42,.10);color:var(--sofa-deep)}
+
+/* ---------- 区块 ---------- */
+section{padding:60px 0 12px}
+.sec-head{margin-bottom:28px}
+.sec-num{
+  font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--sofa);margin-bottom:8px;display:flex;align-items:center;gap:9px;
+}
+.sec-num::before{content:"";width:22px;height:2px;background:var(--sofa);border-radius:2px}
+.sec-head h2{font-size:clamp(23px,3.4vw,31px)}
+.sec-head .sub{color:var(--ink-soft);margin-top:9px;max-width:70ch;font-size:15.5px}
+
+/* ---------- 卡片 ---------- */
+.card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 28px;box-shadow:var(--shadow);
+}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+
+/* ---------- 人物卡 ---------- */
+.person{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:0;overflow:hidden;box-shadow:var(--shadow);transition:.2s;
+  display:flex;flex-direction:column;
+}
+.person:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px)}
+.person .top{padding:22px 24px 18px;border-bottom:1px solid var(--line);position:relative}
+.person .top::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--sofa))}
+.person .pname{font-size:20px;font-weight:750;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.person .pid{
+  font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--ink-faint);
+  border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-family:ui-monospace,monospace;
+}
+.person .role{font-size:13.5px;color:var(--sofa-deep);font-weight:600;margin-top:5px}
+.person .look{font-size:13px;color:var(--ink-faint);margin-top:9px;line-height:1.6}
+.person .body{padding:20px 24px 24px;flex:1}
+.traits{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.trait{
+  font-size:12.5px;font-weight:600;padding:4px 11px;border-radius:999px;
+  background:rgba(226,98,42,.09);color:var(--sofa-deep);border:1px solid rgba(226,98,42,.18);
+}
+.person .body p{font-size:14.5px;color:var(--ink-soft);line-height:1.72}
+.person .body p strong{color:var(--ink)}
+
+/* ---------- 人物定妆帧（取自本集画面）---------- */
+.person .shot{position:relative;aspect-ratio:4/3;overflow:hidden;background:#1F1815;border-bottom:1px solid var(--line)}
+.person .shot img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.person:hover .shot img{transform:scale(1.035)}
+.person .shot::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 -46px 54px -34px rgba(31,24,21,.60)}
+.person .shot-ts{position:absolute;bottom:10px;left:12px;z-index:2;
+  font-family:ui-monospace,SFMono-Regular,monospace;font-size:11.5px;font-weight:700;
+  color:#FFF;background:rgba(31,24,21,.66);border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(6px);border-radius:6px;padding:3px 9px}
+
+/* ---------- 引语 ---------- */
+blockquote.q{
+  margin:14px 0 0;padding:14px 18px;background:var(--cream);
+  border-left:3px solid var(--dot-yellow);border-radius:0 10px 10px 0;
+}
+blockquote.q .line{font-size:14.5px;color:var(--ink);font-style:italic}
+blockquote.q .who{font-size:12px;color:var(--ink-faint);margin-top:7px;font-style:normal}
+blockquote.q .who b{color:var(--ink-soft);font-weight:650;font-style:normal}
+
+/* ---------- 时间戳徽标 ---------- */
+.ts{
+  display:inline-flex;align-items:center;gap:5px;font-family:ui-monospace,SFMono-Regular,monospace;
+  font-size:12.5px;font-weight:650;color:var(--teal);
+  background:rgba(47,125,116,.09);border:1px solid rgba(47,125,116,.20);
+  border-radius:7px;padding:2px 8px;white-space:nowrap;
+}
+
+/* ---------- 关系图 ---------- */
+.rel{display:flex;flex-direction:column;gap:14px}
+.rel-item{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 24px;box-shadow:var(--shadow);
+}
+.rel-pair{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:10px}
+.rel-pair .n{font-weight:700;font-size:16px}
+.rel-pair .link{
+  font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 10px;border-radius:999px;background:var(--ink);color:#FFF;
+}
+.rel-pair .link.warm{background:var(--sofa)}
+.rel-pair .link.cool{background:var(--dot-blue)}
+.rel-pair .link.green{background:var(--dot-green)}
+.rel-item p{font-size:14.5px;color:var(--ink-soft);margin:0}
+.rel-item p + p{margin-top:9px}
+
+/* ---------- 推荐片段 ---------- */
+.pick{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);
+  overflow:hidden;box-shadow:var(--shadow);margin-bottom:22px;
+}
+.pick .head{
+  display:flex;gap:18px;align-items:flex-start;
+  padding:24px 28px;background:linear-gradient(180deg,rgba(226,98,42,.055),transparent);
+  border-bottom:1px solid var(--line);
+}
+.pick .no{
+  flex:0 0 auto;width:42px;height:42px;border-radius:12px;background:var(--sofa);color:#FFF;
+  display:grid;place-items:center;font-weight:800;font-size:17px;box-shadow:0 4px 12px rgba(226,98,42,.30);
+}
+.pick .htxt{flex:1;min-width:0}
+.pick h3{font-size:19px;margin-bottom:9px}
+.pick .range{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.pick .dur{font-size:12px;color:var(--ink-faint)}
+.pick .body{padding:24px 28px 26px}
+.pick .why{font-size:15px;color:var(--ink-soft);margin-bottom:20px}
+.watch-for{background:var(--cream);border-radius:12px;padding:18px 20px;border:1px solid var(--line)}
+.watch-for .wf-title{
+  font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sofa-deep);margin-bottom:12px;
+}
+.watch-for ul{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.watch-for li{font-size:14.5px;color:var(--ink-soft);padding-left:26px;position:relative;line-height:1.7}
+.watch-for li::before{
+  content:"";position:absolute;left:6px;top:.62em;width:7px;height:7px;border-radius:50%;
+  background:var(--dot-yellow);
+}
+.watch-for li b{color:var(--ink);font-weight:650}
+.watch-for li .cue{
+  font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-faint);border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+  margin-right:7px;background:var(--paper);white-space:nowrap;
+}
+
+/* ---------- 多模态解读条 ---------- */
+.modal-grid{display:grid;gap:16px;grid-template-columns:repeat(2,1fr)}
+.modal-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow);
+}
+.modal-card .mtag{
+  font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:11px;display:inline-block;padding:3px 10px;border-radius:999px;
+}
+.mtag.voice{background:rgba(217,79,79,.10);color:#B03A3A;border:1px solid rgba(217,79,79,.20)}
+.mtag.face{background:rgba(59,126,161,.10);color:#2B6483;border:1px solid rgba(59,126,161,.20)}
+.mtag.sound{background:rgba(79,157,126,.10);color:#3A7D62;border:1px solid rgba(79,157,126,.20)}
+.mtag.word{background:rgba(233,185,73,.14);color:#96741B;border:1px solid rgba(233,185,73,.28)}
+.modal-card h4{font-size:16px;margin-bottom:9px}
+.modal-card p{font-size:14.5px;color:var(--ink-soft)}
+
+/* ---------- 剧情时间线 ---------- */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{
+  content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;
+  background:linear-gradient(180deg,var(--sofa),var(--dot-yellow),var(--dot-blue),var(--dot-green));
+  border-radius:2px;opacity:.55;
+}
+.beat{position:relative;padding-bottom:26px}
+.beat:last-child{padding-bottom:0}
+.beat::before{
+  content:"";position:absolute;left:-30px;top:7px;width:12px;height:12px;border-radius:50%;
+  background:var(--paper);border:3px solid var(--sofa);box-sizing:content-box;
+}
+.beat .bt{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+.beat h4{font-size:16.5px}
+.beat p{font-size:14.5px;color:var(--ink-soft)}
+
+/* ---------- 方法说明 / 页脚 ---------- */
+.note{
+  background:linear-gradient(180deg,rgba(59,126,161,.055),transparent);
+  border:1px solid var(--line);border-left:3px solid var(--dot-blue);
+  border-radius:0 var(--radius) var(--radius) 0;padding:22px 26px;
+}
+.note h4{font-size:15px;margin-bottom:10px}
+.note p,.note li{font-size:14px;color:var(--ink-soft)}
+.note ul{margin:9px 0 0;padding-left:20px}
+.note li{margin-bottom:6px}
+footer{
+  margin-top:64px;padding:40px 0 52px;border-top:1px solid var(--line);
+  color:var(--ink-faint);font-size:13px;text-align:center;
+}
+footer .dots{margin-bottom:18px}
+
+/* ---------- 可折叠区块 ---------- */
+details.fold{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+details.fold > summary,
+details.pick > summary{list-style:none;cursor:pointer}
+details.fold > summary::-webkit-details-marker,
+details.pick > summary::-webkit-details-marker{display:none}
+details.fold > summary{
+  padding:18px 24px;display:flex;align-items:center;gap:12px;
+  font-weight:700;font-size:16.5px;color:var(--ink);transition:background .16s;
+}
+details.fold > summary:hover{background:rgba(226,98,42,.055)}
+details.fold[open] > summary{border-bottom:1px solid var(--line)}
+.chev{
+  margin-left:auto;flex:0 0 auto;width:9px;height:9px;
+  border-right:2px solid var(--ink-faint);border-bottom:2px solid var(--ink-faint);
+  transform:rotate(45deg);transition:transform .22s ease;
+}
+details[open] > summary .chev{transform:rotate(-135deg)}
+.fold-hint{font-size:13px;color:var(--ink-faint);font-weight:500}
+.fold-body{padding:28px}
+
+/* 推荐片段折叠头 */
+details.pick > summary{
+  display:flex;gap:18px;align-items:flex-start;padding:24px 28px;
+  background:linear-gradient(180deg,rgba(226,98,42,.055),transparent);transition:background .16s;
+}
+details.pick > summary:hover{background:rgba(226,98,42,.10)}
+details.pick[open] > summary{border-bottom:1px solid var(--line)}
+details.pick > summary .chev{align-self:center}
+
+/* ---------- 关系图 ---------- */
+.relmap{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 22px 18px;overflow-x:auto;
+}
+.relmap svg{display:block;width:100%;min-width:700px;height:auto}
+.relmap svg text{font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
+.relmap-legend{
+  display:flex;flex-wrap:wrap;gap:12px 24px;margin-top:20px;padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.relmap-legend div{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-soft)}
+.relmap-legend b{color:var(--ink);font-weight:650}
+.relmap-legend i{
+  width:28px;flex:0 0 auto;border-top-width:2.5px;border-top-style:solid;display:block;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:880px){
+  .g3,.g2,.modal-grid{grid-template-columns:1fr}
+  header{padding:48px 0 42px}
+  section{padding:46px 0 10px}
+  .pick .head{padding:20px}
+  .pick .body{padding:20px}
+}
+@media print{
+  nav.toc{display:none}
+  body{background:#FFF}
+  .card,.person,.pick,.rel-item,.modal-card{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<!-- CONTENT-START -->
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">观影伴侣 · Viewing Companion</div>
+    <h1>Friends <span class="ep">S01E01</span></h1>
+    <div class="dots"><i></i><i></i><i></i><i></i></div>
+    <p class="tagline">
+      一个刚离婚的男人和一个刚从婚礼上逃走的女人，在同一天下午走进了同一家咖啡馆。
+      这一集要做的事很朴素：让六个人坐在一张橙色沙发上，然后让观众相信他们已经认识很久了。
+    </p>
+    <div class="meta-row">
+      <span class="chip">时长 <b>29 分 39 秒</b></span>
+      <span class="chip">核心人物 <b>6 位</b></span>
+      <span class="chip">主要场景 <b>咖啡馆 · 两间公寓 · 日料店 · 餐厅后厨</b></span>
+      <span class="chip">分析方式 <b>音视频联合记忆 · 71 段</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#plot">剧情概要</a>
+    <a href="#people">核心人物</a>
+    <a href="#relations">关系网</a>
+    <a href="#multimodal">听声辨戏</a>
+    <a href="#picks">值得细看的 5 个片段</a>
+  </div>
+</nav>
+
+<!-- ========================= 剧情概要 ========================= -->
+<section id="plot">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">Part 01</div>
+      <h2>剧情概要</h2>
+      <p class="sub">本集是一次双重"崩塌"的交汇：一个人的婚姻刚结束，另一个人的婚姻还没开始就被自己叫停。</p>
+    </div>
+
+    <div class="card" style="margin-bottom:26px">
+      <p>
+        故事从曼哈顿一家叫 <strong>Central Perk</strong> 的咖啡馆开始。Monica 正被朋友们围攻盘问一个"只是同事"的男人，
+        话音未落，她的哥哥 <strong>Ross</strong> 拖着一把黑伞进门——妻子 Carol 当天把东西搬走了，他的婚姻结束了。
+        朋友们轮流用自己的方式安慰他：Joey 建议去脱衣舞俱乐部，Phoebe 想帮他"净化气场"，Chandler 递上一块饼干。
+        Ross 说出他真正想要的东西：<em>"我不想单身，我只想再结一次婚。"</em>
+      </p>
+      <p>
+        就在这句话落地的瞬间，一个穿着完整婚纱、还戴着头纱的女人推门冲进咖啡馆——是 Monica 高中时代的老友
+        <strong>Rachel</strong>。她在婚礼现场逃了出来，原因说得七零八落：她盯着新郎 Barry 的脸，突然发现他长得像蛋头先生
+        （Mr. Potato Head），然后开始想"我到底为什么要做这件事，为了谁做这件事"。她跑来找 Monica，因为
+        "你是我在这座城市里唯一认识的人"。
+      </p>
+      <p>
+        接下来的一天半里，两条线并行推进。<strong>Rachel 这条线是"断"</strong>：她在电话里向父亲宣告独立，
+        用一个语无伦次但真诚的比喻——所有人都告诉她"你是一只鞋"，可她想问，如果她想做一个包、一顶帽子呢；
+        随后她拒绝再用父亲的信用卡，在六个人的围观和起哄里把卡剪断，正式落进"真实世界"。
+        <strong>Monica 这条线是"信"</strong>：她与酒水供应商 Paul 约会，对方吐露自离婚后有一桩两年未愈的难言心事，
+        Monica 被这份脆弱打动，第二天早上开心得合不上嘴——然后在自己工作的后厨里，
+        同事 Franny 一句话就把这套说辞拆成了他惯用的搭讪台词。
+      </p>
+      <p>
+        而 <strong>Ross 这条线是"修"</strong>：他在自己的公寓里和 Joey、Chandler 一边装家具，一边消化失婚之痛，
+        听着两位单身朋友用冰淇淋口味比喻女人来"开导"他。到了夜里，客厅只剩他和 Rachel，两人分吃一块饼干，
+        他终于说出高中时暗恋过她——Rachel 早就知道。他磕磕巴巴地问能不能约她出去，她答应了。
+        全剧最后一个镜头，Rachel 系着围裙在咖啡馆端咖啡壶，六个人挤在那张橙色沙发上，Chandler 开始讲他的新梦。
+      </p>
+    </div>
+
+    <details class="fold">
+      <summary>
+        展开分场时间线
+        <span class="fold-hint">14 个节点 · 00:50 → 29:39</span>
+        <span class="chev"></span>
+      </summary>
+      <div class="fold-body">
+        <div class="timeline">
+      <div class="beat">
+        <div class="bt"><span class="ts">00:50 – 02:05</span><h4>"没什么可说的，只是同事"</h4></div>
+        <p>Central Perk 里的例行盘问。Monica 的否认说得很快、带着防卫，台词内容和语气自相矛盾——这就是笑点。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">02:05 – 04:00</span><h4>Ross 带着一把黑伞进门</h4></div>
+        <p>他把离婚的感受描述成"有人把手伸进我喉咙，抓住小肠，从嘴里拽出来，缠在我脖子上"。朋友们的安慰方式各不相同，每一种都很像他们自己。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">04:00 – 05:05</span><h4>婚纱闯入</h4></div>
+        <p>Ross 说完"我只想再结一次婚"，穿婚纱的 Rachel 推门而入。Chandler 立刻补刀："我还想要一百万美元！"</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">05:05 – 06:20</span><h4>逃婚的理由</h4></div>
+        <p>Rachel 讲述她如何在婚礼上崩溃。Monica 递上一杯咖啡，Ross 悄悄伸手碰了一下她的手。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">06:20 – 08:25</span><h4>"这是个比喻，爸爸！"</h4></div>
+        <p>Monica 公寓。Rachel 对着无线电话向父亲宣告独立，最后喊出"我是一顶帽子"。她过度呼吸，Phoebe 唱歌把她安抚下来。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">09:10 – 10:30</span><h4>Paul 上门</h4></div>
+        <p>Monica 的约会对象"红酒男 Paul"来了。Joey 和 Chandler 对他一通调侃，Monica 慌慌张张跑去换衣服。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">11:15 – 12:10</span><h4>Phoebe 在地铁里唱歌</h4></div>
+        <p>唯一一段脱离群体的独处镜头：她抱着吉他在地铁站台自弹自唱，通勤者从她身边走过。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">12:10 – 18:50</span><h4>双线交叉剪辑</h4></div>
+        <p>Ross 在自己的公寓里和 Joey、Chandler 一起装家具，反复咀嚼失婚之痛；镜头不断切到日料店，Monica 正在听 Paul 讲述他的"两年"。两个男人，两种关于失去的叙述，一真一假。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">17:25 – 18:40</span><h4>Rachel 独自对着电视落泪</h4></div>
+        <p>她穿着粉色浴袍、抱着那件婚纱，一个人看着电视里正在进行的婚礼场景，无声地哭了。全集最安静的一段。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">18:45 – 20:00</span><h4>人生第一杯咖啡</h4></div>
+        <p>第二天早晨，Rachel 兴奋地宣布自己第一次煮了咖啡。Joey 喝了一口，皱着脸把杯子递给 Chandler。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">22:30 – 23:00</span><h4>后厨里的一句拆穿</h4></div>
+        <p>Iridium 餐厅后厨，Monica 兴奋地提起 Paul，同事 Franny 却说自己也曾让 Paul "恢复"，还提到同样的"两年"——同一套说辞，换过不同的听众。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">25:25 – 26:20</span><h4>剪卡仪式</h4></div>
+        <p>六个人围着圆桌起哄，Rachel 剪断信用卡。Monica 注意到碎片后说："Rachel，那是张图书证。"</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">27:05 – 28:00</span><h4>一块掰成两半的饼干</h4></div>
+        <p>Monica 离场，客厅只剩 Ross 和 Rachel。他说出高中的暗恋，然后问出那句"我能约你出去吗"。她说：好啊。也许。</p>
+      </div>
+      <div class="beat">
+        <div class="bt"><span class="ts">28:45 – 29:39</span><h4>尾声：橙色沙发</h4></div>
+        <p>Rachel 系着围裙端咖啡壶，被顾客催单。Chandler 开始讲一个新的怪梦："我在拉斯维加斯……我是 Liza Minnelli。"——和他开场讲的那个电话梦首尾呼应。</p>
+      </div>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+<!-- ========================= 核心人物 ========================= -->
+<section id="people">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">Part 02</div>
+      <h2>核心人物</h2>
+      <p class="sub">
+        只列这一集真正撑起故事的六个人。以下每一条都出自本集的画面、台词或语气，
+        不引用剧集之外的设定——所以你会看到"本集尚未交代"的地方被明确留空。
+      </p>
+    </div>
+
+    <div class="grid g2">
+
+      <!-- Rachel -->
+      <article class="person" style="--accent:var(--dot-red)">
+        <div class="shot">
+          <img src="assert/image-01.jpg" alt="Rachel 穿着完整婚纱与头纱坐在中央咖啡馆的橙色沙发上，正讲述自己为何从婚礼上逃走">
+          <span class="shot-ts">05:44</span>
+        </div>
+        <div class="top">
+          <div class="pname">Rachel <span class="pid">婚纱 → 浴袍 → 围裙</span></div>
+          <div class="role">从自己的婚礼上逃走的新娘</div>
+          <div class="look">初登场是完整的白色婚纱与头纱；当晚换成粉色浴袍抱着那件婚纱；最后一幕系着围裙、穿牛仔衬衫端咖啡壶。她的服装线本身就是这一集的人物弧线。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">临场脱逃</span><span class="trait">被娇养</span>
+            <span class="trait">情绪外放</span><span class="trait">正在学着长大</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong>与 Monica 是 Lincoln High 的老同学，多年没联系；
+            未婚夫叫 Barry Finkel；本该去阿鲁巴的蜜月取消了；决定住进 Monica 家；
+            <strong>面试被拒 12 次</strong>后当上服务员；此前从没煮过咖啡。
+          </p>
+          <p>
+            <strong>性格：</strong>她的崩溃是全速的——语气标注里她反复是"高音、语速快、喊叫"，
+            但崩完能立刻自己收拾好（用纸袋换气之后一句"我好了"）。她逃婚的理由讲得毫无逻辑，
+            可她在电话里给父亲的那个比喻却精准得惊人：她不反对当鞋，她反对的是<em>从没人问过她想当什么</em>。
+          </p>
+          <blockquote class="q">
+            <div class="line">"我这辈子所有人都在跟我说'你是一只鞋'！那要是我不想当鞋呢？要是我想当一个包、一顶帽子呢？……这是个比喻，爸爸！"</div>
+            <div class="who"><b>07:06 – 07:24</b> · 语气：喊叫 / 高音 / 语速极快</div>
+          </blockquote>
+        </div>
+      </article>
+
+      <!-- Ross -->
+      <article class="person" style="--accent:var(--dot-blue)">
+        <div class="shot">
+          <img src="assert/image-02.jpg" alt="Ross 穿深色外套配红衬衫站在咖啡馆里，正用手势比喻离婚的痛苦">
+          <span class="shot-ts">02:32</span>
+        </div>
+        <div class="top">
+          <div class="pname">Ross <span class="pid">黑伞 · 红衬衫</span></div>
+          <div class="role">婚姻刚在当天结束的哥哥</div>
+          <div class="look">深色外套配红衬衫，进门时攥着一把收起来的黑伞——这把伞后来一直被他抓在手里，成了他情绪的握力计。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">刚离婚</span><span class="trait">书生气</span>
+            <span class="trait">笨拙的深情</span><span class="trait">渴望安定</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong><strong>26 岁</strong>就离了婚；前妻 Carol 当天把东西搬走；
+            他说自己事先不知道 Carol 是女同性恋；这段关系持续了四年；Monica 的哥哥；
+            高中时暗恋过 Rachel，自认是"Monica 那个书呆子哥哥"。
+          </p>
+          <p>
+            <strong>性格：</strong>他是全集情绪跨度最大的人。同一段对话里，他从低沉、缓慢、带叹息的一声"哦"，
+            跳到又快又响的"去她的，是她离开我的！"再回到"我希望她幸福"。
+            他也是唯一一个把"我想要什么"说出口的人——在一个所有人都在开玩笑的场合。
+          </p>
+          <blockquote class="q">
+            <div class="line">"我感觉像有人把手伸进我的喉咙，抓住我的小肠，从嘴里拽出来，然后缠在我脖子上。"</div>
+            <div class="who"><b>02:32</b> · 语气：痛苦 / 戏剧化 —— 紧接着 Chandler 递上一块饼干："吃饼干吗？"</div>
+          </blockquote>
+        </div>
+      </article>
+
+      <!-- Monica -->
+      <article class="person" style="--accent:var(--sofa)">
+        <div class="shot">
+          <img src="assert/image-03.jpg" alt="Monica 在公寓厨房的餐桌边说话，手上带着解释性的手势">
+          <span class="shot-ts">22:02</span>
+        </div>
+        <div class="top">
+          <div class="pname">Monica <span class="pid">白 T 背带裤 · 厨师服</span></div>
+          <div class="role">这群人的接待员与操办者</div>
+          <div class="look">深发；在家是白 T 恤配背带裤，上班是全套白色厨师服与厨师帽，深夜穿蓝色睡衣。她的职业在本集里被完整展示过——以厨师身份出现在餐厅后厨。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">热心操办</span><span class="trait">想掌控</span>
+            <span class="trait">容易心软</span><span class="trait">在意别人怎么看</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong>在 Iridium 餐厅后厨当厨师，同事 Franny；Ross 的妹妹；
+            与 Rachel 是高中同学；正在和"红酒男 Paul"约会——那晚约会之后他留到了第二天早上，
+            她笑得合不上嘴，还把 Paul 的"重新振作"记在自己功劳簿上。
+          </p>
+          <p>
+            <strong>性格：</strong>她的动作几乎都是服务性的：介绍新朋友、端咖啡、递纸袋、说"深呼吸，想点让人平静的事"。
+            但她同时极度在意自己的形象——开场那句否认说得又快又带防卫，Paul 上门时她慌到要跑去换衣服。
+            她也是那个把 Rachel 推向独立的人：剪卡的主意和剪刀都是她给的。
+          </p>
+          <blockquote class="q">
+            <div class="line">"没什么可说的！他就是我的一个同事而已。"</div>
+            <div class="who"><b>00:52</b> · 语气：防卫 —— 台词说的是"没事"，声音说的是"有事"，这就是本集第一个笑点</div>
+          </blockquote>
+        </div>
+      </article>
+
+      <!-- Chandler -->
+      <article class="person" style="--accent:var(--dot-yellow)">
+        <div class="shot">
+          <img src="assert/image-04.jpg" alt="Chandler 双臂张开架在沙发背上，正在讲那个反复出现的电话怪梦">
+          <span class="shot-ts">01:58</span>
+        </div>
+        <div class="top">
+          <div class="pname">Chandler <span class="pid">米色夹克 · 马甲</span></div>
+          <div class="role">给每个严肃时刻踩刹车的人</div>
+          <div class="look">咖啡馆里穿米色夹克，在公寓换成白 T 恤配背带。多数时候他不站在场景中心，而是坐在扶手椅上等一个插话的缝隙。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">讽刺护体</span><span class="trait">时机精准</span>
+            <span class="trait">工作枯燥</span><span class="trait">怪梦缠身</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong>工作内容和"往里输数字"有关，他自己形容多输少输没什么差别；
+            和 Joey 住对门；本集开场他正在讲一个反复出现的梦——他低头发现自己身上长了一部电话，
+            电话响了，全场都看着他，最后接起来是他妈打来的。<strong>全集最后一个镜头，他又开始讲下一个梦</strong>
+            （"我在拉斯维加斯……我是 Liza Minnelli"）——这一集是用他的怪梦开场、也用他的怪梦收尾的。
+          </p>
+          <p>
+            <strong>性格：</strong>他几乎不推动剧情，功能是拆掉煽情。语气标注里他高度集中在"讽刺、干、玩味"，
+            音量语速永远正常——正是这种平稳让他的补刀有效。他也是唯一一个用玩笑替朋友挡尴尬的人
+            （Rachel 说"你是我在这城里唯一认识的人"，他立刻接："而且还没被邀请参加婚礼。"）
+          </p>
+          <blockquote class="q">
+            <div class="line">"——而我还想要一百万美元呢！"</div>
+            <div class="who"><b>04:12</b> · 语气：戏谑 / 讽刺 —— 紧接在 Ross 说完"我只想再结一次婚"、婚纱推门而入的那一秒</div>
+          </blockquote>
+        </div>
+      </article>
+
+      <!-- Joey -->
+      <article class="person" style="--accent:var(--dot-green)">
+        <div class="shot">
+          <img src="assert/image-05.jpg" alt="Joey 穿黑色皮夹克坐在绿色扶手椅里，手里端着蓝色马克杯">
+          <span class="shot-ts">01:48</span>
+        </div>
+        <div class="top">
+          <div class="pname">Joey <span class="pid">黑色皮夹克</span></div>
+          <div class="role">工具箱里只有身体和食欲的好兄弟</div>
+          <div class="look">全集几乎不脱那件黑色皮夹克，手里常端着一只蓝色马克杯或一个三明治。他的道具永远和吃有关。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">直球</span><span class="trait">讲义气</span>
+            <span class="trait">思路单一</span><span class="trait">分不清场合</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong>演员，自称"多是地方上的活"，被朋友当场揭穿是公园小剧场的
+            儿童版《木偶奇遇记》；和 Chandler 住在 Monica 家对门。
+          </p>
+          <p>
+            <strong>性格：</strong>他的每一次安慰都指向一件具体可做的消遣——出门散心、三明治、
+            以及那段著名的冰淇淋口味比喻（"哪有只吃一种口味的？外面有石板街、有饼干面团、有樱桃香草……"）。
+            但语气标注给他的标签是"安慰、友善"：他是真心的，只是词汇量就这么多。
+            他也毫无恶意地在 Rachel 逃婚当天就开始搭讪，被 Monica 当场喝止。
+          </p>
+          <blockquote class="q">
+            <div class="line">"好了 Ross，你现在很痛苦，你很愤怒，你很受伤。要我告诉你答案是什么吗？<strong>脱衣舞俱乐部！</strong>"</div>
+            <div class="who"><b>03:50</b> · 语气：前半句安慰、后半句大声兴奋——一句话里的两副面孔</div>
+          </blockquote>
+        </div>
+      </article>
+
+      <!-- Phoebe -->
+      <article class="person" style="--accent:var(--teal)">
+        <div class="shot">
+          <img src="assert/image-06.jpg" alt="Phoebe 在地铁站台上抱着木吉他自弹自唱，身后贴满旧告示">
+          <span class="shot-ts">11:44</span>
+        </div>
+        <div class="top">
+          <div class="pname">Phoebe <span class="pid">金色双马尾 · 牛仔外套</span></div>
+          <div class="role">唯一不靠讲道理安慰人的人</div>
+          <div class="look">金色双马尾配牛仔外套，地铁那场换成棕色流苏外套抱着一把木吉他。她常常不坐沙发，而是坐在地板上、茶几边。</div>
+        </div>
+        <div class="body">
+          <div class="traits">
+            <span class="trait">灵性</span><span class="trait">跳脱</span>
+            <span class="trait">创伤底色</span><span class="trait">真的在帮忙</span>
+          </div>
+          <p>
+            <strong>背景（本集交代）：</strong>在地铁站台抱着吉他自弹自唱；会伸手帮人"净化气场"；
+            本集后段她讲出自己 <strong>14 岁</strong>时的事——母亲自杀、继父入狱，
+            而她讲这段的场合是为了安慰刚失去经济来源的 Rachel。
+          </p>
+          <p>
+            <strong>性格：</strong>她是全集唯一用非语言手段处理别人情绪的角色：唱歌、摆手、去碰对方的头。
+            被 Ross 粗声拒绝后，她也不争辩，只回一句"那你就浑浊着吧"。
+            她唱《我最喜欢的东西》时歌词全记错，照样唱完——而 Rachel 真的平静了下来。
+          </p>
+          <blockquote class="q">
+            <div class="line">"雨滴落在玫瑰上，小猫的胡须……门铃和雪橇铃，还有什么带手套的……啦啦啦什么，还有拌线的面条。"</div>
+            <div class="who"><b>08:00 – 08:20</b> · 语气：轻柔 / 歌唱 —— 唱完 Rachel 说"我好了"，她答"我帮上忙了"</div>
+          </blockquote>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========================= 关系网 ========================= -->
+<section id="relations">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">Part 03</div>
+      <h2>关系网</h2>
+      <p class="sub">这一集的任务不是介绍六个人，而是让观众相信他们之间早已存在的默契——以及埋下一条将要走很久的线。</p>
+    </div>
+
+    <div class="relmap">
+      <svg viewBox="0 0 920 600" role="img"
+           aria-label="本集六位核心人物的关系图：Ross 与 Monica 是兄妹，Monica 与 Rachel 是高中同学并成为室友，Ross 高中暗恋 Rachel 并在结尾约到她；Joey 与 Chandler 是室友；Phoebe 是全组的情绪调解者；Monica 与 Paul 约会但被拆穿。">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#9C8B7F"/>
+          </marker>
+        </defs>
+
+        <!-- 关系连线（先画线，节点覆盖在上）-->
+        <!-- Rachel — Ross：本集最重要的线 -->
+        <line x1="250" y1="130" x2="620" y2="130" stroke="#E2622A" stroke-width="3.5"/>
+        <rect x="352" y="88" width="166" height="30" rx="15" fill="#FCF7F0" stroke="#E2622A" stroke-width="1.2"/>
+        <text x="435" y="108" text-anchor="middle" font-size="14" font-weight="700" fill="#C24E1C">高中暗恋 → 约会</text>
+
+        <!-- Ross — Monica：兄妹 -->
+        <line x1="620" y1="130" x2="435" y2="315" stroke="#3B7EA1" stroke-width="3"/>
+        <rect x="514" y="197" width="76" height="28" rx="14" fill="#FCF7F0" stroke="#3B7EA1" stroke-width="1.2"/>
+        <text x="552" y="216" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2B6483">兄妹</text>
+
+        <!-- Monica — Rachel：高中同学 → 室友 -->
+        <line x1="250" y1="130" x2="435" y2="315" stroke="#4F9D7E" stroke-width="3"/>
+        <rect x="256" y="197" width="112" height="28" rx="14" fill="#FCF7F0" stroke="#4F9D7E" stroke-width="1.2"/>
+        <text x="312" y="216" text-anchor="middle" font-size="13.5" font-weight="700" fill="#3A7D62">同学 → 室友</text>
+
+        <!-- Monica — Paul：约会，被拆穿 -->
+        <line x1="435" y1="315" x2="435" y2="480" stroke="#E2622A" stroke-width="2.2" stroke-dasharray="7 5"/>
+        <rect x="447" y="382" width="132" height="28" rx="14" fill="#FCF7F0" stroke="#E2622A" stroke-width="1.2"/>
+        <text x="513" y="401" text-anchor="middle" font-size="13" font-weight="650" fill="#C24E1C">约会 → 被拆穿</text>
+
+        <!-- Joey — Chandler：室友 -->
+        <line x1="810" y1="255" x2="810" y2="420" stroke="#2A211C" stroke-width="3"/>
+        <rect x="746" y="323" width="60" height="28" rx="14" fill="#FCF7F0" stroke="#2A211C" stroke-width="1.2"/>
+        <text x="776" y="342" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2A211C">室友</text>
+
+        <!-- Joey+Chandler → Ross：陪他装家具 -->
+        <line x1="810" y1="255" x2="660" y2="152" stroke="#9C8B7F" stroke-width="1.8" stroke-dasharray="4 4"/>
+        <line x1="810" y1="420" x2="668" y2="160" stroke="#9C8B7F" stroke-width="1.8" stroke-dasharray="4 4"/>
+        <text x="742" y="120" text-anchor="middle" font-size="12.5" fill="#6B5C52">陪他装家具 · 开导</text>
+
+        <!-- Phoebe → Rachel / Ross：情绪调解 -->
+        <line x1="112" y1="330" x2="228" y2="152" stroke="#2F7D74" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+        <line x1="130" y1="352" x2="400" y2="330" stroke="#2F7D74" stroke-width="1.8" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+        <text x="96" y="424" text-anchor="middle" font-size="12.5" fill="#2F7D74">唱歌安抚 / 净化气场</text>
+
+        <!-- 人物节点 -->
+        <!-- Rachel -->
+        <circle cx="250" cy="130" r="46" fill="#FFF" stroke="#D94F4F" stroke-width="3.5"/>
+        <text x="250" y="126" text-anchor="middle" font-size="17" font-weight="750" fill="#2A211C">Rachel</text>
+        <text x="250" y="145" text-anchor="middle" font-size="11.5" fill="#9C8B7F">逃婚新娘</text>
+
+        <!-- Ross -->
+        <circle cx="620" cy="130" r="46" fill="#FFF" stroke="#3B7EA1" stroke-width="3.5"/>
+        <text x="620" y="126" text-anchor="middle" font-size="17" font-weight="750" fill="#2A211C">Ross</text>
+        <text x="620" y="145" text-anchor="middle" font-size="11.5" fill="#9C8B7F">刚离婚</text>
+
+        <!-- Monica -->
+        <circle cx="435" cy="330" r="48" fill="#FFF" stroke="#E2622A" stroke-width="4"/>
+        <text x="435" y="326" text-anchor="middle" font-size="17" font-weight="750" fill="#2A211C">Monica</text>
+        <text x="435" y="345" text-anchor="middle" font-size="11.5" fill="#9C8B7F">厨师 · 操办者</text>
+
+        <!-- Paul（关键配角，画小一号）-->
+        <circle cx="435" cy="505" r="34" fill="#FCF7F0" stroke="#E9B949" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <text x="435" y="503" text-anchor="middle" font-size="14" font-weight="700" fill="#6B5C52">Paul</text>
+        <text x="435" y="519" text-anchor="middle" font-size="10.5" fill="#9C8B7F">红酒男</text>
+
+        <!-- Joey -->
+        <circle cx="810" cy="255" r="44" fill="#FFF" stroke="#4F9D7E" stroke-width="3.5"/>
+        <text x="810" y="251" text-anchor="middle" font-size="16.5" font-weight="750" fill="#2A211C">Joey</text>
+        <text x="810" y="270" text-anchor="middle" font-size="11.5" fill="#9C8B7F">演员</text>
+
+        <!-- Chandler -->
+        <circle cx="810" cy="420" r="44" fill="#FFF" stroke="#E9B949" stroke-width="3.5"/>
+        <text x="810" y="416" text-anchor="middle" font-size="15.5" font-weight="750" fill="#2A211C">Chandler</text>
+        <text x="810" y="435" text-anchor="middle" font-size="11.5" fill="#9C8B7F">输数字的</text>
+
+        <!-- Phoebe -->
+        <circle cx="96" cy="345" r="44" fill="#FFF" stroke="#2F7D74" stroke-width="3.5"/>
+        <text x="96" y="341" text-anchor="middle" font-size="16" font-weight="750" fill="#2A211C">Phoebe</text>
+        <text x="96" y="360" text-anchor="middle" font-size="11.5" fill="#9C8B7F">街头歌手</text>
+
+        <!-- 共同主场 -->
+        <rect x="300" y="556" width="320" height="34" rx="17" fill="#FCF7F0" stroke="#EADFD3" stroke-width="1.5"/>
+        <circle cx="326" cy="573" r="6" fill="#E2622A"/>
+        <text x="470" y="578" text-anchor="middle" font-size="13" font-weight="650" fill="#6B5C52">共同主场：Central Perk 的橙色沙发</text>
+      </svg>
+
+      <div class="relmap-legend">
+        <div><i style="border-color:#E2622A"></i><b>本集主线</b>：结尾成功约到</div>
+        <div><i style="border-color:#3B7EA1"></i><b>血缘</b></div>
+        <div><i style="border-color:#4F9D7E"></i><b>旧识转同住</b></div>
+        <div><i style="border-color:#2A211C"></i><b>同住</b></div>
+        <div><i style="border-color:#E2622A;border-top-style:dashed"></i><b>本集 B 线</b>：话术被同事拆穿</div>
+        <div><i style="border-color:#9C8B7F;border-top-style:dashed"></i><b>支援</b></div>
+        <div><i style="border-color:#2F7D74;border-top-style:dashed"></i><b>情绪调解</b>（单向）</div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ========================= 听声辨戏 ========================= -->
+<section id="multimodal">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">Part 04</div>
+      <h2>听声辨戏</h2>
+      <p class="sub">
+        这一集有相当多的信息不在台词里，而在<strong>怎么说</strong>、<strong>脸上有什么</strong>、
+        以及<strong>背景里响了什么</strong>。以下四条是从全片逐段的语音语气、画面动作和声音事件里读出来的。
+      </p>
+    </div>
+
+    <div class="modal-grid">
+
+      <div class="modal-card">
+        <span class="mtag sound">声音线索</span>
+        <h4>现场观众的笑声，就是这一集的节拍器</h4>
+        <p>
+          全片 71 个片段里，几乎<strong>每一段都记录到现场观众笑声</strong>——它不是零星出现的，
+          而是密集、规律地嵌在对话缝隙里。这告诉你两件事：一，这是在现场观众面前录制的多机位情景喜剧，
+          演员的停顿是<em>为笑声留的</em>；二，笑声的落点等于编剧标好的笑点位置。
+        </p>
+        <p>
+          留意听那些"笑声盖过下一句"的地方——Chandler 的补刀几乎全落在这种位置上。
+          反过来，<strong>笑声消失的段落值得警觉</strong>：Rachel 独自对着电视里的婚礼落泪那场、Phoebe 讲 14 岁的事，
+          都是全集少有的安静区，那是这部喜剧放严肃话的地方。
+        </p>
+      </div>
+
+      <div class="modal-card">
+        <span class="mtag voice">语气</span>
+        <h4>台词说"没事"，声音说"有事"</h4>
+        <p>
+          本集第一个笑点完全由语气造成。Monica 说"没什么可说的，他就是我的一个同事而已"——
+          <strong>语气是防卫性的、语速偏快</strong>。台词在否认，声音在承认，观众听到的是后者。
+        </p>
+        <p>
+          同类的背离贯穿全片：Joey 那句"你现在很痛苦，你很愤怒"用的是安慰的语调，
+          下半句"<strong>脱衣舞俱乐部！</strong>"突然转成大声兴奋；
+          Ross 说"我希望她幸福"是低沉认真的，被 Phoebe 一句"不，你不希望"戳破后，
+          他立刻变成又响又快的"去她的，是她离开我的！"——<em>他的真实情绪一直在语气里，不在措辞里</em>。
+        </p>
+      </div>
+
+      <div class="modal-card">
+        <span class="mtag face">画面与身体</span>
+        <h4>手上拿着什么，比脸上写着什么更清楚</h4>
+        <p>
+          Ross 全程攥着那把没打开的黑伞，坐下、站起、激动时都不放手——它是他的握力计。
+          Joey 的手里永远是马克杯或三明治。Rachel 的手上先是婚纱裙摆，然后是纸袋，最后是咖啡壶。
+        </p>
+        <p>
+          最值得看的两个身体动作都发生在拒绝与接受之间：<strong>Phoebe 把手伸向 Ross 头部时他往后一躲、
+          双手挡开</strong>（02:55）；以及夜里那场，<strong>Ross 把一块饼干掰成两半、递过去一半</strong>（27:08）——
+          他嘴上讲的是高中往事，手上做的是"我们一起吃点东西吧"。告白之前，手先说完了。
+        </p>
+      </div>
+
+      <div class="modal-card">
+        <span class="mtag sound">声效</span>
+        <h4>三处笑点是"响"出来的，不是"说"出来的</h4>
+        <p>
+          <strong>喷酒声（17:00）</strong>——Paul 说出那桩两年未愈的私密难题时，<strong>Monica 吃惊得把嘴里的酒喷到了他身上</strong>。
+          这个声音把一段沉重的自白瞬间变成滑稽，也是全场唯一一次用生理反应替代台词。
+        </p>
+        <p>
+          <strong>剪刀声 + 齐声起哄 + 欢呼（25:40）</strong>——剪信用卡那一下配了完整的"剪！剪！剪！"齐喊与掌声，
+          把一个人的经济决定升格成集体仪式。<strong>纸袋的摩擦声（08:05）</strong>——
+          Rachel 过度呼吸时纸袋的沙沙声一直垫在 Phoebe 的歌下面，是她还没平静的证据。
+        </p>
+      </div>
+
+      <div class="modal-card">
+        <span class="mtag word">音乐</span>
+        <h4>主题曲与"翻页音"</h4>
+        <p>
+          片头是那首会唱一整季的歌（"没人告诉过你生活会是这样"），配着<strong>拍手声和喷泉的水花声</strong>——
+          六个人在夜里的喷泉边跳舞、湿着衣服坐上橙色沙发。这段 MV 把"这群人已经很熟了"提前塞给了观众，
+          省掉了正片里所有的关系铺垫。
+        </p>
+        <p>
+          正片里每次换场都有一小段<strong>轻快的过场音乐</strong>配城市空镜（大桥、天际线、公寓外墙）。
+          它的功能是给时间跳跃打标点：听到它，就知道"过了一段时间"或"换了一个地方"。
+          结尾主题曲再起，把首尾扣回同一个空间。
+        </p>
+      </div>
+
+      <div class="modal-card">
+        <span class="mtag voice">结构</span>
+        <h4>两个男人讲同一种"失去"，一真一假</h4>
+        <p>
+          全集中段是刻意的交叉剪辑：一边是 Ross 在朋友家装家具，反复讲他四年婚姻的痛；
+          一边是日料店里 Paul 讲他"两年"的创伤。两段都用了缓慢、低沉、悲伤的语调，
+          两段都换来了对面女性的同情。
+        </p>
+        <p>
+          区别在 22:30 才揭晓：Ross 的痛是真的（Carol 当天搬走），
+          Paul 的痛是一套复用的搭讪话术（Franny 听过一模一样的版本）。
+          <em>把这两段并着看，这一集其实在讲：坦白和表演听起来可以完全一样。</em>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+<!-- ========================= 推荐片段 ========================= -->
+<section id="picks">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-num">Part 05</div>
+      <h2>值得细看的 5 个片段</h2>
+      <p class="sub">
+        按时间顺序排列。时间戳以本片文件为准（含片头 MV，片头约到 00:50 结束）。
+        每段都标了"看什么"——分成台词、语气、画面、声效四类线索。
+      </p>
+    </div>
+
+    <!-- PICK 1 -->
+    <details class="pick">
+      <summary>
+        <div class="no">1</div>
+        <div class="htxt">
+          <h3>许愿与应验：一句心愿话音未落，新娘推门而入</h3>
+          <div class="range">
+            <span class="ts">03:45 → 05:05</span>
+            <span class="dur">约 80 秒</span>
+          </div>
+        </div>
+        <span class="chev"></span>
+      </summary>
+      <div class="body">
+        <p class="why">
+          <strong>为什么值得细看：</strong>这是整部剧的开机键，也是一堂喜剧节奏的示范课。
+          Joey 劝失婚的 Ross 去享受单身，Ross 反过来说出他真正想要的东西——"我不想单身，我只想再结一次婚"。
+          <strong>就在这句话的尾音上，一个穿着完整婚纱的女人推门冲进咖啡馆。</strong>
+          剧本用画面直接"回应"了台词，而 Chandler 立刻用一句吐槽把这份浪漫按住，
+          让本该煽情的巧合变成笑点。全剧的主线（Ross 与 Rachel）就在这 80 秒里同时被点亮和推迟。
+        </p>
+        <div class="watch-for">
+          <div class="wf-title">看什么</div>
+          <ul>
+            <li><span class="cue">语气</span>Ross 说"我只想再结一次婚"时是<b>悲伤、恳求式、语速偏快、音调偏高</b>——他不是在陈述，是在求饶。这句的脆弱程度决定了下一秒的笑声有多响。</li>
+            <li><span class="cue">画面</span>婚纱是<b>从背景的双开门进来的</b>，先于任何台词出现。留意六个人转头的顺序，以及 Monica 是全场第一个站起来的人。</li>
+            <li><span class="cue">台词</span>Chandler 的补刀"<b>而我还想要一百万美元呢！</b>"——他是对着 Ross 的许愿说的，等于把这场巧合明确点成"愿望成真"。</li>
+            <li><span class="cue">台词</span>紧接着 Monica 的介绍连珠炮："这是 Rachel，另一个从 Lincoln High 活下来的人……你还记得我哥哥 Ross 吧？"<b>一句话交代了三组关系</b>：老同学、兄妹、以及 Rachel 与 Ross 的旧识。</li>
+            <li><span class="cue">画面</span>Rachel 和 Ross 打招呼时<b>想握手却没握成</b>——Ross 手里那把黑伞正好挡在中间。两个后面要谈很久恋爱的人，重逢的第一个动作是一次落空的握手。</li>
+            <li><span class="cue">声效</span>Rachel 进门那一刻的观众笑声<b>盖住了后半句台词</b>，这是现场录制的痕迹，也说明这个视觉笑点的冲击力。</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- PICK 2 -->
+    <details class="pick">
+      <summary>
+        <div class="no">2</div>
+        <div class="htxt">
+          <h3>"这是个比喻，爸爸！"——Rachel 的独立宣言</h3>
+          <div class="range">
+            <span class="ts">07:05 → 08:25</span>
+            <span class="dur">约 80 秒</span>
+          </div>
+        </div>
+        <span class="chev"></span>
+      </summary>
+      <div class="body">
+        <p class="why">
+          <strong>为什么值得细看：</strong>这是 Rachel 这个角色的定义性段落，也是全集写得最好的一段台词。
+          她对着电话向父亲解释自己为什么逃婚，逻辑是崩塌的，但内核异常清晰：
+          <em>所有人都告诉她"你是一只鞋"，从没人问过她想不想当鞋。</em>
+          这段还展示了这群朋友的相处方式——她在崩溃，客厅里的四个人却在对着肥皂剧大喊"把她推下楼！"，
+          没人围上来劝，直到她真的喘不上气，才有人跪下来递纸袋。
+        </p>
+        <div class="watch-for">
+          <div class="wf-title">看什么</div>
+          <ul>
+            <li><span class="cue">语气</span>整段的语音标注是<b>喊叫、高音、极快</b>，情绪标注为"沮丧"而不是"愤怒"——她不是在吵架，是在被误解到无法忍受。</li>
+            <li><span class="cue">台词</span>比喻的三级递进："<b>要是我不想当鞋呢？要是我想当一个包、一顶帽子呢？</b>" → 父亲显然理解成要买帽子 → 她崩溃地喊"<b>我不是要你给我买帽子！我说的是我就是一顶帽子！这是个比喻，爸爸！</b>"</li>
+            <li><span class="cue">台词</span>沙发上有人平静地接了一句"<b>你也能理解他为什么听不懂</b>"——这句吐槽的作用是替观众说出实话，同时不否定她的痛苦。</li>
+            <li><span class="cue">画面</span>她<b>穿着婚纱在厨房里踱步打电话</b>，冰箱前有人端着橙汁看她。婚纱一直没脱，是这段情绪的视觉计时器。</li>
+            <li><span class="cue">声效</span>她<b>把电话摔下</b>的声音是这段的分界线。之后是纸袋的沙沙声垫在 Phoebe 的歌下——留意纸袋声什么时候停，那才是她真正平静的时刻。</li>
+            <li><span class="cue">语气</span>Phoebe 唱的《我最喜欢的东西》<b>歌词全是错的</b>（"啦啦啦什么，还有拌线的面条"），语调却温柔平稳。唱完 Rachel 说"我好了"，Phoebe 答"我帮上忙了"。</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- PICK 3 -->
+    <details class="pick">
+      <summary>
+        <div class="no">3</div>
+        <div class="htxt">
+          <h3>Paul 的坦白——以及几分钟后的拆穿</h3>
+          <div class="range">
+            <span class="ts">16:40 → 17:35</span>
+            <span class="dur">约 55 秒</span>
+            <span class="dur">· 延伸对照 <span class="ts">22:30 → 23:00</span></span>
+          </div>
+        </div>
+        <span class="chev"></span>
+      </summary>
+      <div class="body">
+        <p class="why">
+          <strong>为什么值得细看：</strong>这是本集唯一一处<strong>需要两段合起来才成立的设计</strong>，
+          也是全集最锋利的一笔。日料店里，Paul 用缓慢低沉的声音吐露离婚后那桩"两年"未愈的私密难题，
+          Monica 被这份脆弱击中。<strong>请记住他说这话的语气</strong>——因为几分钟之后，
+          在餐厅后厨，同事 Franny 会告诉你：这段话她也听过，一字不差。
+          这一集因此有了一层不那么甜的底色：真诚与表演，听起来可以完全一样。
+        </p>
+        <div class="watch-for">
+          <div class="wf-title">看什么</div>
+          <ul>
+            <li><span class="cue">语气</span>Paul 的自白是<b>悲伤、缓慢、低音</b>——教科书式的"可信的脆弱"。把它和同一时段 Ross 讲离婚的语气对照，你会发现两者几乎无法区分。</li>
+            <li><span class="cue">声效</span><b>Monica 吃惊得把嘴里的酒喷到了 Paul 身上</b>（喷溅声 + 全场笑声）。这个生理反应替代了台词，也让她从"被打动"立刻转成"照顾他"——她随即说"我知道被喷一身大概不是你现在需要的"。</li>
+            <li><span class="cue">台词</span>Monica 的反应链条："天啊，我很抱歉" → "我知道被喷一身大概不是你现在需要的" → "多久了？" → "<b>我很高兴你把她的手表砸了</b>"。她一边同情一边站队，这是她的本能。</li>
+            <li><span class="cue">画面</span>桌上的清酒杯、黑色茶壶、插着一朵橙色花的白瓶——<b>日料店的布景刻意安静</b>，让这段对话显得私密而认真。</li>
+            <li><span class="cue">台词</span>延伸段（22:30）：Franny 先反问"<b>你说的认识 Paul，是像我认识 Paul 那样吗？</b>"，紧接着把功劳算到自己头上——她用的比喻和"<b>两年</b>"这个年份，和 Paul 对 Monica 说的分毫不差。反转全靠这两句完成，没有任何解释，Monica 的表情负责其余部分。</li>
+            <li><span class="cue">声效</span>后厨那段背景里是<b>煎炒声和餐具碰撞声</b>，两人一边颠锅一边说话。把这么重的信息放在最日常的噪音里，是这场戏的高明处。</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- PICK 4 -->
+    <details class="pick">
+      <summary>
+        <div class="no">4</div>
+        <div class="htxt">
+          <h3>剪卡仪式：六个人把一个决定变成典礼</h3>
+          <div class="range">
+            <span class="ts">25:25 → 26:20</span>
+            <span class="dur">约 55 秒</span>
+          </div>
+        </div>
+        <span class="chev"></span>
+      </summary>
+      <div class="body">
+        <p class="why">
+          <strong>为什么值得细看：</strong>这是"朋友"这个主题第一次被完整演示出来。
+          Rachel 要剪掉父亲的信用卡，六个人围着圆桌把这件事办成了一场仪式：
+          有人递剪刀、有人打气、有人齐声起哄、剪完全体鼓掌。
+          这一集反复用一个手法——<strong>把私人时刻公共化</strong>，
+          而这里是它最正面的一次使用。结尾那句吐槽又把煽情精准地拆掉。
+        </p>
+        <div class="watch-for">
+          <div class="wf-title">看什么</div>
+          <ul>
+            <li><span class="cue">台词</span>Rachel 自己给出了这一集最准确的比喻——放弃信用卡、开始独立生活，就像"<b>不带降落伞跳出飞机</b>"。她说的是恐惧，而 Monica 接着往下推，继续鼓励她剪。</li>
+            <li><span class="cue">语气</span>Rachel 的<b>三次退缩</b>："别这样，我做不到"（焦虑、恳求）→"我觉得不行"（音量低、语速慢）→ 最后被推着剪下去。她的犹豫是真实的，不是表演给朋友看的。</li>
+            <li><span class="cue">台词</span>Ross 那句支持很值得注意："<b>来吧，你连咖啡都煮出来了，你什么都做得到。</b>"他拿的是当天早上那件小事——他在听。</li>
+            <li><span class="cue">声效</span><b>齐声"剪！剪！剪！"+ 剪刀剪断的声音 + 欢呼</b>。声音的层次是这场戏的主角：先是节奏，然后是那一下断裂，然后是掌声。</li>
+            <li><span class="cue">画面</span>橙色剪刀、桌上摊开的一叠卡。剪完之后 Rachel 那个<b>如释重负的笑</b>，以及她试图收工的台词"就到这儿吧，算是个象征性的姿态"。</li>
+            <li><span class="cue">台词</span>收尾的一刀：Monica 注意到桌上的碎片——"<b>Rachel，那是张图书证。</b>"仪式感被瞬间戳破，但那份决心并没有被否定。</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <!-- PICK 5 -->
+    <details class="pick">
+      <summary>
+        <div class="no">5</div>
+        <div class="htxt">
+          <h3>一块掰成两半的饼干：Ross 的告白</h3>
+          <div class="range">
+            <span class="ts">27:05 → 28:00</span>
+            <span class="dur">约 55 秒</span>
+          </div>
+        </div>
+        <span class="chev"></span>
+      </summary>
+      <div class="body">
+        <p class="why">
+          <strong>为什么值得细看：</strong>全剧最长的一条感情线，起点就在这 55 秒里。
+          客厅只剩两个人，一盏暖黄的台灯，一块被掰成两半的饼干。
+          Ross 说出高中时的暗恋，被"我知道"和"我确实这么想"连扎两次，
+          却还是把那句邀约说完了。这段的珍贵在于<strong>它没有配任何煽情手段</strong>——
+          没有音乐，没有特写堆叠，只有两个人和各自手里的半块饼干。
+        </p>
+        <div class="watch-for">
+          <div class="wf-title">看什么</div>
+          <ul>
+            <li><span class="cue">画面</span>先看手：<b>Ross 把饼干掰成两半、递出一半</b>。这个动作发生在告白之前，是他给自己搭的台阶。之后他一直捏着那半块饼干说话。</li>
+            <li><span class="cue">语气</span>他的语气标注是<b>紧张、轻声</b>，中间那声"哦"是<b>失望、低音、缓慢</b>——被"我确实把你当我哥的书呆子朋友"击中的那一下，声音掉了下去。</li>
+            <li><span class="cue">台词</span>两次信息反转：他说"你大概不知道，高中时我特别喜欢你"→ 她平静地答"<b>我知道</b>"；他说"我一直以为你只当我是 Monica 那个书呆子哥哥"→ 她答"<b>我是这么想的</b>"。</li>
+            <li><span class="cue">台词</span>他的请求句式极其笨拙，也极其可爱："<b>你能不能……尽量别把我此刻强烈的脆弱当成一个因素……那你觉得，我以后能约你出去吗，也许？</b>"</li>
+            <li><span class="cue">语气</span>Rachel 的回答是<b>两句</b>："好啊。"停顿。"<b>也许。</b>"——第二句是玩味的语气。这个"也许"给了整条线十年的余地。</li>
+            <li><span class="cue">画面</span>她的<b>会意的微笑</b>与他随后的自嘲表情；以及她起身道别后，<b>他独自坐了一会儿才拿起外套</b>。这一集最后一个私人时刻。</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+  </div>
+</section>
+<footer>
+  <div class="wrap">
+    <div class="dots"><i></i><i></i><i></i><i></i></div>
+    <p>
+      观影伴侣 · <strong>Friends</strong> 第一季第一集 &nbsp;·&nbsp; 29 分 39 秒 &nbsp;·&nbsp; 71 段音视频联合记忆
+      <br>
+      全部分析仅基于本集画面与声音
+    </p>
+  </div>
+</footer>
+<!-- CONTENT-END -->
+</body>
+</html>

@@ -5,7 +5,8 @@ import type { PluginSummary } from '@/lib/catalog';
 export default function Home() {
   const plugins: PluginSummary[] = catalog.plugins.map(
     ({
-      skill: _skill,
+      skills,
+      skillBundle: _skillBundle,
       tools,
       moduleDocstring: _moduleDocstring,
       requirements: _requirements,
@@ -14,6 +15,8 @@ export default function Home() {
       ...plugin,
       toolCount: tools.length,
       toolNames: tools.map((t) => t.name),
+      skillCount: skills.length,
+      skillNames: skills.map((s) => s.name),
     }),
   );
   const categories = [

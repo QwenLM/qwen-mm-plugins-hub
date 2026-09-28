@@ -89,9 +89,7 @@ for (const file of [
         `href="${p.source.repository}/tree/qwen-mm-plugins-${p.id}-v${p.version}"`,
       )
     )
-      throw new Error(
-        `Snapshot links to an unpublished release tag: ${file}`,
-      );
+      throw new Error(`Snapshot links to an unpublished release tag: ${file}`);
   }
   if (!html.includes(`action="${prefix}/"`))
     throw new Error(`Documentation search has the wrong destination: ${file}`);
@@ -240,6 +238,19 @@ for (const file of [
       const current = plugins.find(
         (p) => file === `plugins/${p.id}/index.html`,
       );
+      for (const skill of current.skills) {
+        const anchor = `skill-entry-${skill.name}`;
+        if (
+          html.split(`id="${anchor}"`).length !== 2 ||
+          !html.includes(`href="${skill.sourceUrl}"`) ||
+          (current.skills.length > 1 &&
+            (!outline?.includes(`href="#${anchor}"`) ||
+              !html.includes(skill.tokenEstimate.full.toLocaleString('en-US'))))
+        )
+          throw new Error(
+            `Skill entry missing or incorrect in ${file}: ${skill.name}`,
+          );
+      }
       for (const id of current.contributors) {
         if (!html.includes(`href="${contributors[id].url}"`))
           throw new Error(`Contributor profile missing in ${file}: ${id}`);
