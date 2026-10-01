@@ -6,167 +6,101 @@ contributors: [shiym2000]
 order: 4
 ---
 
-# NIfTI volume inspection
+# Cookbook — Qwen-MM-Plugins NIfTI
 
-Use `qwen-mm-plugins-nifti` to inspect `.nii` and `.nii.gz` header metadata with
-`nifti_inspect`, or view configurable slices with `nifti_render_slices`. Rendering
-returns images together with the effective settings so the same view can be
-checked and requested again. Both tools are independent, read-only calls: no
-inspection step is required before rendering, and neither modifies the source.
+Use `qwen-mm-plugins-nifti` to inspect a local `.nii` or `.nii.gz` file, choose slices,
+and compare views with explicit display settings. Both tools open the source read-only.
 
-The default native-image mode requires no model API key. If the shared
-`QWEN_MM_NATIVE_MODE=0` caption fallback is enabled, rendered slices can be
-sent to the configured VL endpoint. Visualization is not a clinical diagnosis.
+## Tools
 
-## Setup
+- `nifti_inspect` — read header metadata, including dimensions, spacing, and orientation.
+- `nifti_render_slices` — render selected slices and report the effective display settings.
 
-The capability requires NumPy, NiBabel, and Pillow, with no system application.
-While its initial release is being prepared, use a checkout containing the
-plugin and follow the [local development guide](https://qwenlm.github.io/qwen-mm-plugins-hub/docs/local-development/):
+Call either tool directly; rendering does not require an inspection call first.
+The Tools tab contains the complete arguments and defaults.
+
+## Install
 
 ```bash
-# Run from the Qwen-MM-Plugins checkout containing the nifti capability.
-python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[nifti]'
-.venv/bin/python src/capabilities/nifti/qwen_mm_plugins_nifti --version
+claude plugin marketplace add https://github.com/QwenLM/Qwen-MM-Plugins.git
+claude plugin install qwen-mm-plugins-nifti@qwen-mm-plugins
 ```
 
-Register that source entry with your harness for development. Once the
-maintainer publishes the capability tag, it can be installed as
-`qwen-mm-plugins-nifti` through the repository's normal plugin installer.
-The Hub's Tools tab is generated from the real MCP schema.
+For other harnesses, use this plugin's Install tab. NumPy, NiBabel, and Pillow are
+installed with the plugin; no system application is required. The default native-image
+mode needs no API key. With `QWEN_MM_NATIVE_MODE=0`, rendered images can be sent to the
+configured VL endpoint for captions.
 
-## Inspect metadata without rendering
+## Workflow
 
-For questions about a file's dimensions, voxel spacing, units, or orientation:
+Start with a local file and the question you want to answer. Inspect its header when
+shape, spacing, or orientation matters; request a view directly when you want slices.
+After rendering, check the reported source axis, slice indices, selected volumes, and
+intensity bounds before comparing images or asking for a more specific view.
+
+Source voxel axes need not match anatomical planes. Oblique data is not resampled,
+and unknown spatial units are reported with an mm assumption. These views support
+inspection and visualization, not clinical diagnosis.
+
+## Example requests
+
+### Check the header
 
 ```text
-@scan.nii.gz  Use the NIfTI plugin to report this file's shape, voxel spacing, and orientation without rendering images.
+@scan.nii.gz  Report the dimensions, voxel spacing, and orientation without rendering images.
 ```
 
-Call `nifti_inspect` with:
+Expect header metadata without an intensity scan or image output. A 4D file also
+reports its fourth-dimension spacing and units; that dimension is not assumed to be time.
 
-```json
-{"file_path": "/absolute/path/scan.nii.gz"}
-```
-
-It returns JSON in a text block containing header metadata: shape, dimensionality,
-dtype, voxel spacing, header and effective spatial units, any mm assumption,
-affine, closest orientation codes, obliquity, and the number of 3D volumes.
-For a 4D file it also reports fourth-dimension spacing and units, without assuming
-that this dimension is time. For a 3D file the volume count is one.
-
-Inspection does not scan voxel intensities, calculate percentiles, choose a
-window, or produce images. It does not establish modality or anatomy. Use it
-when metadata answers the question, or when geometry helps choose a view; it is
-not a required first step for rendering.
-
-## Start with the default view
+### Start with an overview, then choose a view
 
 ```text
-@scan.nii.gz  Use the NIfTI plugin to show this volume and report the settings used.
+@scan.nii.gz  Show the default slices and tell me which source axis and slice indices were used.
 ```
 
-Call `nifti_render_slices` directly with arguments as simple as:
+The default view selects three interior slices along source voxel axis 2. Slices from
+one 3D volume share a P1–P99 intensity range. The report identifies the bounds and
+whether their calculation used a sample.
 
-```json
-{"file_path": "/absolute/path/scan.nii.gz"}
+```text
+@scan.nii.gz  Show five evenly spaced slices along source voxel axis 1.
 ```
 
-The tool takes three interior slices along **source voxel axis 2**, using a
-five-point grid over indices `0..size-1`, dropping its endpoints and rounding
-the remaining positions. For shape `(32, 40, 48)`, the default source indices
-are `(12, 24, 35)`. Duplicate indices are removed for small dimensions.
+For precise locations, ask for zero-based slice indices or fractional positions along
+the chosen axis. For example: “Show source axis 2 at slice indices 10, 20, and 30.”
 
-Axis 2 is not necessarily an anatomical axial plane. The response reports
-closest orientation codes, affine and obliquity; the displayed planes are
-reordered/flipped in-plane without anatomical resampling. Known spatial units
-come from the header; unknown units are explicitly interpreted as mm.
+### Use the same intensity window across volumes
 
-All slices from one 3D volume share its P1–P99 intensity range. Small volumes
-use exact statistics; larger volumes use a deterministic regular-grid sample.
-The returned report states which method was used and the actual intensity
-bounds. Each displayed plane still uses its complete source slice before
-image-budget resizing.
-
-## Change slice selection
-
-Select five slices on source axis 1:
-
-```json
-{
-  "file_path": "/absolute/path/scan.nii.gz",
-  "slice_axis": 1,
-  "num_slices": 5
-}
+```text
+@series.nii.gz  Show the first and third volumes at 25%, 50%, and 75% along source axis 2.
+Use window center 40 and width 400 for both volumes, and report the settings.
 ```
 
-For exact locations, use zero-based indices, for example
-`"slice_indices": [10, 20, 30]`. Alternatively,
-`"slice_positions": [0.25, 0.5, 0.75]` specifies fractions along the selected
-source axis. Set only one of these lists. An explicit list overrides
-`num_slices`; duplicate resolved indices are returned once, in requested order.
-
-## Choose an intensity display
-
-To apply a manually selected center and width consistently across slices:
-
-```json
-{
-  "file_path": "/absolute/path/scan.nii.gz",
-  "intensity_mode": "window",
-  "window_center": 40,
-  "window_width": 400
-}
-```
-
-This clips and linearly maps `[center - width/2, center + width/2]` to grayscale.
-For a CT dataset whose intensities are known to be HU-like, an explicit preset
-request can instead use `"intensity_mode": "preset"` and
-`"window_preset": "ct_bone"`. Available presets are `ct_brain`,
-`ct_soft_tissue`, `ct_lung` and `ct_bone`. Neither modality nor preset is
-inferred automatically from the NIfTI file.
-
-To return to automatic volume-level normalization, use
-`"intensity_mode": "auto_volume"` and omit window arguments. Its percentile
-bounds can be adjusted with `percentile_low` and `percentile_high`. Different
-selected 3D volumes get separate ranges; use a manual window when an identical
-numeric range is required across volumes.
-
-## Render a 4D input
-
-By default, the tool views the first 3D volume. To inspect the first and third:
+A corresponding `nifti_render_slices` call is:
 
 ```json
 {
   "file_path": "/absolute/path/series.nii.gz",
   "volumes": "1,3",
   "max_volumes": 2,
-  "slice_positions": [0.25, 0.5, 0.75]
+  "slice_axis": 2,
+  "slice_positions": [0.25, 0.5, 0.75],
+  "intensity_mode": "window",
+  "window_center": 40,
+  "window_width": 400
 }
 ```
 
-Volume selection is **1-based**, while `slice_indices` are **0-based**. The
-fourth dimension is not assumed to represent time. The report includes selected
-volume pages and indices, along with the header's fourth-dimension spacing/unit.
+Volume numbers start at **1**; explicit slice indices start at **0**. A manual window
+keeps the same numeric intensity range across volumes, whereas automatic normalization
+calculates a separate range for each volume. Choose the window for your data; the values
+above are an example. CT presets require an explicit request and HU-like input values.
 
-## Check the result
+## Case — try a synthetic volume
 
-Review the selected volumes, source axis, resolved slice indices, intensity
-mode and effective bounds. Check whether statistics were sampled and whether
-the response was truncated. The requested slice count can exceed the returned
-count because of duplicate indices or the response-size limit; request the
-remaining indices or volumes in another call.
-
-Core's [`visualize`](../core/usage.md#nifti-volumes) retains its existing
-three orthogonal center slices and per-slice normalization. When the dedicated
-NIfTI tools are available, use `nifti_inspect` for metadata and
-`nifti_render_slices` for configurable viewing. This plugin does not require core
-to be installed. Removal of core's NIfTI support is a separate follow-up change.
-
-## Try a synthetic volume
-
-The following creates a small, deterministic test image outside the repository:
+This reproducible example needs no scan download. Run it in a Python environment with
+NumPy and NiBabel installed, then give the printed path to your agent:
 
 ```python
 from pathlib import Path
@@ -184,8 +118,18 @@ nib.save(volume, path)
 print(path)
 ```
 
-Pass the printed absolute path to `nifti_inspect` to check shape `(32, 40, 48)`,
-spacing `(1, 1, 2) mm`, and one 3D volume. Independently pass the same path to
-`nifti_render_slices` to get three axis-2 slices at `(12, 24, 35)` with one shared
-automatic range. The synthetic values have no medical calibration; use them to
-check the viewing workflow, not CT preset interpretation.
+Ask for its header and a default view, using the two example requests above. Expect:
+
+- Shape `(32, 40, 48)`, spacing `(1, 1, 2) mm`, and one 3D volume.
+- Three slices on source axis 2 at indices `(12, 24, 35)`.
+- One shared automatic intensity range across the three slices.
+
+The synthetic values have no medical calibration. Use this case to check file loading,
+slice selection, and reproducibility of the reported settings.
+
+## Troubleshooting
+
+If fewer slices arrive than requested, check for duplicate resolved indices and the
+response-size limit. Request the remaining slices or volumes in a separate call. For
+views that look different across volumes, compare their reported intensity bounds and
+use a manual window when you need an identical scale.
