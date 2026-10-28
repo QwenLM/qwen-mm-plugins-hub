@@ -7,25 +7,39 @@ order: 11
 
 # Omni Deep Research
 
-Use `qwen-mm-plugins-omnidr` to research a video and produce an interactive report
-with timestamps, images, citations, and comparisons grounded in external sources.
-The host agent directs the research; the plugin supplies media reading, source
-collection, report rendering, and validation tools.
+Use `qwen-mm-plugins-omnidr` with Claude Code or Codex to research a video's
+visuals and speech, collect external sources (related webpages, images, videos,
+and documents), and produce an HTML report. The report includes the original
+video, detailed illustrated notes with timestamps and citations, and multiple
+analyses covering comparisons, causal relationships, and timeliness to address
+the user's needs.
 
-## Install and configure
+## Install
 
-Install the plugin through this page's **Install** tab. For Claude Code:
+For Claude Code, install OmniDR from the plugin marketplace:
 
 ```bash
 claude plugin marketplace add https://github.com/QwenLM/Qwen-MM-Plugins.git
 claude plugin install qwen-mm-plugins-omnidr@qwen-mm-plugins
 ```
 
-The plugin requires Python 3.10+, FFmpeg with `libx264`, `ffprobe`, and Node.js 22+.
-Browser screenshots also need Playwright Chromium or a system Chromium installation.
-The plugin's Python extra installs Playwright and the document/download dependencies.
+For Codex and other supported clients, run the guided installer and select
+**OmniDR**:
 
-Configure media understanding and transcription in `~/.qwen-mm-plugins/config`:
+```bash
+curl -fsSL https://raw.githubusercontent.com/QwenLM/Qwen-MM-Plugins/main/install.sh | bash
+```
+
+The released MCP server needs `uvx`. OmniDR also requires Python 3.10+,
+FFmpeg with `libx264`, `ffprobe`, Node.js 22+, and Chromium for screenshots.
+On Windows, follow the
+[WSL2 installation guide](https://github.com/QwenLM/Qwen-MM-Plugins/blob/main/docs/en/installation.md#windows-wsl2).
+Reload Claude Code plugins or start a new Codex task after installation.
+
+## Configure
+
+Set these through the installer's **Configure** action, the environment, or
+`~/.qwen-mm-plugins/config`:
 
 ```dotenv
 DASHSCOPE_API_KEY=<your-api-key>
@@ -33,54 +47,34 @@ DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
 QWEN_MM_API_OMNI_MODEL=qwen3.8-omni-flash
 ```
 
-The host agent's model is configured separately. Public search needs no additional
-API key. Keep credentials and cookies outside the report directory.
+The host agent's model is configured separately. Public search needs no key.
 
 ## Research a video
 
-Provide a local video or downloadable video URL, your question, and a new output
-directory. For example:
+Provide a local video or downloadable URL, a question, and a new report
+directory:
 
 ```text
 Use qwen-mm-plugins-omnidr to research /absolute/path/demo.mp4.
-Explain the demonstrated method, compare it with alternatives, and verify its
-main claims against current sources. Write an English interactive report in
-/absolute/path/demo-research/.
+Explain the demonstrated method, compare alternatives, and verify its main
+claims. Write an English report in /absolute/path/demo-research/.
 ```
 
-The workflow reads the full source, extracts visual and spoken research anchors,
-opens supporting documents, watches related videos, and checks comparisons and
-dated claims. It then assembles the illustrated report and checks its evidence,
-playback, navigation, and citations. A focused question still receives the full
-source-reading and external-research workflow.
+The Skill requires full-source reading, external research, and checks of
+comparisons and dated claims, even for a focused question.
 
-## Open the result
+## View and resume the report
 
-Keep the complete report directory: `index.html` depends on its neighboring media,
-images, styles, and data. Serve it locally to inspect playback and linked evidence:
+Open `/absolute/path/demo-research/index.html` to view the report. Keep the
+complete directory for its media, images, and research records.
 
-```bash
-python3 -m http.server 8000 --bind 127.0.0.1 --directory /absolute/path/demo-research
-```
-
-Open `http://127.0.0.1:8000/` in your browser. The directory also retains source
-readings and research records for audit and continuation.
-
-Report creation starts with a draft. A structure check confirms the report's
-shape; delivery checks also assess research coverage and review records. Missing
-readings, inaccessible sources, failed downloads, or unreviewed claims must remain
-explicit gaps in a partial result.
-
-## Resume work
-
-Give the agent the existing report directory and the original question:
+To resume, give the agent that directory and the original question:
 
 ```text
-Resume /absolute/path/demo-research/ with qwen-mm-plugins-omnidr.
-Keep completed readings and investigate the remaining gaps before delivery.
+Resume the qwen-mm-plugins-omnidr report in /absolute/path/demo-research/.
+The original question was: Explain the demonstrated method, compare
+alternatives, and verify its main claims. Investigate the remaining gaps.
 ```
 
-The agent inspects saved state and reuses successful work. Keep the source video,
-reading manifests, and evidence files in place. If you explicitly request offline
-work, model readers, search, and downloads are unavailable; local inspection can
-continue, and the result remains partial where online evidence is required.
+The agent reuses completed work. Unavailable sources and incomplete readings
+remain explicit gaps in a partial report.
